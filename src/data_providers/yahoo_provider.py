@@ -54,6 +54,8 @@ class YahooFinanceProvider(DataProvider):
             # Basic info
             company_name = info.get("longName") or info.get("shortName")
             current_price = info.get("currentPrice") or info.get("regularMarketPrice")
+
+            # Get diluted shares (prefer sharesOutstanding, fallback to basic shares)
             shares = info.get("sharesOutstanding")
             market_cap = info.get("marketCap")
 
@@ -127,22 +129,42 @@ class YahooFinanceProvider(DataProvider):
                                 ebitda_list.append(float(val))
                             break
 
-            # Extract balance sheet data
+            # Extract balance sheet data (most recent quarter)
             total_debt = None
             cash = None
 
             if not balance_sheet.empty:
-                col = balance_sheet.columns[0]  # Most recent
+                col = balance_sheet.columns[0]  # Most recent quarter
                 for idx in balance_sheet.index:
                     name = str(idx).lower()
-                    if "total debt" in name or name == "total debt":
-                        val = balance_sheet.loc[idx, col]
-                        if val is not None and not str(val).lower() == "nan":
-                            total_debt = float(val)
-                    if "cash" in name and "equivalents" in name:
-                        val = balance_sheet.loc[idx, col]
-                        if val is not None and not str(val).lower() == "nan":
-                            cash = float(val)
+
+                    # Total Debt (long-term + short-term)
+                    if total_debt is None:
+                        if "total debt" in name or name == "total debt":
+                            val = balance_sheet.loc[idx, col]
+                            if val is not None and not str(val).lower() == "nan":
+                                total_debt = float(val)
+                        elif (
+                            "long term debt" in name or "long-term debt" in name
+                        ) and "long term debt" in name:
+                            val = balance_sheet.loc[idx, col]
+                            if val is not None and not str(val).lower() == "nan":
+                                total_debt = float(val)
+
+                    # Cash and Cash Equivalents
+                    if cash is None:
+                        if ("cash and cash equivalents" in name) or (
+                            "cash" in name and "short" in name
+                        ):
+                            val = balance_sheet.loc[idx, col]
+                            if val is not None and not str(val).lower() == "nan":
+                                cash = float(val)
+
+            # Fallback to info dict if not found in balance sheet
+            if total_debt is None:
+                total_debt = info.get("totalDebt", 0.0)
+            if cash is None:
+                cash = info.get("totalCash", 0.0)
 
             # Create FinancialData object
             data = FinancialData(

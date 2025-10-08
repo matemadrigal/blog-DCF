@@ -40,7 +40,14 @@ class FinancialData:
     confidence_score: float = 0.0  # 0-100%
 
     def calculate_fcf(self) -> Optional[List[float]]:
-        """Calculate Free Cash Flow from operating cash flow and capex."""
+        """
+        Calculate Free Cash Flow from operating cash flow and capex.
+
+        Formula: FCF = Operating Cash Flow - |Capital Expenditure|
+
+        NOTE: Always calculates from OCF and CAPEX, never uses free_cash_flow field
+        to ensure consistency across all data sources.
+        """
         if self.operating_cash_flow and self.capital_expenditure:
             if len(self.operating_cash_flow) == len(self.capital_expenditure):
                 return [
@@ -49,7 +56,8 @@ class FinancialData:
                         self.operating_cash_flow, self.capital_expenditure
                     )
                 ]
-        return self.free_cash_flow
+        # Only return None if we can't calculate (don't fall back to free_cash_flow)
+        return None
 
     def calculate_completeness(self) -> float:
         """Calculate data completeness percentage."""

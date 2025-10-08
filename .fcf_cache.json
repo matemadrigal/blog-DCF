@@ -1,0 +1,302 @@
+{
+  "AAPL": {
+    "base_fcf": 108807000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:10.445393"
+  },
+  "MSFT": {
+    "base_fcf": 71611000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:11.119964"
+  },
+  "NVDA": {
+    "base_fcf": 60853000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:11.419183"
+  },
+  "GOOGL": {
+    "base_fcf": 72764000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:11.733665"
+  },
+  "AMZN": {
+    "base_fcf": 32878000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:12.040196"
+  },
+  "META": {
+    "base_fcf": 54072000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:12.369091"
+  },
+  "TSLA": {
+    "base_fcf": 3581000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:12.677239"
+  },
+  "AVGO": {
+    "base_fcf": 19414000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:13.070230"
+  },
+  "ORCL": {
+    "base_fcf": -394000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:13.405222"
+  },
+  "ADBE": {
+    "base_fcf": 7873000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:13.704142"
+  },
+  "CRM": {
+    "base_fcf": 12434000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:14.000915"
+  },
+  "CSCO": {
+    "base_fcf": 13288000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:14.290445"
+  },
+  "AMD": {
+    "base_fcf": 2405000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:14.611297"
+  },
+  "INTC": {
+    "base_fcf": -15656000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:14.915665"
+  },
+  "IBM": {
+    "base_fcf": 11760000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:15.292726"
+  },
+  "BRK.B": {
+    "base_fcf": 0.0,
+    "error": "No cash flow data",
+    "timestamp": "2025-10-08T17:42:15.624671"
+  },
+  "JPM": {
+    "base_fcf": 0.0,
+    "error": "Missing OCF or CAPEX",
+    "timestamp": "2025-10-08T17:42:15.962695"
+  },
+  "V": {
+    "base_fcf": 18693000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:16.304296"
+  },
+  "MA": {
+    "base_fcf": 13586000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:16.620812"
+  },
+  "BAC": {
+    "base_fcf": 0.0,
+    "error": "Missing OCF or CAPEX",
+    "timestamp": "2025-10-08T17:42:16.984187"
+  },
+  "WFC": {
+    "base_fcf": 0.0,
+    "error": "Missing OCF or CAPEX",
+    "timestamp": "2025-10-08T17:42:17.302306"
+  },
+  "GS": {
+    "base_fcf": -15303000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:17.598375"
+  },
+  "MS": {
+    "base_fcf": -2100000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:17.942935"
+  },
+  "BLK": {
+    "base_fcf": 4701000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:18.214061"
+  },
+  "C": {
+    "base_fcf": -26169000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:18.490067"
+  },
+  "LLY": {
+    "base_fcf": 414300000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:18.831491"
+  },
+  "UNH": {
+    "base_fcf": 20705000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:19.126053"
+  },
+  "JNJ": {
+    "base_fcf": 18059000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:19.425421"
+  },
+  "ABBV": {
+    "base_fcf": 17832000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:19.703032"
+  },
+  "MRK": {
+    "base_fcf": 18096000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:19.965290"
+  },
+  "PFE": {
+    "base_fcf": 9835000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:20.285681"
+  },
+  "TMO": {
+    "base_fcf": 7267000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:20.564834"
+  },
+  "ABT": {
+    "base_fcf": 6351000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:20.853504"
+  },
+  "DHR": {
+    "base_fcf": 5296000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:21.183687"
+  },
+  "CVS": {
+    "base_fcf": 6326000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:21.487392"
+  },
+  "WMT": {
+    "base_fcf": 12660000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:21.828253"
+  },
+  "HD": {
+    "base_fcf": 16325000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:22.146803"
+  },
+  "PG": {
+    "base_fcf": 14044000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:22.432944"
+  },
+  "KO": {
+    "base_fcf": 4741000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:22.719142"
+  },
+  "PEP": {
+    "base_fcf": 7189000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:23.020045"
+  },
+  "COST": {
+    "base_fcf": 6629000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:23.290820"
+  },
+  "MCD": {
+    "base_fcf": 6672000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:23.613324"
+  },
+  "NKE": {
+    "base_fcf": 3268000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:23.933985"
+  },
+  "SBUX": {
+    "base_fcf": 3318100000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:24.245129"
+  },
+  "TGT": {
+    "base_fcf": 4476000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:24.522204"
+  },
+  "NFLX": {
+    "base_fcf": 6921826000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:24.832054"
+  },
+  "DIS": {
+    "base_fcf": 8559000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:25.156842"
+  },
+  "CMCSA": {
+    "base_fcf": 12543000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:25.453567"
+  },
+  "T": {
+    "base_fcf": 18508000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:25.779560"
+  },
+  "VZ": {
+    "base_fcf": 18922000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:26.078395"
+  },
+  "BA": {
+    "base_fcf": -14398000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:26.549113"
+  },
+  "CAT": {
+    "base_fcf": 8820000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:26.905832"
+  },
+  "GE": {
+    "base_fcf": 3678000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:27.250705"
+  },
+  "UPS": {
+    "base_fcf": 6213000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:27.543223"
+  },
+  "HON": {
+    "base_fcf": 4933000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:27.853307"
+  },
+  "XOM": {
+    "base_fcf": 30716000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:28.187009"
+  },
+  "CVX": {
+    "base_fcf": 15044000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:28.474436"
+  },
+  "COP": {
+    "base_fcf": 8006000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:28.748588"
+  },
+  "SLB": {
+    "base_fcf": 4473000000.0,
+    "error": null,
+    "timestamp": "2025-10-08T17:42:29.036881"
+  },
+  "SPY": {
+    "base_fcf": 0.0,
+    "error": "No cash flow data",
+    "timestamp": "2025-10-08T17:42:29.292908"
+  }
+}
