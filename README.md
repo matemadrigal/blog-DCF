@@ -10,7 +10,9 @@ Plataforma profesional de valoración de empresas mediante **Discounted Cash Flo
 ## 🚀 Características
 
 ### 📈 Análisis Individual
-- Cálculo DCF con inputs manuales o autocompletado desde Yahoo Finance
+- Cálculo DCF con inputs manuales o **búsqueda inteligente multi-fuente**
+- **3 modos de datos**: Manual, Autocompletar (Yahoo), Multi-fuente (varios APIs)
+- **Estrategias de búsqueda**: Mejor calidad, Primera disponible, Combinar fuentes
 - Métricas clave: Enterprise Value, Fair Value por acción, Upside/Downside
 - Desglose detallado de flujos de caja proyectados
 - Gráficos interactivos con Plotly
@@ -69,6 +71,26 @@ pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
 ```
 
+### 4. Configurar APIs (Opcional pero recomendado)
+
+Para usar el modo **Multi-fuente** con mejor calidad de datos:
+
+```bash
+# Opción A: Variables de entorno
+cp .env.example .env
+# Edita .env y agrega tus API keys
+
+# Opción B: Streamlit secrets
+cp .streamlit/secrets.toml.example .streamlit/secrets.toml
+# Edita secrets.toml y agrega tus API keys
+```
+
+**Obtener API keys gratuitas:**
+- **Alpha Vantage**: https://www.alphavantage.co/support/#api-key (25 req/día)
+- **Financial Modeling Prep**: https://site.financialmodelingprep.com/developer/docs (250 req/día)
+
+📚 Ver guía completa: [docs/MULTI_SOURCE_DATA.md](docs/MULTI_SOURCE_DATA.md)
+
 ## 🚀 Ejecución
 
 ### Método 1: Comando directo
@@ -91,12 +113,14 @@ La aplicación se abrirá en `http://localhost:8501`
 
 1. Ingresa un ticker (ej: AAPL, GOOGL, MSFT)
 2. Configura parámetros DCF:
-   - **Modo**: Manual o Autocompletar (desde Yahoo Finance)
+   - **Modo**: Manual, Autocompletar (Yahoo Finance), o **Multi-fuente** (búsqueda inteligente)
+   - **Estrategia** (si usas Multi-fuente): Mejor calidad, Primera disponible, o Combinar fuentes
    - **Tasa de descuento (r)**: Típicamente 8-15%
    - **Crecimiento terminal (g)**: Típicamente 2-3%
    - **Shares outstanding**: Dejar en 0 para autocompletar
 3. Revisa los resultados:
    - Fair Value calculado
+   - **Métricas de calidad** (fuente, completitud, confianza)
    - Comparación con precio de mercado
    - Upside/Downside potencial
 4. Exporta:
@@ -134,6 +158,12 @@ blog-DCF/
 │   ├── dcf/
 │   │   ├── model.py               # Modelo DCF core
 │   │   └── fundamentals.py        # Normalización de datos
+│   ├── data_providers/            # 🆕 Sistema multi-fuente
+│   │   ├── base.py                # Clases base y FinancialData
+│   │   ├── yahoo_provider.py      # Yahoo Finance provider
+│   │   ├── alpha_vantage_provider.py  # Alpha Vantage provider
+│   │   ├── fmp_provider.py        # Financial Modeling Prep provider
+│   │   └── aggregator.py          # Búsqueda inteligente multi-fuente
 │   ├── cache/
 │   │   └── db.py                  # Sistema de caché SQLite
 │   └── reports/
@@ -149,10 +179,13 @@ blog-DCF/
 
 - **Streamlit**: Framework web interactivo
 - **yfinance**: Datos financieros de Yahoo Finance
+- **Alpha Vantage API**: Datos fundamentales de alta calidad
+- **Financial Modeling Prep API**: Estados financieros detallados
 - **Plotly**: Gráficos interactivos profesionales
 - **SQLite**: Base de datos persistente local
 - **ReportLab**: Generación de informes PDF
 - **Pandas/NumPy**: Procesamiento de datos
+- **Requests**: Cliente HTTP para APIs REST
 
 ## 🎯 Metodología DCF
 
@@ -199,7 +232,8 @@ pip install reportlab
 
 ## 🔮 Próximas Mejoras
 
-- [ ] Múltiples fuentes de datos (Alpha Vantage, Financial Modeling Prep)
+- [x] ✅ Múltiples fuentes de datos (Alpha Vantage, Financial Modeling Prep)
+- [x] ✅ Búsqueda inteligente con estrategias (mejor calidad, merge, fallback)
 - [ ] Cálculo automático de WACC
 - [ ] Proyecciones inteligentes basadas en histórico
 - [ ] Análisis de sensibilidad (heat maps r vs g)

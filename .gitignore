@@ -38,3 +38,6 @@ reports_output/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Environment variables
+.env

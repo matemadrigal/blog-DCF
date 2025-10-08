@@ -8,6 +8,7 @@ from datetime import date, timedelta, datetime
 
 from src.dcf.model import dcf_value
 from src.cache import DCFCache
+from src.data_providers.aggregator import get_data_aggregator
 
 
 st.set_page_config(
@@ -20,13 +21,14 @@ st.markdown(
 )
 
 
-# Initialize cache
+# Initialize cache and data aggregator
 @st.cache_resource
 def get_cache():
     return DCFCache()
 
 
 cache = get_cache()
+aggregator = get_data_aggregator()
 
 
 # Sidebar inputs
@@ -34,7 +36,30 @@ st.sidebar.header("Parámetros")
 ticker = st.sidebar.text_input("Ticker (Yahoo Finance)", value="AAPL").upper()
 
 st.sidebar.subheader("Parámetros DCF")
-mode = st.sidebar.radio("Modo FCF", ["Manual", "Autocompletar"], index=0)
+
+# Data source selection
+available_providers = aggregator.get_available_providers()
+if len(available_providers) > 1:
+    st.sidebar.info(f"📡 Fuentes disponibles: {', '.join(available_providers)}")
+    data_strategy = st.sidebar.selectbox(
+        "Estrategia de datos",
+        ["best_quality", "first_available", "merge"],
+        format_func=lambda x: {
+            "best_quality": "Mejor Calidad",
+            "first_available": "Primera Disponible",
+            "merge": "Combinar Fuentes",
+        }[x],
+        help="best_quality: Compara todas las fuentes y elige la mejor\nfirst_available: Usa la primera que funcione\nmerge: Combina datos de múltiples fuentes",
+    )
+else:
+    data_strategy = "first_available"
+    st.sidebar.info(
+        f"📡 Usando: {available_providers[0] if available_providers else 'Yahoo Finance'}"
+    )
+
+mode = st.sidebar.radio(
+    "Modo FCF", ["Manual", "Autocompletar", "Multi-fuente"], index=0
+)
 years = st.sidebar.number_input(
     "Años de proyección", min_value=1, max_value=20, value=5
 )
@@ -116,24 +141,78 @@ st.subheader("📊 Proyecciones de Free Cash Flow")
 
 # Autofill logic
 autofill = []
-if mode == "Autocompletar":
+data_source_used = None
+
+if mode == "Multi-fuente":
+    # Use multi-source aggregator
+    with st.spinner("🔍 Buscando datos en múltiples fuentes..."):
+        financial_data = aggregator.get_financial_data(
+            ticker, years, strategy=data_strategy
+        )
+        if financial_data:
+            # Calculate or get FCF
+            fcf_data = financial_data.calculate_fcf()
+            if fcf_data:
+                autofill = fcf_data
+                data_source_used = financial_data.data_source
+
+                # Update company info if available
+                if financial_data.company_name:
+                    company_name = financial_data.company_name
+                if financial_data.current_price:
+                    current_price = financial_data.current_price
+                if financial_data.shares_outstanding and shares == 0:
+                    shares = financial_data.shares_outstanding
+
+                # Show data quality metrics
+                st.info(
+                    f"📊 **Fuente**: {financial_data.data_source} | "
+                    f"**Completitud**: {financial_data.data_completeness:.1f}% | "
+                    f"**Confianza**: {financial_data.confidence_score:.1f}%"
+                )
+            else:
+                st.warning(
+                    "⚠️ No se pudieron calcular FCF desde multi-fuentes. Usando Yahoo Finance..."
+                )
+
+elif mode == "Autocompletar":
+    # Original Yahoo Finance only
     try:
-        t = yf.Ticker(ticker)
-        cashflow = t.cashflow
-        if not cashflow.empty:
-            cols = list(cashflow.columns)[:years]
-            for c in cols:
-                op = None
-                capex = None
-                for idx in cashflow.index:
-                    name = str(idx).lower()
-                    if "operat" in name and op is None:
-                        op = cashflow.loc[idx, c]
-                    if "capital" in name and capex is None:
-                        capex = cashflow.loc[idx, c]
-                if op is not None and capex is not None:
-                    autofill.append(float(op - capex))
-    except Exception:
+        with st.spinner("🔍 Obteniendo datos desde Yahoo Finance..."):
+            t = yf.Ticker(ticker)
+            cashflow = t.cashflow
+            if not cashflow.empty:
+                cols = list(cashflow.columns)[:years]
+                for c in cols:
+                    op = None
+                    capex = None
+                    for idx in cashflow.index:
+                        name = str(idx).lower()
+                        # Look for Operating Cash Flow
+                        if "operating cash flow" in name and op is None:
+                            op = cashflow.loc[idx, c]
+                        # Look for Capital Expenditure (not stock repurchase!)
+                        if (
+                            "capital expenditure" in name or "purchase of ppe" in name
+                        ) and capex is None:
+                            capex = cashflow.loc[idx, c]
+                    if op is not None and capex is not None:
+                        # CAPEX is usually negative in Yahoo Finance, so we use abs
+                        autofill.append(float(op - abs(capex)))
+                data_source_used = "Yahoo Finance"
+
+                if autofill:
+                    st.success(
+                        f"✅ Autocompletado {len(autofill)} años de FCF desde Yahoo Finance"
+                    )
+                else:
+                    st.warning(
+                        "⚠️ No se encontraron datos de Operating Cash Flow y CAPEX"
+                    )
+            else:
+                st.warning(f"⚠️ No se encontraron datos de cash flow para {ticker}")
+    except Exception as e:
+        st.error(f"❌ Error al obtener datos: {str(e)}")
         autofill = []
 
 fcf_cols = st.columns(years)
