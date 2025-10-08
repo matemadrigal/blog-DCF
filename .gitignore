@@ -26,3 +26,15 @@ dist/
 
 # pip
 pip-wheel-metadata/
+
+# Database & cache
+data/
+*.db
+*.sqlite3
+
+# Generated reports
+reports_output/
+*.pdf
+
+# Streamlit
+.streamlit/secrets.toml
