@@ -8,6 +8,7 @@ from datetime import date, timedelta, datetime
 
 from src.dcf.model import dcf_value
 from src.dcf.enhanced_model import EnhancedDCFModel
+from src.dcf.wacc_calculator import WACCCalculator
 from src.dcf.projections import (
     predict_growth_rate_linear_regression,
     apply_growth_rates_to_base,
@@ -200,31 +201,73 @@ mode = st.sidebar.radio(
 use_enhanced_model = st.sidebar.checkbox(
     "🚀 Usar Modelo DCF Mejorado",
     value=True,
-    help="Modelo mejorado con:\n- Crecimiento escalonado (10-25%, 10-15%, 3-8%)\n- WACC 8.5%\n- Equity Value (EV + Cash - Debt)\n- Shares diluidas",
+    help="Modelo mejorado con:\n- Crecimiento escalonado realista\n- WACC dinámico (CAPM)\n- Equity Value (EV + Cash - Debt)\n- Shares diluidas",
 )
+
+# WACC calculation mode
+use_dynamic_wacc = st.sidebar.checkbox(
+    "📊 WACC Dinámico (CAPM + Deuda Real)",
+    value=True,
+    help="Calcula WACC usando CAPM basado en:\n- Beta de la empresa\n- Estructura de capital real\n- Costo de deuda ajustado por impuestos",
+)
+
+# Industry WACC option (only if dynamic WACC is enabled)
+use_industry_wacc = False
+if use_dynamic_wacc:
+    use_industry_wacc = st.sidebar.checkbox(
+        "🏭 Usar WACC de Industria (Damodaran)",
+        value=False,
+        help="Usa el WACC promedio de la industria según Damodaran.\nCada sector tiene un WACC diferente:\n• Software: 9.41%\n• Banks: 5.99%\n• Utilities: 5.69%\n• Etc.",
+    )
+
+# FCF normalization option
+normalize_fcf = st.sidebar.checkbox(
+    "🎯 Normalizar FCF Base",
+    value=True,
+    help="Usa promedio ponderado de FCF histórico en lugar del año más reciente.\nÚtil para empresas con flujos de caja volátiles.",
+)
+
+if normalize_fcf:
+    normalization_method = st.sidebar.selectbox(
+        "Método de normalización",
+        ["weighted_average", "average", "median", "current"],
+        format_func=lambda x: {
+            "weighted_average": "Promedio Ponderado (50%, 30%, 20%)",
+            "average": "Promedio Simple",
+            "median": "Mediana",
+            "current": "Año Actual (sin normalizar)",
+        }[x],
+        help="Método para calcular el FCF base normalizado",
+    )
+else:
+    normalization_method = "current"
 
 years = st.sidebar.number_input(
     "Años de proyección", min_value=1, max_value=20, value=5
 )
 
 if use_enhanced_model:
-    r = st.sidebar.number_input(
-        "WACC (Tasa de descuento)",
-        min_value=0.0,
-        max_value=0.30,
-        value=0.085,
-        step=0.005,
-        format="%.3f",
-        help="Weighted Average Cost of Capital (defecto 8.5%)",
-    )
+    if not use_dynamic_wacc:
+        r = st.sidebar.number_input(
+            "WACC (Tasa de descuento)",
+            min_value=0.0,
+            max_value=0.30,
+            value=0.08,
+            step=0.005,
+            format="%.3f",
+            help="Weighted Average Cost of Capital (defecto 8%)",
+        )
+    else:
+        r = None  # Will be calculated dynamically
+
     g = st.sidebar.number_input(
         "Crecimiento terminal (g)",
         min_value=0.0,
         max_value=0.10,
-        value=0.03,
+        value=0.035,
         step=0.005,
         format="%.3f",
-        help="Crecimiento perpetuo terminal (defecto 3%)",
+        help="Crecimiento perpetuo terminal (defecto 3.5%)",
     )
 else:
     r = st.sidebar.number_input(
@@ -491,15 +534,43 @@ elif mode == "Autocompletar":
 
 # Display base FCF information
 if base_fcf > 0:
-    st.info(
-        f"📊 **Año Base FCF**: ${base_fcf/1e9:.2f}B"
+    fcf_display = (
+        f"${base_fcf/1e9:.2f}B"
         if base_fcf > 1e9
-        else (
-            f"📊 **Año Base FCF**: ${base_fcf/1e6:.2f}M"
-            if base_fcf > 1e6
-            else f"📊 **Año Base FCF**: ${base_fcf:,.0f}"
-        )
+        else (f"${base_fcf/1e6:.2f}M" if base_fcf > 1e6 else f"${base_fcf:,.0f}")
     )
+
+    # Show historical FCF if available
+    if historical_fcf and len(historical_fcf) > 1:
+        hist_display = " | ".join(
+            [
+                f"${f/1e9:.1f}B" if f > 1e9 else f"${f/1e6:.1f}M"
+                for f in historical_fcf[:4]
+            ]
+        )
+        st.info(
+            f"📊 **FCF Base**: {fcf_display} | **Histórico** (últimos años): {hist_display}"
+        )
+
+        # Show normalization info if enabled
+        if normalize_fcf and normalization_method != "current":
+            from src.dcf.enhanced_model import EnhancedDCFModel
+
+            temp_model = EnhancedDCFModel()
+            normalized_fcf = temp_model.normalize_base_fcf(
+                historical_fcf, method=normalization_method
+            )
+            norm_display = (
+                f"${normalized_fcf/1e9:.2f}B"
+                if normalized_fcf > 1e9
+                else f"${normalized_fcf/1e6:.2f}M"
+            )
+            diff_pct = ((normalized_fcf - base_fcf) / base_fcf) * 100
+            st.success(
+                f"🎯 **FCF Normalizado** ({normalization_method}): {norm_display} ({diff_pct:+.1f}% vs año actual)"
+            )
+    else:
+        st.info(f"📊 **Año Base FCF**: {fcf_display}")
 
 # Growth rate inputs
 growth_rate_cols = st.columns(years)
@@ -548,10 +619,6 @@ fcf_inputs = apply_growth_rates_to_base(base_fcf, growth_rate_inputs)
 st.markdown("---")
 st.subheader("💰 Valoración DCF")
 
-if r <= g:
-    st.error("⚠️ La tasa de descuento (r) debe ser mayor que g. Ajusta los parámetros.")
-    st.stop()
-
 if base_fcf == 0:
     st.error("❌ Error en el cálculo: float division by zero")
     st.warning(
@@ -560,6 +627,86 @@ if base_fcf == 0:
     st.stop()
 
 try:
+    # Calculate dynamic WACC if enabled
+    wacc_components = None
+    terminal_growth_info = None
+    if use_enhanced_model and use_dynamic_wacc:
+        wacc_calc = WACCCalculator()
+        wacc_components = wacc_calc.calculate_wacc(
+            ticker,
+            use_net_debt=True,
+            adjust_for_growth=True,
+            use_industry_wacc=use_industry_wacc,
+        )
+        r = wacc_components["wacc"]
+
+        # Get company-specific terminal growth
+        terminal_growth_info = wacc_calc.calculate_company_terminal_growth(
+            ticker, use_company_specific=True
+        )
+        g_calculated = terminal_growth_info["terminal_growth"]
+
+        # Use the higher of user input or calculated
+        g = max(g, g_calculated)
+
+        # Display WACC breakdown
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("**📊 WACC Dinámico Calculado**")
+
+        # Show industry info if available
+        if wacc_components.get("using_industry_wacc"):
+            st.sidebar.success(f"🏭 WACC de Industria: {wacc_components['industry']}")
+            st.sidebar.metric(
+                "WACC",
+                f"{r:.2%}",
+                help=f"WACC promedio del sector {wacc_components['industry']}",
+            )
+            st.sidebar.caption(f"• Beta Industria: {wacc_components['beta']:.2f}")
+            st.sidebar.caption(
+                f"• Cost of Equity: {wacc_components['cost_of_equity']:.2%}"
+            )
+            st.sidebar.caption(
+                f"• E/V: {wacc_components['equity_weight']:.1%} | D/V: {wacc_components['debt_weight']:.1%}"
+            )
+        else:
+            st.sidebar.metric(
+                "WACC", f"{r:.2%}", help=f"Beta: {wacc_components['beta']:.2f}"
+            )
+            st.sidebar.caption(
+                f"• Cost of Equity: {wacc_components['cost_of_equity']:.2%}"
+            )
+            st.sidebar.caption(
+                f"• After-tax Cost of Debt: {wacc_components['after_tax_cost_of_debt']:.2%}"
+            )
+            st.sidebar.caption(
+                f"• E/V: {wacc_components['equity_weight']:.1%} | D/V: {wacc_components['debt_weight']:.1%}"
+            )
+
+            # Show industry WACC for comparison
+            if wacc_components.get("industry_wacc"):
+                st.sidebar.info(
+                    f"📊 WACC Industria ({wacc_components['industry']}): {wacc_components['industry_wacc']:.2%}"
+                )
+
+        # Show terminal growth calculation
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("**📈 Terminal Growth (g)**")
+        st.sidebar.metric("Terminal Growth", f"{g:.2%}")
+
+        if (
+            terminal_growth_info
+            and terminal_growth_info.get("method") == "company_specific"
+        ):
+            with st.sidebar.expander("🔍 Ver cálculo detallado"):
+                st.markdown(terminal_growth_info["justification"])
+
+    # Validate WACC and terminal growth
+    if r is None or r <= g:
+        st.error(
+            "⚠️ La tasa de descuento (r) debe ser mayor que g. Ajusta los parámetros."
+        )
+        st.stop()
+
     if use_enhanced_model:
         # Use Enhanced DCF Model
         enhanced_model = EnhancedDCFModel(wacc=r, terminal_growth=g)
@@ -577,6 +724,8 @@ try:
                 if mode == "Autocompletar" or mode == "Multi-fuente"
                 else growth_rate_inputs
             ),
+            normalize_base=normalize_fcf,
+            normalization_method=normalization_method,
         )
 
         fair_value_total = dcf_result["enterprise_value"]
