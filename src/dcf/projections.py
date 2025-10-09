@@ -29,7 +29,13 @@ def predict_growth_rate_linear_regression(
     fcf_history: List[float], years_to_predict: int = 5
 ) -> List[float]:
     """
-    Predict future growth rates using linear regression on historical growth rates.
+    Predict future growth rates using intelligent analysis of historical data.
+
+    Strategy:
+    1. Calculate historical growth rates
+    2. Use median growth (robust to outliers)
+    3. Apply conservative decay for projections
+    4. Never project persistent negative growth (use GDP floor)
 
     Args:
         fcf_history: List of historical FCF values (at least 2 values required)
@@ -39,51 +45,71 @@ def predict_growth_rate_linear_regression(
         List of predicted growth rates for each future year
     """
     if len(fcf_history) < 2:
-        # Not enough data, return conservative 2% growth
-        return [0.02] * years_to_predict
+        # Not enough data, return conservative GDP growth
+        return [0.025] * years_to_predict
 
     # Calculate historical growth rates
     growth_rates = calculate_historical_growth_rates(fcf_history)
 
     if len(growth_rates) == 0:
         # All zeros or single value, return conservative growth
-        return [0.02] * years_to_predict
+        return [0.025] * years_to_predict
 
-    # Simple linear regression on growth rates
-    # x = year index, y = growth rate
-    x = np.arange(len(growth_rates))
-    y = np.array(growth_rates)
+    # Use median for robustness (less sensitive to outliers)
+    median_growth = float(np.median(growth_rates))
 
-    # Handle outliers by capping extreme values
-    y = np.clip(y, -0.5, 2.0)  # Cap between -50% and +200%
+    # Calculate average for recent trend
+    recent_growth = (
+        float(np.mean(growth_rates[-3:])) if len(growth_rates) >= 3 else median_growth
+    )
 
-    # Linear regression: y = mx + b
-    if len(x) > 1:
-        m, b = np.polyfit(x, y, 1)
+    # Conservative floor: GDP growth rate (2.5%)
+    GDP_FLOOR = 0.025
+
+    # If historical growth is negative, gradually converge to GDP floor
+    if median_growth < 0:
+        # Start from current trend but converge to GDP floor
+        predicted_rates = []
+        for i in range(years_to_predict):
+            # Exponential decay towards GDP floor
+            weight = np.exp(-i * 0.5)  # Faster convergence
+            predicted_rate = recent_growth * weight + GDP_FLOOR * (1 - weight)
+
+            # Floor at 0% (no company should have persistent negative FCF growth in DCF)
+            predicted_rate = max(0.0, predicted_rate)
+            predicted_rates.append(predicted_rate)
+
+        return predicted_rates
+
+    # If historical growth is positive, use tiered decay
     else:
-        # Single growth rate, use it as baseline
-        m = 0
-        b = y[0]
+        # High growth gradually decays to sustainable terminal rate
+        predicted_rates = []
 
-    # Predict future growth rates
-    predicted_rates = []
-    for i in range(years_to_predict):
-        future_x = len(growth_rates) + i
-        predicted_rate = m * future_x + b
+        # Start from recent growth
+        base_rate = max(recent_growth, median_growth)
 
-        # Apply conservative constraints
-        # Growth rates shouldn't be too extreme
-        predicted_rate = max(-0.2, min(0.3, predicted_rate))  # Between -20% and +30%
+        # Cap extreme growth
+        base_rate = min(0.40, base_rate)  # Max 40% (unrealistic beyond this)
 
-        # If trend is negative, gradually converge to 0% (no growth)
-        if m < 0 and predicted_rate < 0:
-            # Gradually reduce negative impact
-            decay_factor = 1 / (i + 1)
-            predicted_rate = predicted_rate * decay_factor
+        for i in range(years_to_predict):
+            # Decay formula: higher growth decays faster
+            if base_rate > 0.30:  # Very high growth (>30%)
+                decay = 0.85 ** (i + 1)  # Fast decay
+            elif base_rate > 0.15:  # High growth (15-30%)
+                decay = 0.90 ** (i + 1)  # Medium decay
+            else:  # Moderate growth (<15%)
+                decay = 0.95 ** (i + 1)  # Slow decay
 
-        predicted_rates.append(predicted_rate)
+            predicted_rate = base_rate * decay
 
-    return predicted_rates
+            # Converge towards sustainable terminal growth (3-5%)
+            terminal_rate = 0.04  # 4% sustainable long-term
+            predicted_rate = max(predicted_rate, terminal_rate)
+
+            predicted_rates.append(predicted_rate)
+
+        return predicted_rates
 
 
 def apply_growth_rates_to_base(
