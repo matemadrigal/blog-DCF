@@ -154,9 +154,23 @@ class HTMLReportGenerator:
 
         # Get valuation multiples if available
         multiples = dcf_result.get("valuation_metrics", {})
-        ev_ebitda = multiples.get("ev_ebitda", "N/A")
-        pe = multiples.get("pe_ratio", "N/A")
-        pb = multiples.get("pb_ratio", "N/A")
+
+        # Handle both dict and object types
+        if hasattr(multiples, "__dict__"):
+            # It's an object, convert to dict
+            ev_ebitda = getattr(multiples, "ev_ebitda", "N/A")
+            pe = getattr(multiples, "pe_ratio", "N/A")
+            pb = getattr(multiples, "pb_ratio", "N/A")
+        elif isinstance(multiples, dict):
+            # It's a dict
+            ev_ebitda = multiples.get("ev_ebitda", "N/A")
+            pe = multiples.get("pe_ratio", "N/A")
+            pb = multiples.get("pb_ratio", "N/A")
+        else:
+            # Fallback
+            ev_ebitda = "N/A"
+            pe = "N/A"
+            pb = "N/A"
 
         if isinstance(ev_ebitda, (int, float)):
             ev_ebitda = f"{ev_ebitda:.1f}"

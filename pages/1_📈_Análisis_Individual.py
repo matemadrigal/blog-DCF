@@ -1753,7 +1753,7 @@ with col2:
 
     with col_pdf:
         try:
-            from src.reports import generate_dcf_report
+            from src.reports import generate_dcf_report, ENHANCED_PDF_AVAILABLE
 
             if st.button("📥 Generar Informe PDF", use_container_width=True):
                 pdf_data = {
@@ -1765,7 +1765,10 @@ with col2:
                     "fcf_projections": fcf_inputs,
                 }
 
-                pdf_bytes = generate_dcf_report(ticker, company_name, pdf_data)
+                # Pass scenarios for enhanced PDF
+                pdf_bytes = generate_dcf_report(
+                    ticker, company_name, pdf_data, scenarios=scenarios
+                )
 
                 st.download_button(
                     label="⬇️ Descargar PDF",
@@ -1774,7 +1777,13 @@ with col2:
                     mime="application/pdf",
                     use_container_width=True,
                 )
-                st.success("✅ Informe PDF generado correctamente")
+
+                if ENHANCED_PDF_AVAILABLE:
+                    st.success(
+                        "✅ Informe PDF mejorado generado con gráficos y diseño profesional"
+                    )
+                else:
+                    st.success("✅ Informe PDF generado correctamente")
 
         except ImportError:
             st.info(
