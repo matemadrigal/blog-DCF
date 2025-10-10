@@ -232,21 +232,68 @@ with st.sidebar.expander("⚙️ Opciones Avanzadas (opcional)"):
     st.caption("El sistema usa valores óptimos por defecto")
 
     # WACC calculation method
-    st.markdown("**Método de cálculo WACC:**")
+    st.markdown("### 🎯 Método de Cálculo WACC")
+    st.markdown(
+        """
+        El WACC (Weighted Average Cost of Capital) es la tasa de descuento que se usa
+        para calcular el valor presente de los flujos de caja futuros.
+        """
+    )
+
     wacc_method = st.radio(
-        "Selecciona el método",
+        "Selecciona el método de cálculo:",
         ["company_specific", "industry_damodaran", "custom"],
         format_func=lambda x: {
-            "company_specific": "🔬 Calculado (CAPM + estructura capital real)",
-            "industry_damodaran": "🏭 Promedio industria (Damodaran)",
-            "custom": "✏️ Personalizado (manual)",
+            "company_specific": "🔬 Calculado por empresa (CAPM)",
+            "industry_damodaran": "🏭 Promedio de industria (Damodaran)",
+            "custom": "✏️ Manual (personalizado)",
         }[x],
-        help=(
-            "• **Calculado**: Usa beta, deuda y equity de la empresa específica\n"
-            "• **Industria Damodaran**: Usa WACC promedio del sector según Damodaran\n"
-            "• **Personalizado**: Ingresa tu propio WACC"
-        ),
+        index=0,  # Default: company_specific
     )
+
+    # Show detailed explanation based on selection
+    if wacc_method == "company_specific":
+        st.info(
+            """
+            **🔬 WACC Calculado (Método CAPM)**
+
+            Calcula el WACC específico de la empresa usando:
+            - Beta de la acción (riesgo sistemático)
+            - Estructura de capital real (deuda/equity)
+            - Cost of equity (CAPM): Re = Rf + β × (Rm - Rf)
+            - Cost of debt con tax shield
+            - Ajustes por beta alto para empresas de crecimiento
+
+            ✅ **Recomendado**: Para análisis detallado de empresas individuales
+            """
+        )
+    elif wacc_method == "industry_damodaran":
+        st.info(
+            """
+            **🏭 WACC Industria (Datos Damodaran)**
+
+            Usa el WACC promedio del sector según Aswath Damodaran (NYU Stern):
+            - Basado en promedios de industria actualizados
+            - Considera características típicas del sector
+            - Útil para comparación y benchmarking
+
+            ✅ **Recomendado**: Para comparación rápida o cuando faltan datos específicos
+            ⚠️  **Nota**: Para financieros se usa automáticamente (la deuda es parte del negocio)
+            """
+        )
+    else:  # custom
+        st.info(
+            """
+            **✏️ WACC Manual**
+
+            Ingresa tu propio valor de WACC si:
+            - Tienes una estimación propia
+            - Quieres probar diferentes escenarios
+            - Tienes información privilegiada del costo de capital
+
+            ⚠️ Asegúrate de que WACC > terminal growth (mínimo 4pp de diferencia)
+            """
+        )
 
     custom_wacc = None
     if wacc_method == "custom":
@@ -651,51 +698,62 @@ try:
         # Display WACC breakdown
         st.sidebar.markdown("---")
 
-        # Show WACC method being used
-        if wacc_method == "company_specific":
-            st.sidebar.markdown("**🔬 WACC Calculado (CAPM)**")
-        elif wacc_method == "industry_damodaran":
-            st.sidebar.markdown("**🏭 WACC Industria (Damodaran)**")
-        else:
-            st.sidebar.markdown("**✏️ WACC Personalizado**")
-
-        # Show industry info if available
+        # Show WACC method being used with clear header
         if wacc_components.get("using_industry_wacc"):
-            st.sidebar.success(f"Industria: {wacc_components['industry']}")
-            st.sidebar.metric(
-                "WACC",
-                f"{r:.2%}",
-                help=f"WACC promedio del sector {wacc_components['industry']}",
-            )
+            st.sidebar.markdown("### 🏭 WACC Industria (Damodaran)")
+            st.sidebar.success(f"📊 Sector: {wacc_components['industry']}")
+        elif wacc_method == "company_specific":
+            st.sidebar.markdown("### 🔬 WACC Calculado (CAPM)")
+            if wacc_components.get("sector"):
+                st.sidebar.info(f"📊 Sector: {wacc_components['sector']}")
+        else:
+            st.sidebar.markdown("### ✏️ WACC Personalizado")
+
+        # Show WACC value prominently
+        st.sidebar.metric(
+            "WACC (Tasa de Descuento)",
+            f"{r:.2%}",
+            help="Weighted Average Cost of Capital - Tasa usada para descontar flujos futuros",
+        )
+
+        # Show components based on method
+        if wacc_components.get("using_industry_wacc"):
+            # Industry WACC components
             st.sidebar.caption(f"• Beta Industria: {wacc_components['beta']:.2f}")
             st.sidebar.caption(
                 f"• Cost of Equity: {wacc_components['cost_of_equity']:.2%}"
             )
             st.sidebar.caption(
-                f"• E/V: {wacc_components['equity_weight']:.1%} | D/V: {wacc_components['debt_weight']:.1%}"
+                f"• Estructura Capital: E/V {wacc_components['equity_weight']:.1%} | D/V {wacc_components['debt_weight']:.1%}"
             )
         else:
-            st.sidebar.metric(
-                "WACC",
-                f"{r:.2%}",
-                help=f"Beta empresa: {wacc_components.get('beta', 'N/A')}",
-            )
-
+            # Company-specific WACC components
             if wacc_components.get("beta"):
+                st.sidebar.caption(f"• Beta Empresa: {wacc_components['beta']:.2f}")
                 st.sidebar.caption(
-                    f"• Cost of Equity: {wacc_components['cost_of_equity']:.2%}"
+                    f"• Cost of Equity (Re): {wacc_components['cost_of_equity']:.2%}"
                 )
                 st.sidebar.caption(
-                    f"• After-tax Cost of Debt: {wacc_components['after_tax_cost_of_debt']:.2%}"
+                    f"• Cost of Debt (Rd): {wacc_components['cost_of_debt']:.2%}"
                 )
                 st.sidebar.caption(
-                    f"• E/V: {wacc_components['equity_weight']:.1%} | D/V: {wacc_components['debt_weight']:.1%}"
+                    f"• After-tax Rd: {wacc_components['after_tax_cost_of_debt']:.2%}"
+                )
+                st.sidebar.caption(
+                    f"• Estructura Capital: E/V {wacc_components['equity_weight']:.1%} | D/V {wacc_components['debt_weight']:.1%}"
                 )
 
-                # Show industry WACC for comparison
+                # Show comparison with industry WACC
                 if wacc_components.get("industry_wacc"):
-                    st.sidebar.info(
-                        f"📊 Comparación - WACC Industria ({wacc_components['industry']}): {wacc_components['industry_wacc']:.2%}"
+                    diff = (r - wacc_components["industry_wacc"]) * 100
+                    st.sidebar.markdown("---")
+                    st.sidebar.markdown("**📊 Comparación con Industria:**")
+                    st.sidebar.metric(
+                        f"WACC Industria ({wacc_components.get('industry', 'Sector')})",
+                        f"{wacc_components['industry_wacc']:.2%}",
+                        delta=f"{diff:+.1f}pp",
+                        delta_color="inverse",
+                        help="Diferencia: WACC empresa vs promedio industria",
                     )
 
         # Show terminal growth calculation
