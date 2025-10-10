@@ -1635,28 +1635,148 @@ with col1:
         st.balloons()
 
 with col2:
-    try:
-        from src.reports import generate_dcf_report
+    # Report generation section
+    st.markdown("---")
+    st.subheader("📄 Generar Informe Profesional")
 
-        if st.button("📥 Descargar Informe PDF"):
-            pdf_data = {
-                "fair_value": fair_value_total,
-                "market_price": current_price,
-                "shares_outstanding": shares,
-                "discount_rate": r,
-                "growth_rate": g,
-                "fcf_projections": fcf_inputs,
-            }
+    with st.expander("⚙️ Opciones de Informe", expanded=False):
+        st.markdown("Personaliza tu informe con comentarios del analista:")
 
-            pdf_bytes = generate_dcf_report(ticker, company_name, pdf_data)
+        # Commentary inputs
+        summary_comment = st.text_area(
+            "💬 Resumen Ejecutivo (opcional)",
+            placeholder="Añade tu análisis y conclusiones principales...",
+            help="Este comentario aparecerá en el resumen ejecutivo del informe",
+        )
 
-            st.download_button(
-                label="⬇️ Descargar PDF",
-                data=pdf_bytes,
-                file_name=f"DCF_Report_{ticker}_{date.today().isoformat()}.pdf",
-                mime="application/pdf",
+        multiples_comment = st.text_area(
+            "📊 Comentario sobre Múltiplos (opcional)",
+            placeholder="Tu análisis sobre la valoración relativa...",
+            help="Comenta sobre los múltiplos de valoración (P/E, EV/EBITDA, P/B)",
+        )
+
+        # Additional analyst notes
+        st.markdown("**📝 Notas Adicionales del Analista:**")
+
+        num_notes = st.number_input(
+            "Número de notas",
+            min_value=0,
+            max_value=5,
+            value=0,
+            help="Añade notas adicionales con títulos personalizados",
+        )
+
+        analyst_notes = []
+        for i in range(int(num_notes)):
+            col_note1, col_note2 = st.columns([1, 3])
+            with col_note1:
+                tone = st.selectbox(
+                    f"Tono {i+1}",
+                    ["neutral", "positive", "negative"],
+                    key=f"tone_{i}",
+                    format_func=lambda x: {
+                        "neutral": "ℹ️ Neutral",
+                        "positive": "✅ Positivo",
+                        "negative": "⚠️ Riesgo",
+                    }[x],
+                )
+            with col_note2:
+                note_title = st.text_input(f"Título nota {i+1}", key=f"note_title_{i}")
+                note_text = st.text_area(
+                    f"Contenido nota {i+1}",
+                    key=f"note_text_{i}",
+                    placeholder="Describe el punto clave...",
+                )
+                if note_title and note_text:
+                    analyst_notes.append(
+                        {"title": note_title, "text": note_text, "tone": tone}
+                    )
+
+    # Build commentary dict
+    commentary = None
+    if summary_comment or multiples_comment or analyst_notes:
+        commentary = {
+            "summary": summary_comment if summary_comment else None,
+            "multiples": multiples_comment if multiples_comment else None,
+            "notes": analyst_notes,
+        }
+
+    # Generate report buttons
+    col_html, col_pdf = st.columns(2)
+
+    with col_html:
+        if st.button("📄 Generar Informe HTML", use_container_width=True):
+            try:
+                from src.reports.html_report_generator import HTMLReportGenerator
+
+                generator = HTMLReportGenerator()
+
+                # Build DCF result dict
+                dcf_result_data = {
+                    "fair_value_per_share": fair_value_per_share,
+                    "enterprise_value": fair_value_total,
+                    "equity_value": fair_value_total - total_debt + cash,
+                    "wacc": r,
+                    "terminal_growth": g,
+                    "projected_fcf": fcf_inputs,
+                    "growth_rates": growth_rate_inputs,
+                    "diluted_shares": shares,
+                    "cash": cash,
+                    "debt": total_debt,
+                }
+
+                # Add valuation metrics if available
+                if "valuation_metrics" in locals():
+                    dcf_result_data["valuation_metrics"] = valuation_metrics
+
+                # Generate HTML
+                html_content = generator.generate_report(
+                    ticker=ticker,
+                    company_name=company_name,
+                    dcf_result=dcf_result_data,
+                    scenarios=scenarios,
+                    market_price=current_price,
+                    commentary=commentary,
+                )
+
+                st.download_button(
+                    label="⬇️ Descargar HTML",
+                    data=html_content,
+                    file_name=f"DCF_Report_{ticker}_{date.today().isoformat()}.html",
+                    mime="text/html",
+                    use_container_width=True,
+                )
+                st.success("✅ Informe HTML generado correctamente")
+
+            except Exception as e:
+                st.error(f"Error generando informe HTML: {str(e)}")
+
+    with col_pdf:
+        try:
+            from src.reports import generate_dcf_report
+
+            if st.button("📥 Generar Informe PDF", use_container_width=True):
+                pdf_data = {
+                    "fair_value": fair_value_total,
+                    "market_price": current_price,
+                    "shares_outstanding": shares,
+                    "discount_rate": r,
+                    "growth_rate": g,
+                    "fcf_projections": fcf_inputs,
+                }
+
+                pdf_bytes = generate_dcf_report(ticker, company_name, pdf_data)
+
+                st.download_button(
+                    label="⬇️ Descargar PDF",
+                    data=pdf_bytes,
+                    file_name=f"DCF_Report_{ticker}_{date.today().isoformat()}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True,
+                )
+                st.success("✅ Informe PDF generado correctamente")
+
+        except ImportError:
+            st.info(
+                "💡 **Informe PDF no disponible**\n\nPara generar PDFs instala: `pip install reportlab`\n\nMientras tanto, usa el formato HTML que tiene todas las funcionalidades."
             )
-            st.success("✅ Informe PDF generado correctamente")
-
-    except ImportError:
-        st.warning("⚠️ Para generar PDFs instala: pip install reportlab")
