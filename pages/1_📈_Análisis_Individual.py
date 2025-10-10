@@ -1172,6 +1172,259 @@ try:
         )
         st.plotly_chart(fig_dcf, use_container_width=True)
 
+    # === RELATIVE VALUATION METRICS SECTION ===
+    st.markdown("---")
+    st.subheader("📊 Métricas de Valoración Relativa")
+    st.markdown(
+        """
+        Compara el valor intrínseco (DCF) con métricas de valoración relativa del mercado.
+        Estas métricas permiten comparar con empresas similares y promedios de la industria.
+        """
+    )
+
+    # Calculate valuation metrics
+    with st.spinner("Calculando métricas de valoración relativa..."):
+        try:
+            from src.dcf.valuation_metrics import ValuationMetricsCalculator
+
+            metrics_calculator = ValuationMetricsCalculator()
+            valuation_metrics = metrics_calculator.calculate_all_metrics(ticker)
+
+            # Display key metrics
+            st.markdown("### 🎯 Métricas Clave")
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+                if valuation_metrics.ev_ebitda:
+                    st.metric(
+                        "EV/EBITDA",
+                        f"{valuation_metrics.ev_ebitda:.2f}x",
+                        help="Enterprise Value / EBITDA - Múltiplo de valoración operativa",
+                    )
+                else:
+                    st.metric(
+                        "EV/EBITDA", "N/A", help="EBITDA no disponible o negativo"
+                    )
+
+            with col2:
+                if valuation_metrics.pe_ratio:
+                    st.metric(
+                        "P/E Ratio",
+                        f"{valuation_metrics.pe_ratio:.2f}x",
+                        help="Price to Earnings - Múltiplo de valoración por beneficios",
+                    )
+                else:
+                    st.metric("P/E Ratio", "N/A", help="EPS no disponible o negativo")
+
+            with col3:
+                if valuation_metrics.pb_ratio:
+                    st.metric(
+                        "P/B Ratio",
+                        f"{valuation_metrics.pb_ratio:.2f}x",
+                        help="Price to Book - Múltiplo sobre valor contable",
+                    )
+                else:
+                    st.metric("P/B Ratio", "N/A", help="Valor contable no disponible")
+
+            with col4:
+                if valuation_metrics.enterprise_value:
+                    ev_display = (
+                        f"${valuation_metrics.enterprise_value/1e9:.2f}B"
+                        if valuation_metrics.enterprise_value > 1e9
+                        else f"${valuation_metrics.enterprise_value/1e6:.2f}M"
+                    )
+                    st.metric(
+                        "Enterprise Value",
+                        ev_display,
+                        help="Market Cap + Debt - Cash",
+                    )
+
+            # Show interpretations
+            st.markdown("### 📈 Interpretación de Múltiplos")
+
+            interpretations = metrics_calculator.get_valuation_interpretation(
+                valuation_metrics
+            )
+
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                st.markdown("**EV/EBITDA:**")
+                st.info(interpretations.get("ev_ebitda", "N/A"))
+                if valuation_metrics.ev_ebitda:
+                    st.caption(
+                        "Rangos típicos: <10 (baja), 10-15 (normal), >15 (alta/crecimiento)"
+                    )
+
+            with col2:
+                st.markdown("**P/E Ratio:**")
+                st.info(interpretations.get("pe_ratio", "N/A"))
+                if valuation_metrics.pe_ratio:
+                    st.caption(
+                        "Rangos típicos: <15 (baja), 15-25 (normal), >25 (alta/crecimiento)"
+                    )
+
+            with col3:
+                st.markdown("**P/B Ratio:**")
+                st.info(interpretations.get("pb_ratio", "N/A"))
+                if valuation_metrics.pb_ratio:
+                    st.caption("Rangos típicos: <1 (baja), 1-3 (normal), >3 (premium)")
+
+            # Comparison with DCF
+            st.markdown("---")
+            st.markdown("### ⚖️ Comparación: DCF vs Métricas Relativas")
+
+            if fair_value_per_share > 0:
+                comparison = metrics_calculator.compare_with_dcf(
+                    dcf_fair_value=fair_value_per_share,
+                    current_price=current_price,
+                    metrics=valuation_metrics,
+                )
+
+                # Show comparison summary
+                col1, col2 = st.columns([1, 2])
+
+                with col1:
+                    st.markdown("**Señales de Valoración:**")
+                    st.success(comparison["dcf_signal"])
+
+                    for signal in comparison["relative_signals"]:
+                        st.info(signal)
+
+                with col2:
+                    st.markdown("**Consenso de Valoración:**")
+                    consensus = comparison["consensus"]
+
+                    if "COMPRA FUERTE" in consensus:
+                        st.success(consensus)
+                    elif "COMPRA" in consensus:
+                        st.success(consensus)
+                    elif "NEUTRAL" in consensus:
+                        st.warning(consensus)
+                    else:
+                        st.error(consensus)
+
+                    # Additional details
+                    st.caption(
+                        f"DCF Fair Value: ${comparison['dcf_fair_value']:.2f} | "
+                        f"Upside DCF: {comparison['dcf_upside']:+.1f}%"
+                    )
+
+                # Visualization: Comparison chart
+                st.markdown("---")
+                st.markdown("### 📊 Comparación Visual: DCF vs Precio de Mercado")
+
+                fig_comparison = go.Figure()
+
+                # Calculate implied values from multiples (if available)
+                comparison_data = [
+                    ("Precio Actual", current_price, "#1f77b4"),
+                    ("Fair Value (DCF)", fair_value_per_share, "#ff7f0e"),
+                ]
+
+                # Add metric bars
+                for label, value, color in comparison_data:
+                    fig_comparison.add_trace(
+                        go.Bar(
+                            name=label,
+                            x=[label],
+                            y=[value],
+                            marker_color=color,
+                            text=f"${value:.2f}",
+                            textposition="outside",
+                        )
+                    )
+
+                fig_comparison.update_layout(
+                    title="Comparación de Valoración",
+                    yaxis_title="Precio por Acción ($)",
+                    showlegend=False,
+                    height=400,
+                )
+
+                st.plotly_chart(fig_comparison, use_container_width=True)
+
+            # Detailed metrics table
+            with st.expander("🔍 Ver detalles completos de métricas"):
+                st.markdown("**Componentes del Enterprise Value:**")
+
+                detail_cols = st.columns(4)
+                with detail_cols[0]:
+                    if valuation_metrics.market_cap:
+                        mc_display = (
+                            f"${valuation_metrics.market_cap/1e9:.2f}B"
+                            if valuation_metrics.market_cap > 1e9
+                            else f"${valuation_metrics.market_cap/1e6:.2f}M"
+                        )
+                        st.metric("Market Cap", mc_display)
+
+                with detail_cols[1]:
+                    if valuation_metrics.total_debt is not None:
+                        debt_display = (
+                            f"${valuation_metrics.total_debt/1e9:.2f}B"
+                            if valuation_metrics.total_debt > 1e9
+                            else f"${valuation_metrics.total_debt/1e6:.2f}M"
+                        )
+                        st.metric("Deuda Total", debt_display)
+
+                with detail_cols[2]:
+                    if valuation_metrics.cash_and_equivalents is not None:
+                        cash_display = (
+                            f"${valuation_metrics.cash_and_equivalents/1e9:.2f}B"
+                            if valuation_metrics.cash_and_equivalents > 1e9
+                            else f"${valuation_metrics.cash_and_equivalents/1e6:.2f}M"
+                        )
+                        st.metric("Cash & Equivalents", cash_display)
+
+                with detail_cols[3]:
+                    if valuation_metrics.enterprise_value:
+                        ev_display = (
+                            f"${valuation_metrics.enterprise_value/1e9:.2f}B"
+                            if valuation_metrics.enterprise_value > 1e9
+                            else f"${valuation_metrics.enterprise_value/1e6:.2f}M"
+                        )
+                        st.metric("Enterprise Value", ev_display)
+
+                st.markdown("---")
+                st.markdown("**Métricas del Income Statement:**")
+
+                income_cols = st.columns(3)
+                with income_cols[0]:
+                    if valuation_metrics.ebitda:
+                        ebitda_display = (
+                            f"${valuation_metrics.ebitda/1e9:.2f}B"
+                            if valuation_metrics.ebitda > 1e9
+                            else f"${valuation_metrics.ebitda/1e6:.2f}M"
+                        )
+                        st.metric("EBITDA", ebitda_display)
+
+                with income_cols[1]:
+                    if valuation_metrics.net_income:
+                        ni_display = (
+                            f"${valuation_metrics.net_income/1e9:.2f}B"
+                            if valuation_metrics.net_income > 1e9
+                            else f"${valuation_metrics.net_income/1e6:.2f}M"
+                        )
+                        st.metric("Net Income", ni_display)
+
+                with income_cols[2]:
+                    if valuation_metrics.eps:
+                        st.metric("EPS (Diluted)", f"${valuation_metrics.eps:.2f}")
+
+                st.markdown("---")
+                st.caption(f"Fuente de datos: {valuation_metrics.data_source}")
+                st.caption(
+                    f"Fecha de cálculo: {valuation_metrics.calculation_date.strftime('%Y-%m-%d %H:%M')}"
+                )
+
+        except Exception as e:
+            st.error(f"❌ Error al calcular métricas de valoración: {str(e)}")
+            st.info(
+                "Las métricas de valoración relativa requieren datos completos de la empresa. "
+                "Algunos valores pueden no estar disponibles para este ticker."
+            )
+
     # Fair Value vs Market Price Chart
     st.markdown("---")
     st.subheader("📊 Fair Value vs Precio de Mercado (Histórico)")
