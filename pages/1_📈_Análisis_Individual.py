@@ -633,14 +633,20 @@ try:
         )
         r = wacc_components["wacc"]
 
-        # Get company-specific terminal growth
+        # Get company-specific terminal growth with WACC for spread validation
         terminal_growth_info = wacc_calc.calculate_company_terminal_growth(
-            ticker, use_company_specific=True
+            ticker,
+            use_company_specific=True,
+            wacc=r,  # Pass WACC for spread validation
+            validate_spread=True,  # Ensure minimum 4pp spread
         )
         g_calculated = terminal_growth_info["terminal_growth"]
 
-        # Use the higher of user input or calculated
-        g = max(g, g_calculated)
+        # If user has NOT customized g, use calculated value
+        # If user HAS customized g, use their value
+        if not use_custom_g:
+            g = g_calculated  # Use calculated value when not customized
+        # else: g already has custom value from user input
 
         # Display WACC breakdown
         st.sidebar.markdown("---")
@@ -696,6 +702,22 @@ try:
         st.sidebar.markdown("---")
         st.sidebar.markdown("**📈 Terminal Growth (g)**")
         st.sidebar.metric("Terminal Growth", f"{g:.2%}")
+
+        # Show if spread was adjusted
+        if terminal_growth_info and terminal_growth_info.get("spread_adjusted"):
+            st.sidebar.warning(
+                f"⚠️ Ajustado por spread: {terminal_growth_info['g_before_spread_adjustment']:.2%} → {g:.2%}"
+            )
+            st.sidebar.caption("(Spread mínimo: 4.0pp)")
+
+        # Show if WACC floor was applied
+        if wacc_components and wacc_components.get("floor_applied"):
+            st.sidebar.warning(
+                f"⚠️ WACC floor aplicado: {wacc_components['wacc_before_floor']:.2%} → {r:.2%}"
+            )
+            st.sidebar.caption(
+                f"(Floor {wacc_components['sector']}: {wacc_components['wacc_floor']:.2%})"
+            )
 
         if (
             terminal_growth_info
