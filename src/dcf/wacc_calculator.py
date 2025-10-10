@@ -244,6 +244,30 @@ class WACCCalculator:
                 "equity_risk_premium": self.market_return - self.risk_free_rate,
             }
 
+        # OPTION 1.5: Use industry WACC for Financial Services automatically
+        # AJUSTADO: Para financieros, usar WACC de industria automáticamente
+        # La deuda es parte del negocio, no debe penalizarse
+        try:
+            import yfinance as yf
+
+            stock = yf.Ticker(ticker)
+            sector = stock.info.get("sector", "")
+
+            if (
+                sector == "Financial Services"
+                and self.use_damodaran
+                and not use_industry_wacc
+            ):
+                # Auto-redirect to industry WACC for financials
+                return self.calculate_wacc(
+                    ticker,
+                    use_net_debt=use_net_debt,
+                    adjust_for_growth=False,  # Don't adjust for financials
+                    use_industry_wacc=True,
+                )
+        except Exception:
+            pass  # Continue with company-specific calculation
+
         # OPTION 2: Calculate company-specific WACC (current method)
         # Get capital structure
         market_cap, total_debt, cash, interest_expense = self.get_capital_structure(
@@ -338,9 +362,46 @@ class WACCCalculator:
         if self.use_damodaran:
             industry_data = DamodaranData.get_industry_data(ticker)
 
+        # Apply sector-specific WACC floors to avoid underestimation
+        # AJUSTADO: Nuevos floors para evitar valoraciones infladas
+        import yfinance as yf
+
+        try:
+            stock = yf.Ticker(ticker)
+            sector = stock.info.get("sector", "")
+        except Exception:
+            sector = ""
+
+        sector_floors = {
+            "Technology": 0.075,  # 7.5%
+            "Healthcare": 0.065,  # 6.5%
+            "Consumer Defensive": 0.060,  # 6.0%
+            "Consumer Cyclical": 0.070,  # 7.0%
+            "Financial Services": 0.070,  # 7.0%
+            "Industrials": 0.070,  # 7.0%
+            "Energy": 0.070,  # 7.0%
+            "Utilities": 0.060,  # 6.0%
+            "Real Estate": 0.065,  # 6.5%
+            "Communication Services": 0.070,  # 7.0%
+            "Basic Materials": 0.070,  # 7.0%
+        }
+
+        wacc_floor = sector_floors.get(sector, 0.065)  # Default 6.5%
+        wacc_before_floor = wacc_adjusted
+
+        if wacc_adjusted < wacc_floor:
+            wacc_adjusted = wacc_floor
+            floor_applied = True
+        else:
+            floor_applied = False
+
         return {
             "wacc": wacc_adjusted,
             "wacc_unadjusted": wacc,
+            "wacc_before_floor": wacc_before_floor if floor_applied else None,
+            "floor_applied": floor_applied,
+            "wacc_floor": wacc_floor,
+            "sector": sector,
             "cost_of_equity": cost_of_equity,
             "cost_of_debt": cost_of_debt,
             "after_tax_cost_of_debt": cost_of_debt * (1 - self.tax_rate),
@@ -363,7 +424,11 @@ class WACCCalculator:
         }
 
     def calculate_company_terminal_growth(
-        self, ticker: str, use_company_specific: bool = True
+        self,
+        ticker: str,
+        use_company_specific: bool = True,
+        wacc: Optional[float] = None,
+        validate_spread: bool = True,
     ) -> dict:
         """
         Calculate terminal growth rate specific to each company.
@@ -387,6 +452,8 @@ class WACCCalculator:
         Args:
             ticker: Stock ticker
             use_company_specific: If True, calculate based on company metrics
+            wacc: Optional WACC value for spread validation
+            validate_spread: If True and wacc provided, ensure minimum 4pp spread
 
         Returns:
             dict with terminal_growth, components, and justification
@@ -411,21 +478,23 @@ class WACCCalculator:
             gdp_base = 0.025  # 2.5% US GDP long-term
 
             # 1. ROE Premium (sustainable profitability)
+            # AJUSTADO: Reducido de 0.5% a 0.25% para ser más conservador
             roe = info.get("returnOnEquity", 0)
             if roe and roe > 0:
-                # ROE > 15% = strong (add 0.5%)
+                # ROE > 15% = strong (add 0.25%)
                 # ROE 10-15% = average (add 0%)
-                # ROE < 10% = weak (subtract 0.5%)
+                # ROE < 10% = weak (subtract 0.25%)
                 if roe > 0.15:
-                    roe_premium = 0.005
+                    roe_premium = 0.0025  # Reducido de 0.005 a 0.0025
                 elif roe > 0.10:
                     roe_premium = 0.0
                 else:
-                    roe_premium = -0.005
+                    roe_premium = -0.0025  # Reducido de -0.005 a -0.0025
             else:
                 roe_premium = 0.0
 
             # 2. Margin Premium (operational efficiency)
+            # AJUSTADO: Reducido de 0.5% a 0.25% para ser más conservador
             operating_margin = info.get("operatingMargins", 0)
             profit_margin = info.get("profitMargins", 0)
 
@@ -436,25 +505,26 @@ class WACCCalculator:
             )
 
             if avg_margin > 0.20:  # >20% margins = excellent
-                margin_premium = 0.005
+                margin_premium = 0.0025  # Reducido de 0.005 a 0.0025
             elif avg_margin > 0.10:  # 10-20% = good
-                margin_premium = 0.0025
+                margin_premium = 0.00125  # Reducido de 0.0025 a 0.00125
             elif avg_margin > 0.05:  # 5-10% = average
                 margin_premium = 0.0
             else:  # <5% = weak
-                margin_premium = -0.005
+                margin_premium = -0.0025  # Reducido de -0.005 a -0.0025
 
             # 3. Revenue Growth Trend (momentum)
+            # AJUSTADO: Reducido de 0.5% a 0.25% para ser más conservador
             revenue_growth = info.get("revenueGrowth", 0)
             if revenue_growth and revenue_growth > 0:
                 if revenue_growth > 0.15:  # >15% growth
-                    growth_premium = 0.005
+                    growth_premium = 0.0025  # Reducido de 0.005 a 0.0025
                 elif revenue_growth > 0.05:  # 5-15% growth
-                    growth_premium = 0.0025
+                    growth_premium = 0.00125  # Reducido de 0.0025 a 0.00125
                 else:  # <5% growth
                     growth_premium = 0.0
             else:
-                growth_premium = -0.005  # Negative growth
+                growth_premium = -0.0025  # Reducido de -0.005 a -0.0025
 
             # 4. Risk Adjustment (beta/volatility)
             beta = info.get("beta", 1.0)
@@ -480,7 +550,16 @@ class WACCCalculator:
             )
 
             # Apply constraints
-            g_terminal = max(0.015, min(0.045, g_terminal))  # 1.5% - 4.5%
+            # AJUSTADO: Reducido cap máximo de 4.5% a 3.5%
+            g_terminal = max(0.015, min(0.035, g_terminal))  # 1.5% - 3.5%
+
+            # Validate spread if WACC provided
+            spread_adjusted = False
+            g_terminal_before_spread = g_terminal
+            if wacc is not None and validate_spread:
+                g_terminal, spread_adjusted = self.validate_and_adjust_spread(
+                    wacc, g_terminal
+                )
 
             # Build justification
             components = {
@@ -500,11 +579,19 @@ class WACCCalculator:
                 components, g_terminal
             )
 
+            # Add spread adjustment info if applicable
+            if spread_adjusted:
+                justification += f"\n\n⚠️ **Ajuste por spread:** g ajustado de {g_terminal_before_spread:.2%} a {g_terminal:.2%} para mantener spread mínimo de 4.0pp con WACC"
+
             return {
                 "terminal_growth": g_terminal,
                 "method": "company_specific",
                 "components": components,
                 "justification": justification,
+                "spread_adjusted": spread_adjusted,
+                "g_before_spread_adjustment": (
+                    g_terminal_before_spread if spread_adjusted else None
+                ),
             }
 
         except Exception as e:
@@ -554,6 +641,36 @@ class WACCCalculator:
             lines.append(f"• Baja volatilidad (β={beta:.2f}): {abs(risk_adj):.2%}")
 
         return "\n".join(lines)
+
+    def validate_and_adjust_spread(
+        self, wacc: float, g_terminal: float, min_spread: float = 0.04
+    ) -> Tuple[float, bool]:
+        """
+        Validate that WACC - g spread is sufficient for model stability.
+
+        A spread that is too low can lead to inflated valuations and
+        mathematical instability in the Gordon Growth Model.
+
+        Args:
+            wacc: Weighted Average Cost of Capital
+            g_terminal: Terminal growth rate
+            min_spread: Minimum acceptable spread (default 4.0pp = 0.04)
+
+        Returns:
+            Tuple of (adjusted_g_terminal, was_adjusted)
+        """
+        spread = wacc - g_terminal
+
+        if spread < min_spread:
+            # Adjust g_terminal downward to meet minimum spread
+            g_adjusted = wacc - min_spread
+
+            # Ensure g doesn't go below reasonable minimum (1.5%)
+            g_adjusted = max(0.015, g_adjusted)
+
+            return g_adjusted, True
+        else:
+            return g_terminal, False
 
     def get_sector_terminal_growth(self, ticker: str) -> float:
         """
