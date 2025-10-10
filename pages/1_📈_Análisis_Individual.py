@@ -1765,9 +1765,13 @@ with col2:
                     "fcf_projections": fcf_inputs,
                 }
 
-                # Pass scenarios for enhanced PDF
+                # Pass scenarios and commentary for enhanced PDF
                 pdf_bytes = generate_dcf_report(
-                    ticker, company_name, pdf_data, scenarios=scenarios
+                    ticker,
+                    company_name,
+                    pdf_data,
+                    scenarios=scenarios,
+                    commentary=commentary,
                 )
 
                 st.download_button(

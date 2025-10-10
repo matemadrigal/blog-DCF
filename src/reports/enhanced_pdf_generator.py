@@ -156,22 +156,52 @@ if REPORTLAB_AVAILABLE:
                 )
             )
 
+            # Executive summary box
+            self.styles.add(
+                ParagraphStyle(
+                    name="ExecutiveSummary",
+                    parent=self.styles["Normal"],
+                    fontSize=10,
+                    textColor=self.COLORS["dark"],
+                    alignment=TA_JUSTIFY,
+                    spaceBefore=8,
+                    spaceAfter=8,
+                    leftIndent=12,
+                    rightIndent=12,
+                )
+            )
+
+            # Analyst note
+            self.styles.add(
+                ParagraphStyle(
+                    name="AnalystNote",
+                    parent=self.styles["Normal"],
+                    fontSize=9,
+                    textColor=self.COLORS["dark"],
+                    alignment=TA_JUSTIFY,
+                    spaceBefore=6,
+                    leftIndent=10,
+                )
+            )
+
         def generate_report(
             self,
             ticker: str,
             company_name: str,
             dcf_data: Dict[str, Any],
             scenarios: Optional[Dict[str, Any]] = None,
+            commentary: Optional[Dict[str, Any]] = None,
             output_path: Optional[str] = None,
         ) -> bytes:
             """
-            Generate enhanced PDF report with charts.
+            Generate enhanced PDF report with charts and analyst commentary.
 
             Args:
                 ticker: Stock ticker
                 company_name: Company name
                 dcf_data: DCF calculation data
                 scenarios: Optional scenario analysis
+                commentary: Optional analyst commentary (summary, multiples, notes)
                 output_path: Optional output path
 
             Returns:
@@ -202,18 +232,33 @@ if REPORTLAB_AVAILABLE:
 
             story.append(Spacer(1, 0.3 * inch))
 
+            # Executive summary from analyst (if provided)
+            if commentary and commentary.get("summary"):
+                story.extend(self._build_executive_summary(commentary["summary"]))
+
             # Parameters section
             story.extend(self._build_parameters_section(dcf_data))
 
             # FCF projections with chart
             story.extend(self._build_fcf_section(dcf_data))
 
+            # Value breakdown chart
+            story.extend(self._build_value_breakdown_chart(dcf_data))
+
             # Scenarios if available
             if scenarios:
                 story.extend(self._build_scenarios_section(scenarios, dcf_data))
 
-            # Value breakdown chart
-            story.extend(self._build_value_breakdown_chart(dcf_data))
+            # Sensitivity analysis chart
+            story.extend(self._build_sensitivity_analysis(dcf_data))
+
+            # Analyst notes (if provided)
+            if commentary and commentary.get("notes"):
+                story.extend(self._build_analyst_notes(commentary["notes"]))
+
+            # Multiples commentary (if provided)
+            if commentary and commentary.get("multiples"):
+                story.extend(self._build_multiples_section(commentary["multiples"]))
 
             # Disclaimer
             story.extend(self._build_disclaimer())
@@ -690,6 +735,201 @@ if REPORTLAB_AVAILABLE:
 
             return elements
 
+        def _build_executive_summary(self, summary: str) -> List:
+            """Build executive summary section with analyst commentary."""
+            elements = []
+
+            elements.append(
+                Paragraph("📋 Resumen Ejecutivo", self.styles["SectionTitle"])
+            )
+
+            # Create a styled box for the summary
+            summary_data = [[Paragraph(summary, self.styles["ExecutiveSummary"])]]
+            summary_table = Table(summary_data, colWidths=[6.5 * inch])
+            summary_table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, -1), self.COLORS["light"]),
+                        ("BOX", (0, 0), (-1, -1), 2, self.COLORS["primary"]),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                        ("TOPPADDING", (0, 0), (-1, -1), 12),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
+                    ]
+                )
+            )
+
+            elements.append(summary_table)
+            elements.append(Spacer(1, 0.2 * inch))
+
+            return elements
+
+        def _build_analyst_notes(self, notes: List[Dict[str, str]]) -> List:
+            """Build analyst notes section with multiple notes."""
+            elements = []
+
+            elements.append(
+                Paragraph("📝 Notas del Analista", self.styles["SectionTitle"])
+            )
+
+            for note in notes:
+                title = note.get("title", "")
+                text = note.get("text", "")
+                tone = note.get("tone", "neutral")
+
+                # Select color and icon based on tone
+                if tone == "positive":
+                    icon = "✅"
+                    color = self.COLORS["success"]
+                elif tone == "negative":
+                    icon = "⚠️"
+                    color = self.COLORS["danger"]
+                else:
+                    icon = "ℹ️"
+                    color = self.COLORS["primary"]
+
+                # Create note box
+                note_title = f"<b>{icon} {title}</b>"
+                note_content = [[Paragraph(note_title, self.styles["Normal"])]]
+                note_content.append([Paragraph(text, self.styles["AnalystNote"])])
+
+                note_table = Table(note_content, colWidths=[6.5 * inch])
+                note_table.setStyle(
+                    TableStyle(
+                        [
+                            ("BACKGROUND", (0, 0), (-1, 0), color),
+                            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                            ("BACKGROUND", (0, 1), (-1, -1), colors.white),
+                            ("BOX", (0, 0), (-1, -1), 1, color),
+                            ("INNERGRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                            ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                            ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                            ("TOPPADDING", (0, 0), (-1, -1), 8),
+                            ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+                        ]
+                    )
+                )
+
+                elements.append(note_table)
+                elements.append(Spacer(1, 0.15 * inch))
+
+            return elements
+
+        def _build_multiples_section(self, multiples_text: str) -> List:
+            """Build multiples commentary section."""
+            elements = []
+
+            elements.append(
+                Paragraph("📊 Análisis de Múltiplos", self.styles["SectionTitle"])
+            )
+
+            multiples_data = [[Paragraph(multiples_text, self.styles["AnalystNote"])]]
+            multiples_table = Table(multiples_data, colWidths=[6.5 * inch])
+            multiples_table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f0f9ff")),
+                        ("BOX", (0, 0), (-1, -1), 1, self.COLORS["secondary"]),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                        ("TOPPADDING", (0, 0), (-1, -1), 10),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+                    ]
+                )
+            )
+
+            elements.append(multiples_table)
+            elements.append(Spacer(1, 0.2 * inch))
+
+            return elements
+
+        def _build_sensitivity_analysis(self, dcf_data: Dict[str, Any]) -> List:
+            """Build sensitivity analysis matrix showing fair value at different WACC and g."""
+            elements = []
+
+            r = dcf_data.get("discount_rate", 0.08)
+            g = dcf_data.get("growth_rate", 0.03)
+            fcf_projections = dcf_data.get("fcf_projections", [])
+            shares = dcf_data.get("shares_outstanding", 1)
+
+            if not fcf_projections or shares == 0:
+                return elements
+
+            elements.append(
+                Paragraph("📈 Análisis de Sensibilidad", self.styles["SectionTitle"])
+            )
+            elements.append(
+                Paragraph(
+                    "Valor razonable por acción según diferentes combinaciones de WACC y tasa de crecimiento terminal:",
+                    self.styles["Normal"],
+                )
+            )
+            elements.append(Spacer(1, 0.1 * inch))
+
+            # Generate sensitivity matrix
+            wacc_range = [r - 0.02, r - 0.01, r, r + 0.01, r + 0.02]
+            g_range = [g - 0.01, g - 0.005, g, g + 0.005, g + 0.01]
+
+            # Build table data
+            header = ["WACC / g"] + [f"{g_val:.2%}" for g_val in g_range]
+            table_data = [header]
+
+            for wacc_val in wacc_range:
+                row = [f"{wacc_val:.2%}"]
+                for g_val in g_range:
+                    if wacc_val > g_val:
+                        # Calculate PV of explicit period
+                        pv_years = sum(
+                            fcf / ((1 + wacc_val) ** (i + 1))
+                            for i, fcf in enumerate(fcf_projections)
+                        )
+                        # Calculate terminal value
+                        terminal_fcf = fcf_projections[-1] * (1 + g_val)
+                        terminal_value = terminal_fcf / (wacc_val - g_val)
+                        pv_terminal = terminal_value / (
+                            (1 + wacc_val) ** len(fcf_projections)
+                        )
+                        fair_value_per_share = (pv_years + pv_terminal) / shares
+                        row.append(f"${fair_value_per_share:.2f}")
+                    else:
+                        row.append("N/A")
+                table_data.append(row)
+
+            # Create table
+            sens_table = Table(table_data, colWidths=[1 * inch] + [1 * inch] * 5)
+
+            # Base case coordinates (center of matrix)
+            base_row = 3  # r in the middle
+            base_col = 3  # g in the middle
+
+            sens_table.setStyle(
+                TableStyle(
+                    [
+                        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                        ("FONTNAME", (0, 1), (0, -1), "Helvetica-Bold"),
+                        ("FONTSIZE", (0, 0), (-1, -1), 8),
+                        ("BACKGROUND", (0, 0), (-1, 0), self.COLORS["primary"]),
+                        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                        ("BACKGROUND", (0, 1), (0, -1), self.COLORS["secondary"]),
+                        ("TEXTCOLOR", (0, 1), (0, -1), colors.white),
+                        (
+                            "BACKGROUND",
+                            (base_col, base_row),
+                            (base_col, base_row),
+                            colors.HexColor("#fef3c7"),
+                        ),
+                        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ]
+                )
+            )
+
+            elements.append(sens_table)
+            elements.append(Spacer(1, 0.2 * inch))
+
+            return elements
+
         def _build_disclaimer(self) -> List:
             """Build disclaimer section."""
             elements = []
@@ -717,6 +957,7 @@ if REPORTLAB_AVAILABLE:
         company_name: str,
         dcf_data: Dict[str, Any],
         scenarios: Optional[Dict[str, Any]] = None,
+        commentary: Optional[Dict[str, Any]] = None,
         output_path: Optional[str] = None,
     ) -> bytes:
         """
@@ -727,6 +968,7 @@ if REPORTLAB_AVAILABLE:
             company_name: Company name
             dcf_data: DCF data dictionary
             scenarios: Optional scenarios dict
+            commentary: Optional analyst commentary dict
             output_path: Optional output path
 
         Returns:
@@ -734,7 +976,7 @@ if REPORTLAB_AVAILABLE:
         """
         generator = EnhancedPDFReportGenerator()
         return generator.generate_report(
-            ticker, company_name, dcf_data, scenarios, output_path
+            ticker, company_name, dcf_data, scenarios, commentary, output_path
         )
 
 else:
