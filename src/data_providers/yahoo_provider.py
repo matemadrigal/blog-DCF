@@ -28,8 +28,8 @@ class YahooFinanceProvider(DataProvider):
             return False
 
     def get_priority(self) -> int:
-        """Yahoo Finance has high priority (free and reliable)."""
-        return 1
+        """Yahoo Finance has secondary priority (reliable backup source)."""
+        return 2  # Changed from 1 to 2 - now SECONDARY source (FMP is primary)
 
     def get_financial_data(
         self, ticker: str, years: int = 5

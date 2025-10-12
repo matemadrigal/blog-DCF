@@ -17,7 +17,7 @@ from src.dcf.projections import (
 )
 from src.cache import DCFCache
 from src.data_providers.aggregator import get_data_aggregator
-from src.companies import get_sp500_companies, get_all_sectors
+from src.data_providers.company_catalog import get_company_catalog
 from src.companies.fcf_scanner import get_fcf_scanner
 from src.utils.data_fetcher import (
     get_shares_outstanding,
@@ -53,6 +53,7 @@ def get_intelligent_selector():
 
 cache = get_cache()
 aggregator = get_data_aggregator()
+catalog = get_company_catalog()
 fcf_scanner = get_fcf_scanner()
 intelligent_selector = get_intelligent_selector()
 
@@ -75,9 +76,9 @@ else:
     # List with filters
     st.sidebar.subheader("Filtros")
 
-    # Get all companies
-    companies = get_sp500_companies()
-    all_sectors = get_all_sectors()
+    # Get all companies from catalog (374+ companies)
+    companies = catalog.get_all_companies()
+    all_sectors = catalog.get_sectors()
 
     # Search filter
     search_query = st.sidebar.text_input(

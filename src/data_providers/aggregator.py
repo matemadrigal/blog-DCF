@@ -9,6 +9,7 @@ from .base import DataProvider, FinancialData
 from .yahoo_provider import YahooFinanceProvider
 from .alpha_vantage_provider import AlphaVantageProvider
 from .fmp_provider import FinancialModelingPrepProvider
+from .iex_cloud_provider import IEXCloudProvider
 
 
 class DataAggregator:
@@ -32,11 +33,13 @@ class DataAggregator:
         """
         config = config or {}
 
-        # Initialize all providers
+        # Initialize all providers in priority order
+        # Priority: FMP(1), Yahoo(2), Alpha Vantage(3), IEX Cloud(4)
         self.providers: List[DataProvider] = [
+            FinancialModelingPrepProvider(api_key=config.get("fmp")),
             YahooFinanceProvider(),
             AlphaVantageProvider(api_key=config.get("alpha_vantage")),
-            FinancialModelingPrepProvider(api_key=config.get("fmp")),
+            IEXCloudProvider(api_key=config.get("iex_cloud")),
         ]
 
         # Filter only available providers and sort by priority
@@ -237,5 +240,7 @@ def get_data_aggregator() -> DataAggregator:
         config["alpha_vantage"] = os.getenv("ALPHA_VANTAGE_API_KEY")
     if "fmp" not in config:
         config["fmp"] = os.getenv("FMP_API_KEY")
+    if "iex_cloud" not in config:
+        config["iex_cloud"] = os.getenv("IEX_CLOUD_API_KEY")
 
     return DataAggregator(config)

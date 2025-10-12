@@ -34,8 +34,8 @@ class FinancialModelingPrepProvider(DataProvider):
             return False
 
     def get_priority(self) -> int:
-        """FMP has medium priority."""
-        return 3
+        """FMP has HIGHEST priority (PRIMARY DATA SOURCE)."""
+        return 1  # Changed from 3 to 1 - now PRIMARY source
 
     def get_financial_data(
         self, ticker: str, years: int = 5

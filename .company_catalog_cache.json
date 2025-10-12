@@ -1,0 +1,2337 @@
+{
+  "companies": [
+    {
+      "ticker": "AAPL",
+      "name": "Apple Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "MSFT",
+      "name": "Microsoft Corporation",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "GOOGL",
+      "name": "Alphabet Inc.",
+      "sector": "Communication Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "AMZN",
+      "name": "Amazon.com Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "NVDA",
+      "name": "NVIDIA Corporation",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "META",
+      "name": "Meta Platforms Inc.",
+      "sector": "Communication Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "TSLA",
+      "name": "Tesla, Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "BRK.B",
+      "name": "Berkshire Hathaway Inc.",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "V",
+      "name": "Visa Inc.",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "JPM",
+      "name": "JPMorgan Chase & Co.",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "WMT",
+      "name": "Walmart Inc.",
+      "sector": "Consumer Defensive",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "JNJ",
+      "name": "Johnson & Johnson",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "PG",
+      "name": "Procter & Gamble Co.",
+      "sector": "Consumer Defensive",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "UNH",
+      "name": "UnitedHealth Group Inc.",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "HD",
+      "name": "The Home Depot Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "MA",
+      "name": "Mastercard Inc.",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "XOM",
+      "name": "Exxon Mobil Corporation",
+      "sector": "Energy",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "CVX",
+      "name": "Chevron Corporation",
+      "sector": "Energy",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "LLY",
+      "name": "Eli Lilly and Company",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ABBV",
+      "name": "AbbVie Inc.",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "PFE",
+      "name": "Pfizer Inc.",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "KO",
+      "name": "The Coca-Cola Company",
+      "sector": "Consumer Defensive",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "PEP",
+      "name": "PepsiCo Inc.",
+      "sector": "Consumer Defensive",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "MRK",
+      "name": "Merck & Co. Inc.",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "COST",
+      "name": "Costco Wholesale Corporation",
+      "sector": "Consumer Defensive",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "AVGO",
+      "name": "Broadcom Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ORCL",
+      "name": "Oracle Corporation",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ADBE",
+      "name": "Adobe Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "CSCO",
+      "name": "Cisco Systems Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ACN",
+      "name": "Accenture plc",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "TMO",
+      "name": "Thermo Fisher Scientific Inc.",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "NKE",
+      "name": "NIKE Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ABT",
+      "name": "Abbott Laboratories",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "DIS",
+      "name": "The Walt Disney Company",
+      "sector": "Communication Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "CRM",
+      "name": "Salesforce Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "VZ",
+      "name": "Verizon Communications Inc.",
+      "sector": "Communication Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "NFLX",
+      "name": "Netflix Inc.",
+      "sector": "Communication Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "INTC",
+      "name": "Intel Corporation",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "AMD",
+      "name": "Advanced Micro Devices Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "CMCSA",
+      "name": "Comcast Corporation",
+      "sector": "Communication Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "BAC",
+      "name": "Bank of America Corporation",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "WFC",
+      "name": "Wells Fargo & Company",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "C",
+      "name": "Citigroup Inc.",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "GS",
+      "name": "The Goldman Sachs Group Inc.",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "MS",
+      "name": "Morgan Stanley",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "BLK",
+      "name": "BlackRock Inc.",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "AXP",
+      "name": "American Express Company",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "SCHW",
+      "name": "The Charles Schwab Corporation",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "USB",
+      "name": "U.S. Bancorp",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "PNC",
+      "name": "The PNC Financial Services Group Inc.",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "NOW",
+      "name": "ServiceNow Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "QCOM",
+      "name": "QUALCOMM Incorporated",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "TXN",
+      "name": "Texas Instruments Incorporated",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "IBM",
+      "name": "International Business Machines Corporation",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "INTU",
+      "name": "Intuit Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "AMAT",
+      "name": "Applied Materials Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "MU",
+      "name": "Micron Technology Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "LRCX",
+      "name": "Lam Research Corporation",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "KLAC",
+      "name": "KLA Corporation",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "SNPS",
+      "name": "Synopsys Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "CDNS",
+      "name": "Cadence Design Systems Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "PANW",
+      "name": "Palo Alto Networks Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "CRWD",
+      "name": "CrowdStrike Holdings Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "SNOW",
+      "name": "Snowflake Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "DDOG",
+      "name": "Datadog Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ZS",
+      "name": "Zscaler Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "NET",
+      "name": "Cloudflare Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "UNP",
+      "name": "Union Pacific Corporation",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "RTX",
+      "name": "RTX Corporation",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "HON",
+      "name": "Honeywell International Inc.",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "BA",
+      "name": "The Boeing Company",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "CAT",
+      "name": "Caterpillar Inc.",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "DE",
+      "name": "Deere & Company",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "MMM",
+      "name": "3M Company",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "GE",
+      "name": "General Electric Company",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "LMT",
+      "name": "Lockheed Martin Corporation",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "NOC",
+      "name": "Northrop Grumman Corporation",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "MCD",
+      "name": "McDonald's Corporation",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "SBUX",
+      "name": "Starbucks Corporation",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "TGT",
+      "name": "Target Corporation",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "LOW",
+      "name": "Lowe's Companies Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "TJX",
+      "name": "The TJX Companies Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "BKNG",
+      "name": "Booking Holdings Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "MAR",
+      "name": "Marriott International Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "F",
+      "name": "Ford Motor Company",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "GM",
+      "name": "General Motors Company",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "COP",
+      "name": "ConocoPhillips",
+      "sector": "Energy",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "SLB",
+      "name": "Schlumberger Limited",
+      "sector": "Energy",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "EOG",
+      "name": "EOG Resources Inc.",
+      "sector": "Energy",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "PXD",
+      "name": "Pioneer Natural Resources Company",
+      "sector": "Energy",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "MPC",
+      "name": "Marathon Petroleum Corporation",
+      "sector": "Energy",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "PSX",
+      "name": "Phillips 66",
+      "sector": "Energy",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "VLO",
+      "name": "Valero Energy Corporation",
+      "sector": "Energy",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "LIN",
+      "name": "Linde plc",
+      "sector": "Basic Materials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "APD",
+      "name": "Air Products and Chemicals Inc.",
+      "sector": "Basic Materials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ECL",
+      "name": "Ecolab Inc.",
+      "sector": "Basic Materials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "DD",
+      "name": "DuPont de Nemours Inc.",
+      "sector": "Basic Materials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "DOW",
+      "name": "Dow Inc.",
+      "sector": "Basic Materials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "FCX",
+      "name": "Freeport-McMoRan Inc.",
+      "sector": "Basic Materials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "NEM",
+      "name": "Newmont Corporation",
+      "sector": "Basic Materials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "BMY",
+      "name": "Bristol-Myers Squibb Company",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "AMGN",
+      "name": "Amgen Inc.",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "GILD",
+      "name": "Gilead Sciences Inc.",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "CVS",
+      "name": "CVS Health Corporation",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "CI",
+      "name": "Cigna Group",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "REGN",
+      "name": "Regeneron Pharmaceuticals Inc.",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "VRTX",
+      "name": "Vertex Pharmaceuticals Inc.",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ISRG",
+      "name": "Intuitive Surgical Inc.",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "DHR",
+      "name": "Danaher Corporation",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "BSX",
+      "name": "Boston Scientific Corporation",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "MDT",
+      "name": "Medtronic plc",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ELV",
+      "name": "Elevance Health Inc.",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ZTS",
+      "name": "Zoetis Inc.",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "HUM",
+      "name": "Humana Inc.",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "SYK",
+      "name": "Stryker Corporation",
+      "sector": "Healthcare",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "PLD",
+      "name": "Prologis Inc.",
+      "sector": "Real Estate",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "AMT",
+      "name": "American Tower Corporation",
+      "sector": "Real Estate",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "CCI",
+      "name": "Crown Castle Inc.",
+      "sector": "Real Estate",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "EQIX",
+      "name": "Equinix Inc.",
+      "sector": "Real Estate",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "SPG",
+      "name": "Simon Property Group Inc.",
+      "sector": "Real Estate",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "PSA",
+      "name": "Public Storage",
+      "sector": "Real Estate",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "O",
+      "name": "Realty Income Corporation",
+      "sector": "Real Estate",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "DLR",
+      "name": "Digital Realty Trust Inc.",
+      "sector": "Real Estate",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "WELL",
+      "name": "Welltower Inc.",
+      "sector": "Real Estate",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "AVB",
+      "name": "AvalonBay Communities Inc.",
+      "sector": "Real Estate",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "NEE",
+      "name": "NextEra Energy Inc.",
+      "sector": "Utilities",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "DUK",
+      "name": "Duke Energy Corporation",
+      "sector": "Utilities",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "SO",
+      "name": "The Southern Company",
+      "sector": "Utilities",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "D",
+      "name": "Dominion Energy Inc.",
+      "sector": "Utilities",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "AEP",
+      "name": "American Electric Power Company Inc.",
+      "sector": "Utilities",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "EXC",
+      "name": "Exelon Corporation",
+      "sector": "Utilities",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "SRE",
+      "name": "Sempra",
+      "sector": "Utilities",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "XEL",
+      "name": "Xcel Energy Inc.",
+      "sector": "Utilities",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "WEC",
+      "name": "WEC Energy Group Inc.",
+      "sector": "Utilities",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "PCG",
+      "name": "PG&E Corporation",
+      "sector": "Utilities",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "SPGI",
+      "name": "S&P Global Inc.",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "CB",
+      "name": "Chubb Limited",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "MMC",
+      "name": "Marsh & McLennan Companies Inc.",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "AON",
+      "name": "Aon plc",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ICE",
+      "name": "Intercontinental Exchange Inc.",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "CME",
+      "name": "CME Group Inc.",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "TFC",
+      "name": "Truist Financial Corporation",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "COF",
+      "name": "Capital One Financial Corporation",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "MET",
+      "name": "MetLife Inc.",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "PRU",
+      "name": "Prudential Financial Inc.",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "AFL",
+      "name": "Aflac Incorporated",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ALL",
+      "name": "The Allstate Corporation",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "TRV",
+      "name": "The Travelers Companies Inc.",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "AIG",
+      "name": "American International Group Inc.",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "HIG",
+      "name": "The Hartford Financial Services Group Inc.",
+      "sector": "Financial Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "PM",
+      "name": "Philip Morris International Inc.",
+      "sector": "Consumer Defensive",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "MO",
+      "name": "Altria Group Inc.",
+      "sector": "Consumer Defensive",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "MDLZ",
+      "name": "Mondelez International Inc.",
+      "sector": "Consumer Defensive",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "CL",
+      "name": "Colgate-Palmolive Company",
+      "sector": "Consumer Defensive",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "GIS",
+      "name": "General Mills Inc.",
+      "sector": "Consumer Defensive",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "KMB",
+      "name": "Kimberly-Clark Corporation",
+      "sector": "Consumer Defensive",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "K",
+      "name": "Kellanova",
+      "sector": "Consumer Defensive",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "HSY",
+      "name": "The Hershey Company",
+      "sector": "Consumer Defensive",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "SYY",
+      "name": "Sysco Corporation",
+      "sector": "Consumer Defensive",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "KHC",
+      "name": "The Kraft Heinz Company",
+      "sector": "Consumer Defensive",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "STZ",
+      "name": "Constellation Brands Inc.",
+      "sector": "Consumer Defensive",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "EL",
+      "name": "The Est\u00e9e Lauder Companies Inc.",
+      "sector": "Consumer Defensive",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ADM",
+      "name": "Archer-Daniels-Midland Company",
+      "sector": "Consumer Defensive",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "CAG",
+      "name": "Conagra Brands Inc.",
+      "sector": "Consumer Defensive",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "EBAY",
+      "name": "eBay Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ROST",
+      "name": "Ross Stores Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "YUM",
+      "name": "Yum! Brands Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "CMG",
+      "name": "Chipotle Mexican Grill Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ORLY",
+      "name": "O'Reilly Automotive Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "AZO",
+      "name": "AutoZone Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "DHI",
+      "name": "D.R. Horton Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "LEN",
+      "name": "Lennar Corporation",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "NVR",
+      "name": "NVR Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "HLT",
+      "name": "Hilton Worldwide Holdings Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "POOL",
+      "name": "Pool Corporation",
+      "sector": "Consumer Cyclical",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "UPS",
+      "name": "United Parcel Service Inc.",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "FDX",
+      "name": "FedEx Corporation",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "NSC",
+      "name": "Norfolk Southern Corporation",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "CSX",
+      "name": "CSX Corporation",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "EMR",
+      "name": "Emerson Electric Co.",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ETN",
+      "name": "Eaton Corporation plc",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "PH",
+      "name": "Parker-Hannifin Corporation",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "PCAR",
+      "name": "PACCAR Inc.",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ITW",
+      "name": "Illinois Tool Works Inc.",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "WM",
+      "name": "Waste Management Inc.",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "RSG",
+      "name": "Republic Services Inc.",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "GD",
+      "name": "General Dynamics Corporation",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "LHX",
+      "name": "L3Harris Technologies Inc.",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "TDG",
+      "name": "TransDigm Group Incorporated",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "CARR",
+      "name": "Carrier Global Corporation",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ODFL",
+      "name": "Old Dominion Freight Line Inc.",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "VRSK",
+      "name": "Verisk Analytics Inc.",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "FAST",
+      "name": "Fastenal Company",
+      "sector": "Industrials",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "TSM",
+      "name": "Taiwan Semiconductor Manufacturing",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "SHOP",
+      "name": "Shopify Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "MELI",
+      "name": "MercadoLibre Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ADSK",
+      "name": "Autodesk Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ROP",
+      "name": "Roper Technologies Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "PAYX",
+      "name": "Paychex Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ANSS",
+      "name": "ANSYS Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "MCHP",
+      "name": "Microchip Technology Incorporated",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "ADI",
+      "name": "Analog Devices Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "FTNT",
+      "name": "Fortinet Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "WDAY",
+      "name": "Workday Inc.",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "TEAM",
+      "name": "Atlassian Corporation",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "MNST",
+      "name": "Monster Beverage Corporation",
+      "sector": "Technology",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "T",
+      "name": "AT&T Inc.",
+      "sector": "Communication Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "TMUS",
+      "name": "T-Mobile US Inc.",
+      "sector": "Communication Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "CHTR",
+      "name": "Charter Communications Inc.",
+      "sector": "Communication Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "EA",
+      "name": "Electronic Arts Inc.",
+      "sector": "Communication Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "TTWO",
+      "name": "Take-Two Interactive Software Inc.",
+      "sector": "Communication Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "NTES",
+      "name": "NetEase Inc.",
+      "sector": "Communication Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "MTCH",
+      "name": "Match Group Inc.",
+      "sector": "Communication Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "OMC",
+      "name": "Omnicom Group Inc.",
+      "sector": "Communication Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "IPG",
+      "name": "The Interpublic Group of Companies Inc.",
+      "sector": "Communication Services",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "OXY",
+      "name": "Occidental Petroleum Corporation",
+      "sector": "Energy",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "HAL",
+      "name": "Halliburton Company",
+      "sector": "Energy",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "BKR",
+      "name": "Baker Hughes Company",
+      "sector": "Energy",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "KMI",
+      "name": "Kinder Morgan Inc.",
+      "sector": "Energy",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "WMB",
+      "name": "The Williams Companies Inc.",
+      "sector": "Energy",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "HES",
+      "name": "Hess Corporation",
+      "sector": "Energy",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "DVN",
+      "name": "Devon Energy Corporation",
+      "sector": "Energy",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "FANG",
+      "name": "Diamondback Energy Inc.",
+      "sector": "Energy",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "EQT",
+      "name": "EQT Corporation",
+      "sector": "Energy",
+      "source": "S&P 500 (Static)"
+    },
+    {
+      "ticker": "SAP",
+      "name": "SAP SE",
+      "country": "Germany",
+      "sector": "Technology",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "SIEGY",
+      "name": "Siemens AG",
+      "country": "Germany",
+      "sector": "Industrials",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "ADDYY",
+      "name": "adidas AG",
+      "country": "Germany",
+      "sector": "Consumer Cyclical",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "BAYRY",
+      "name": "Bayer AG",
+      "country": "Germany",
+      "sector": "Healthcare",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "VLKAF",
+      "name": "Volkswagen AG",
+      "country": "Germany",
+      "sector": "Consumer Cyclical",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "DMLRY",
+      "name": "Daimler AG",
+      "country": "Germany",
+      "sector": "Consumer Cyclical",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "ASML",
+      "name": "ASML Holding N.V.",
+      "country": "Netherlands",
+      "sector": "Technology",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "HEIA",
+      "name": "Heineken N.V.",
+      "country": "Netherlands",
+      "sector": "Consumer Defensive",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "ING",
+      "name": "ING Groep N.V.",
+      "country": "Netherlands",
+      "sector": "Financial Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "SHEL",
+      "name": "Shell plc",
+      "country": "UK",
+      "sector": "Energy",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "BP",
+      "name": "BP p.l.c.",
+      "country": "UK",
+      "sector": "Energy",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "HSBC",
+      "name": "HSBC Holdings plc",
+      "country": "UK",
+      "sector": "Financial Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "AZN",
+      "name": "AstraZeneca PLC",
+      "country": "UK",
+      "sector": "Healthcare",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "UL",
+      "name": "Unilever PLC",
+      "country": "UK/Netherlands",
+      "sector": "Consumer Defensive",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "GSK",
+      "name": "GSK plc",
+      "country": "UK",
+      "sector": "Healthcare",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "RIO",
+      "name": "Rio Tinto Group",
+      "country": "UK",
+      "sector": "Basic Materials",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "BHP",
+      "name": "BHP Group Limited",
+      "country": "UK/Australia",
+      "sector": "Basic Materials",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "BTI",
+      "name": "British American Tobacco p.l.c.",
+      "country": "UK",
+      "sector": "Consumer Defensive",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "DEO",
+      "name": "Diageo plc",
+      "country": "UK",
+      "sector": "Consumer Defensive",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "NVS",
+      "name": "Novartis AG",
+      "country": "Switzerland",
+      "sector": "Healthcare",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "RHHBY",
+      "name": "Roche Holding AG",
+      "country": "Switzerland",
+      "sector": "Healthcare",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "NESN",
+      "name": "Nestl\u00e9 S.A.",
+      "country": "Switzerland",
+      "sector": "Consumer Defensive",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "UBS",
+      "name": "UBS Group AG",
+      "country": "Switzerland",
+      "sector": "Financial Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "SNY",
+      "name": "Sanofi",
+      "country": "France",
+      "sector": "Healthcare",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "LVMUY",
+      "name": "LVMH Mo\u00ebt Hennessy",
+      "country": "France",
+      "sector": "Consumer Cyclical",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "TOT",
+      "name": "TotalEnergies SE",
+      "country": "France",
+      "sector": "Energy",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "OR",
+      "name": "L'Or\u00e9al S.A.",
+      "country": "France",
+      "sector": "Consumer Defensive",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "ACA",
+      "name": "Airbus SE",
+      "country": "France",
+      "sector": "Industrials",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "BN",
+      "name": "Danone S.A.",
+      "country": "France",
+      "sector": "Consumer Defensive",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "NVO",
+      "name": "Novo Nordisk A/S",
+      "country": "Denmark",
+      "sector": "Healthcare",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "VOLVY",
+      "name": "Volvo AB",
+      "country": "Sweden",
+      "sector": "Consumer Cyclical",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "EQNR",
+      "name": "Equinor ASA",
+      "country": "Norway",
+      "sector": "Energy",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "SAN",
+      "name": "Banco Santander S.A.",
+      "country": "Spain",
+      "sector": "Financial Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "BBVA",
+      "name": "Banco Bilbao Vizcaya Argentaria",
+      "country": "Spain",
+      "sector": "Financial Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "ITX",
+      "name": "Inditex S.A.",
+      "country": "Spain",
+      "sector": "Consumer Cyclical",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "TM",
+      "name": "Toyota Motor Corporation",
+      "country": "Japan",
+      "sector": "Consumer Cyclical",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "SONY",
+      "name": "Sony Group Corporation",
+      "country": "Japan",
+      "sector": "Technology",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "MUFG",
+      "name": "Mitsubishi UFJ Financial Group",
+      "country": "Japan",
+      "sector": "Financial Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "SMFG",
+      "name": "Sumitomo Mitsui Financial Group",
+      "country": "Japan",
+      "sector": "Financial Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "NTT",
+      "name": "Nippon Telegraph and Telephone",
+      "country": "Japan",
+      "sector": "Communication Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "HMC",
+      "name": "Honda Motor Co., Ltd.",
+      "country": "Japan",
+      "sector": "Consumer Cyclical",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "NSANY",
+      "name": "Nissan Motor Co., Ltd.",
+      "country": "Japan",
+      "sector": "Consumer Cyclical",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "UMC",
+      "name": "United Microelectronics Corporation",
+      "country": "Taiwan",
+      "sector": "Technology",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "KB",
+      "name": "KB Financial Group Inc.",
+      "country": "South Korea",
+      "sector": "Financial Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "PKX",
+      "name": "POSCO Holdings Inc.",
+      "country": "South Korea",
+      "sector": "Basic Materials",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "LPL",
+      "name": "LG Display Co., Ltd.",
+      "country": "South Korea",
+      "sector": "Technology",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "BABA",
+      "name": "Alibaba Group",
+      "country": "China",
+      "sector": "Consumer Cyclical",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "TCEHY",
+      "name": "Tencent Holdings",
+      "country": "China",
+      "sector": "Communication Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "JD",
+      "name": "JD.com Inc.",
+      "country": "China",
+      "sector": "Consumer Cyclical",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "NIO",
+      "name": "NIO Inc.",
+      "country": "China",
+      "sector": "Consumer Cyclical",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "BIDU",
+      "name": "Baidu Inc.",
+      "country": "China",
+      "sector": "Communication Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "PDD",
+      "name": "PDD Holdings Inc.",
+      "country": "China",
+      "sector": "Consumer Cyclical",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "BEKE",
+      "name": "KE Holdings Inc.",
+      "country": "China",
+      "sector": "Real Estate",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "LI",
+      "name": "Li Auto Inc.",
+      "country": "China",
+      "sector": "Consumer Cyclical",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "XPEV",
+      "name": "XPeng Inc.",
+      "country": "China",
+      "sector": "Consumer Cyclical",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "BILI",
+      "name": "Bilibili Inc.",
+      "country": "China",
+      "sector": "Communication Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "TME",
+      "name": "Tencent Music Entertainment Group",
+      "country": "China",
+      "sector": "Communication Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "YUMC",
+      "name": "Yum China Holdings Inc.",
+      "country": "China",
+      "sector": "Consumer Cyclical",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "INFY",
+      "name": "Infosys Limited",
+      "country": "India",
+      "sector": "Technology",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "WIT",
+      "name": "Wipro Limited",
+      "country": "India",
+      "sector": "Technology",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "HDB",
+      "name": "HDFC Bank Limited",
+      "country": "India",
+      "sector": "Financial Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "IBN",
+      "name": "ICICI Bank Limited",
+      "country": "India",
+      "sector": "Financial Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "VEDL",
+      "name": "Vedanta Limited",
+      "country": "India",
+      "sector": "Basic Materials",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "PBR",
+      "name": "Petr\u00f3leo Brasileiro S.A.",
+      "country": "Brazil",
+      "sector": "Energy",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "VALE",
+      "name": "Vale S.A.",
+      "country": "Brazil",
+      "sector": "Basic Materials",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "ITUB",
+      "name": "Ita\u00fa Unibanco",
+      "country": "Brazil",
+      "sector": "Financial Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "BBD",
+      "name": "Banco Bradesco S.A.",
+      "country": "Brazil",
+      "sector": "Financial Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "ABEV",
+      "name": "Ambev S.A.",
+      "country": "Brazil",
+      "sector": "Consumer Defensive",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "NU",
+      "name": "Nu Holdings Ltd.",
+      "country": "Brazil",
+      "sector": "Financial Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "AMX",
+      "name": "Am\u00e9rica M\u00f3vil S.A.B. de C.V.",
+      "country": "Mexico",
+      "sector": "Communication Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "TV",
+      "name": "Grupo Televisa S.A.B.",
+      "country": "Mexico",
+      "sector": "Communication Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "RY",
+      "name": "Royal Bank of Canada",
+      "country": "Canada",
+      "sector": "Financial Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "TD",
+      "name": "Toronto-Dominion Bank",
+      "country": "Canada",
+      "sector": "Financial Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "ENB",
+      "name": "Enbridge Inc.",
+      "country": "Canada",
+      "sector": "Energy",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "CNQ",
+      "name": "Canadian Natural Resources",
+      "country": "Canada",
+      "sector": "Energy",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "BNS",
+      "name": "The Bank of Nova Scotia",
+      "country": "Canada",
+      "sector": "Financial Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "BMO",
+      "name": "Bank of Montreal",
+      "country": "Canada",
+      "sector": "Financial Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "CNI",
+      "name": "Canadian National Railway Company",
+      "country": "Canada",
+      "sector": "Industrials",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "CP",
+      "name": "Canadian Pacific Railway Limited",
+      "country": "Canada",
+      "sector": "Industrials",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "SU",
+      "name": "Suncor Energy Inc.",
+      "country": "Canada",
+      "sector": "Energy",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "BCE",
+      "name": "BCE Inc.",
+      "country": "Canada",
+      "sector": "Communication Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "WES",
+      "name": "Wesfarmers Limited",
+      "country": "Australia",
+      "sector": "Consumer Defensive",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "NAB",
+      "name": "National Australia Bank Limited",
+      "country": "Australia",
+      "sector": "Financial Services",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "TEVA",
+      "name": "Teva Pharmaceutical Industries",
+      "country": "Israel",
+      "sector": "Healthcare",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "CHKP",
+      "name": "Check Point Software Technologies",
+      "country": "Israel",
+      "sector": "Technology",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "WIX",
+      "name": "Wix.com Ltd.",
+      "country": "Israel",
+      "sector": "Technology",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "MNDY",
+      "name": "Monday.com Ltd.",
+      "country": "Israel",
+      "sector": "Technology",
+      "source": "International (Static)"
+    },
+    {
+      "ticker": "PLTR",
+      "name": "Palantir Technologies Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "OKTA",
+      "name": "Okta Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "MDB",
+      "name": "MongoDB Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "TWLO",
+      "name": "Twilio Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "DOCU",
+      "name": "DocuSign Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "PATH",
+      "name": "UiPath Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "AI",
+      "name": "C3.ai Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "BILL",
+      "name": "Bill.com Holdings Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "S",
+      "name": "SentinelOne Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "GTLB",
+      "name": "GitLab Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "CFLT",
+      "name": "Confluent Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "ESTC",
+      "name": "Elastic N.V.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "RBLX",
+      "name": "Roblox Corporation",
+      "sector": "Communication Services",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "DASH",
+      "name": "DoorDash Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "ABNB",
+      "name": "Airbnb Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "UBER",
+      "name": "Uber Technologies Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "LYFT",
+      "name": "Lyft Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "ROKU",
+      "name": "Roku Inc.",
+      "sector": "Communication Services",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "SPOT",
+      "name": "Spotify Technology S.A.",
+      "sector": "Communication Services",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "PINS",
+      "name": "Pinterest Inc.",
+      "sector": "Communication Services",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "SNAP",
+      "name": "Snap Inc.",
+      "sector": "Communication Services",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "YELP",
+      "name": "Yelp Inc.",
+      "sector": "Communication Services",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "BMBL",
+      "name": "Bumble Inc.",
+      "sector": "Communication Services",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "W",
+      "name": "Wayfair Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "ETSY",
+      "name": "Etsy Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "CHWY",
+      "name": "Chewy Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "COIN",
+      "name": "Coinbase Global Inc.",
+      "sector": "Financial Services",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "SOFI",
+      "name": "SoFi Technologies Inc.",
+      "sector": "Financial Services",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "HOOD",
+      "name": "Robinhood Markets Inc.",
+      "sector": "Financial Services",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "SQ",
+      "name": "Block Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "AFRM",
+      "name": "Affirm Holdings Inc.",
+      "sector": "Financial Services",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "UPST",
+      "name": "Upstart Holdings Inc.",
+      "sector": "Financial Services",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "LC",
+      "name": "LendingClub Corporation",
+      "sector": "Financial Services",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "PYPL",
+      "name": "PayPal Holdings Inc.",
+      "sector": "Financial Services",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "RIVN",
+      "name": "Rivian Automotive Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "LCID",
+      "name": "Lucid Group Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "FSLY",
+      "name": "Fastly Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "PLUG",
+      "name": "Plug Power Inc.",
+      "sector": "Industrials",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "BLNK",
+      "name": "Blink Charging Co.",
+      "sector": "Consumer Cyclical",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "CHPT",
+      "name": "ChargePoint Holdings Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "ENPH",
+      "name": "Enphase Energy Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "SEDG",
+      "name": "SolarEdge Technologies Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "U",
+      "name": "Unity Software Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "ZNGA",
+      "name": "Zynga Inc.",
+      "sector": "Communication Services",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "LYV",
+      "name": "Live Nation Entertainment Inc.",
+      "sector": "Communication Services",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "MRNA",
+      "name": "Moderna Inc.",
+      "sector": "Healthcare",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "BNTX",
+      "name": "BioNTech SE",
+      "sector": "Healthcare",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "ARKG",
+      "name": "ARK Genomic Revolution ETF",
+      "sector": "Healthcare",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "ILMN",
+      "name": "Illumina Inc.",
+      "sector": "Healthcare",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "CRSP",
+      "name": "CRISPR Therapeutics AG",
+      "sector": "Healthcare",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "EDIT",
+      "name": "Editas Medicine Inc.",
+      "sector": "Healthcare",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "NTLA",
+      "name": "Intellia Therapeutics Inc.",
+      "sector": "Healthcare",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "BEAM",
+      "name": "Beam Therapeutics Inc.",
+      "sector": "Healthcare",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "SE",
+      "name": "Sea Limited",
+      "sector": "Consumer Cyclical",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "CPNG",
+      "name": "Coupang Inc.",
+      "sector": "Consumer Cyclical",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "CART",
+      "name": "Instacart (Maplebear Inc.)",
+      "sector": "Consumer Cyclical",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "SPCE",
+      "name": "Virgin Galactic Holdings Inc.",
+      "sector": "Industrials",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "RKLB",
+      "name": "Rocket Lab USA Inc.",
+      "sector": "Industrials",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "ZM",
+      "name": "Zoom Video Communications Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "DOCN",
+      "name": "DigitalOcean Holdings Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "FROG",
+      "name": "JFrog Ltd.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "DT",
+      "name": "Dynatrace Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    },
+    {
+      "ticker": "PSTG",
+      "name": "Pure Storage Inc.",
+      "sector": "Technology",
+      "source": "Growth Stocks (Static)"
+    }
+  ],
+  "total_count": 374,
+  "last_updated": "2025-10-12 22:53:41.177244"
+}
