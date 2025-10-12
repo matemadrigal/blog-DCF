@@ -56,6 +56,11 @@ class FCFScanner:
         """
         Get base FCF for a ticker (with caching).
 
+        Priority:
+        1. Direct "Free Cash Flow" from Yahoo Finance
+        2. Operating Cash Flow - Purchase of PPE (operational CAPEX)
+        3. Operating Cash Flow - Capital Expenditure (includes M&A)
+
         Returns:
             Tuple of (base_fcf, error_message)
         """
@@ -76,24 +81,49 @@ class FCFScanner:
 
             # Get most recent year
             col = cashflow.columns[0]
+            fcf = None
             op = None
-            capex = None
+            ppe_capex = None
+            total_capex = None
 
             for idx in cashflow.index:
                 name = str(idx).lower()
+
+                # Priority 1: Direct Free Cash Flow
+                if "free cash flow" == name and fcf is None:
+                    fcf = cashflow.loc[idx, col]
+
+                # Priority 2: Operating Cash Flow
                 if "operating cash flow" in name and op is None:
                     op = cashflow.loc[idx, col]
-                if (
-                    "capital expenditure" in name or "purchase of ppe" in name
-                ) and capex is None:
-                    capex = cashflow.loc[idx, col]
 
-            if op is not None and capex is not None:
-                base_fcf = float(op - abs(capex))
+                # Priority 3a: Purchase of PPE (preferred)
+                if (
+                    "purchase of ppe" in name or "net ppe purchase" in name
+                ) and ppe_capex is None:
+                    ppe_capex = cashflow.loc[idx, col]
+
+                # Priority 3b: Total Capital Expenditure (fallback)
+                if "capital expenditure" in name and total_capex is None:
+                    total_capex = cashflow.loc[idx, col]
+
+            # Calculate FCF in order of priority
+            if op is not None and ppe_capex is not None:
+                # Priority 1: OCF - PPE CAPEX (operational only) - PREFERRED
+                base_fcf = float(op - abs(ppe_capex))
+                self._update_cache(ticker, base_fcf, None)
+                return base_fcf, None
+            elif fcf is not None and not str(fcf).lower() == "nan":
+                # Priority 2: Yahoo's FCF (may include M&A)
+                base_fcf = float(fcf)
+                self._update_cache(ticker, base_fcf, None)
+                return base_fcf, None
+            elif op is not None and total_capex is not None:
+                base_fcf = float(op - abs(total_capex))
                 self._update_cache(ticker, base_fcf, None)
                 return base_fcf, None
             else:
-                error_msg = "Missing OCF or CAPEX"
+                error_msg = "Missing FCF components"
                 self._update_cache(ticker, 0.0, error_msg)
                 return 0.0, error_msg
 

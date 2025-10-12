@@ -320,14 +320,14 @@ with st.sidebar.expander("⚙️ Opciones Avanzadas (opcional)"):
         )
 
 # Set intelligent defaults (always use best model)
-use_enhanced_model = True
+use_enhanced_model = True  # Always use Enhanced DCF
 use_dynamic_wacc = True if wacc_method != "custom" else False
 use_industry_wacc = True if wacc_method == "industry_damodaran" else False
-normalize_fcf = None  # Let intelligent selector decide
-normalization_method = None  # Let intelligent selector decide
+normalize_fcf = True  # Always normalize FCF base by default
+normalization_method = "weighted_average"  # Default normalization method
 
 years = st.sidebar.number_input(
-    "Años de proyección", min_value=1, max_value=20, value=5
+    "Años de proyección", min_value=1, max_value=20, value=10  # Changed from 5 to 10
 )
 
 # Handle WACC based on selected method
@@ -447,7 +447,10 @@ def get_base_fcf_from_yahoo(ticker: str):
     Returns:
         tuple: (base_fcf, historical_fcf_list) or (0.0, [])
 
-    Formula: FCF = Operating Cash Flow - |Capital Expenditure|
+    Priority:
+    1. Direct "Free Cash Flow" from Yahoo Finance
+    2. Operating Cash Flow - Purchase of PPE (operational CAPEX)
+    3. Operating Cash Flow - Capital Expenditure (includes M&A)
     """
     try:
         t = yf.Ticker(ticker)
@@ -461,23 +464,43 @@ def get_base_fcf_from_yahoo(ticker: str):
         # Get up to 5 years of historical data
         cols = list(cashflow.columns)[:5]
         for c in cols:
+            fcf = None
             op = None
-            capex = None
+            ppe_capex = None
+            total_capex = None
+
             for idx in cashflow.index:
                 name = str(idx).lower()
-                # Look for Operating Cash Flow
+
+                # Priority 1: Direct Free Cash Flow
+                if "free cash flow" == name and fcf is None:
+                    fcf = cashflow.loc[idx, c]
+
+                # Priority 2: Operating Cash Flow
                 if "operating cash flow" in name and op is None:
                     op = cashflow.loc[idx, c]
-                # Look for Capital Expenditure
-                if (
-                    "capital expenditure" in name or "purchase of ppe" in name
-                ) and capex is None:
-                    capex = cashflow.loc[idx, c]
 
-            if op is not None and capex is not None:
-                # CAPEX is usually negative, use abs to ensure correct subtraction
-                fcf = float(op - abs(capex))
-                historical_fcf.append(fcf)
+                # Priority 3a: Purchase of PPE (operational CAPEX - preferred)
+                if (
+                    "purchase of ppe" in name or "net ppe purchase" in name
+                ) and ppe_capex is None:
+                    ppe_capex = cashflow.loc[idx, c]
+
+                # Priority 3b: Total Capital Expenditure (includes M&A - fallback)
+                if "capital expenditure" in name and total_capex is None:
+                    total_capex = cashflow.loc[idx, c]
+
+            # Use FCF in order of priority
+            if op is not None and ppe_capex is not None:
+                # Priority 1: OCF - PPE CAPEX (operational only) - PREFERRED
+                calculated_fcf = float(op - abs(ppe_capex))
+                historical_fcf.append(calculated_fcf)
+            elif fcf is not None and not str(fcf).lower() == "nan":
+                # Priority 2: Yahoo's FCF (may include M&A)
+                historical_fcf.append(float(fcf))
+            elif op is not None and total_capex is not None:
+                calculated_fcf = float(op - abs(total_capex))
+                historical_fcf.append(calculated_fcf)
 
         # Most recent year is first in Yahoo Finance
         base_fcf = historical_fcf[0] if historical_fcf else 0.0
@@ -639,23 +662,69 @@ if base_fcf > 0:
         st.info(f"📊 **Año Base FCF**: {fcf_display}")
 
 # Growth rate inputs
-growth_rate_cols = st.columns(years)
-growth_rate_inputs = []
+# Display in rows if more than 5 years for better UX
+if years <= 5:
+    growth_rate_cols = st.columns(years)
+    growth_rate_inputs = []
+    for i in range(years):
+        with growth_rate_cols[i]:
+            default_rate = (
+                autofill_growth_rates[i] * 100
+                if i < len(autofill_growth_rates)
+                else 2.0
+            )
+            val = st.number_input(
+                f"Año {i+1}",
+                value=float(default_rate),
+                format="%.2f",
+                step=0.5,
+                key=f"growth_{i}",
+                help="% de crecimiento respecto al año anterior",
+            )
+            growth_rate_inputs.append(float(val) / 100)  # Convert to decimal
+else:
+    # Display in 2 rows for better visibility with 6+ years
+    st.markdown("**Tasas de crecimiento anual (%)**")
+    growth_rate_inputs = []
 
-for i in range(years):
-    with growth_rate_cols[i]:
-        default_rate = (
-            autofill_growth_rates[i] * 100 if i < len(autofill_growth_rates) else 2.0
-        )
-        val = st.number_input(
-            f"Año {i+1}",
-            value=float(default_rate),
-            format="%.2f",
-            step=0.5,
-            key=f"growth_{i}",
-            help=f"% de crecimiento respecto al año {i if i > 0 else 'base'}",
-        )
-        growth_rate_inputs.append(float(val) / 100)  # Convert to decimal
+    # First row: Years 1-5
+    cols_row1 = st.columns(min(5, years))
+    for i in range(min(5, years)):
+        with cols_row1[i]:
+            default_rate = (
+                autofill_growth_rates[i] * 100
+                if i < len(autofill_growth_rates)
+                else 2.0
+            )
+            val = st.number_input(
+                f"Año {i+1}",
+                value=float(default_rate),
+                format="%.2f",
+                step=0.5,
+                key=f"growth_{i}",
+                help="% de crecimiento respecto al año anterior",
+            )
+            growth_rate_inputs.append(float(val) / 100)
+
+    # Second row: Years 6-10 (if applicable)
+    if years > 5:
+        cols_row2 = st.columns(years - 5)
+        for i in range(5, years):
+            with cols_row2[i - 5]:
+                default_rate = (
+                    autofill_growth_rates[i] * 100
+                    if i < len(autofill_growth_rates)
+                    else 2.0
+                )
+                val = st.number_input(
+                    f"Año {i+1}",
+                    value=float(default_rate),
+                    format="%.2f",
+                    step=0.5,
+                    key=f"growth_{i}",
+                    help="% de crecimiento respecto al año anterior",
+                )
+                growth_rate_inputs.append(float(val) / 100)
 
 
 # Calculate projected FCF from growth rates
@@ -822,16 +891,29 @@ try:
         # Use Enhanced DCF Model
         enhanced_model = EnhancedDCFModel(wacc=r, terminal_growth=g)
 
-        # Check if user manually changed any growth rate
+        # SIMPLIFIED: Always use the growth_rate_inputs from the UI
+        # This ensures ANY user modification (manual or via defaults) is respected
+        # The model will use custom rates if provided, otherwise calculate its own
+
+        # Check if user modified growth rates from autofill suggestions
         user_modified_growth = False
-        if len(growth_rate_inputs) == len(autofill_growth_rates):
+        if len(autofill_growth_rates) > 0 and len(autofill_growth_rates) == len(
+            growth_rate_inputs
+        ):
+            # Compare with tolerance for rounding
             for i in range(len(growth_rate_inputs)):
-                # Check if user input differs from autofill (with small tolerance for rounding)
-                if abs(growth_rate_inputs[i] - autofill_growth_rates[i]) > 0.001:
+                if abs(growth_rate_inputs[i] - autofill_growth_rates[i]) > 0.005:
                     user_modified_growth = True
                     break
+        elif len(autofill_growth_rates) != len(growth_rate_inputs):
+            # Different lengths = user changed something
+            user_modified_growth = True
+        elif len(autofill_growth_rates) == 0:
+            # No autofill = treat as custom
+            user_modified_growth = True
 
-        # Perform full DCF valuation
+        # IMPORTANT: ALWAYS pass growth_rate_inputs as custom_growth_rates
+        # This ensures the UI inputs are ALWAYS used in the valuation
         dcf_result = enhanced_model.full_dcf_valuation(
             base_fcf=base_fcf,
             historical_fcf=historical_fcf if historical_fcf else [base_fcf],
@@ -839,9 +921,7 @@ try:
             debt=total_debt,
             diluted_shares=shares,
             years=years,
-            custom_growth_rates=(
-                growth_rate_inputs if user_modified_growth else None
-            ),  # Use custom if user changed
+            custom_growth_rates=growth_rate_inputs,  # ALWAYS use UI inputs
             normalize_base=normalize_fcf,
             normalization_method=normalization_method,
         )
@@ -850,7 +930,8 @@ try:
         equity_value = dcf_result["equity_value"]
         fair_value_per_share = dcf_result["fair_value_per_share"]
         fcf_inputs = dcf_result["projected_fcf"]
-        growth_rate_inputs = dcf_result["growth_rates"]
+        # DON'T overwrite growth_rate_inputs with model's rates - keep user's inputs!
+        # growth_rate_inputs = dcf_result["growth_rates"]  # REMOVED - this was overwriting UI values
 
     else:
         # Use Original DCF Model
@@ -906,6 +987,7 @@ try:
             normalization_method=(
                 normalization_method if normalization_method else "weighted_average"
             ),
+            custom_growth_rates=growth_rate_inputs,  # Pass user's custom growth rates
         )
 
     # Display scenario results

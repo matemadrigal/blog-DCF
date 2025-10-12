@@ -4,7 +4,7 @@ Provides scenario-based analysis (pessimistic, base, optimistic) with proper
 financial mathematics and Monte Carlo simulation capabilities.
 """
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 import numpy as np
 from dataclasses import dataclass
 
@@ -52,6 +52,7 @@ class SensitivityAnalyzer:
         years: int = 5,
         normalize_base: bool = True,
         normalization_method: str = "weighted_average",
+        custom_growth_rates: Optional[List[float]] = None,
     ) -> Dict[str, ScenarioResult]:
         """
         Calculate pessimistic, base, and optimistic scenarios.
@@ -83,6 +84,7 @@ class SensitivityAnalyzer:
         enhanced_model.wacc = base_wacc
         enhanced_model.terminal_growth = base_terminal_growth
 
+        # Use custom growth rates if provided by user, otherwise let model calculate
         base_result = enhanced_model.full_dcf_valuation(
             base_fcf=base_fcf,
             historical_fcf=historical_fcf,
@@ -90,6 +92,7 @@ class SensitivityAnalyzer:
             debt=debt,
             diluted_shares=diluted_shares,
             years=years,
+            custom_growth_rates=custom_growth_rates,  # Use user's custom rates for base case
             normalize_base=normalize_base,
             normalization_method=normalization_method,
         )
@@ -125,9 +128,13 @@ class SensitivityAnalyzer:
         enhanced_model.terminal_growth = pessimistic_terminal_growth
 
         # Calculate growth rates with 30% haircut
-        base_growth_rates = enhanced_model.calculate_tiered_growth_rates(
-            historical_fcf, years
-        )
+        # If user provided custom rates, use those as base; otherwise calculate
+        if custom_growth_rates:
+            base_growth_rates = custom_growth_rates
+        else:
+            base_growth_rates = enhanced_model.calculate_tiered_growth_rates(
+                historical_fcf, years
+            )
         pessimistic_growth_rates = [max(g * 0.70, 0.0) for g in base_growth_rates]
 
         pessimistic_result = enhanced_model.full_dcf_valuation(

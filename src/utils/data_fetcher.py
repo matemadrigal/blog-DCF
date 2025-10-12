@@ -266,7 +266,10 @@ def get_fcf_data(
     """
     Get Free Cash Flow data with robust error handling.
 
-    FCF = Operating Cash Flow - |Capital Expenditure|
+    Priority:
+    1. Direct "Free Cash Flow" from Yahoo Finance (most accurate)
+    2. Calculate: Operating Cash Flow - Purchase of PPE (operational CAPEX only)
+    3. Fallback: Operating Cash Flow - |Capital Expenditure| (includes acquisitions)
 
     Args:
         ticker: Stock ticker
@@ -296,43 +299,74 @@ def get_fcf_data(
         cols = list(cashflow.columns)[:max_years]
 
         for i, col in enumerate(cols):
+            fcf = None
             operating_cf = None
-            capex = None
+            ppe_capex = None
+            total_capex = None
 
             for idx in cashflow.index:
                 name = str(idx).lower()
 
-                # Look for Operating Cash Flow
+                # Priority 1: Direct Free Cash Flow (Yahoo's calculation)
+                if "free cash flow" == name and fcf is None:
+                    val = cashflow.loc[idx, col]
+                    fcf = safe_get_float(val)
+
+                # Priority 2: Operating Cash Flow
                 if "operating cash flow" in name and operating_cf is None:
                     val = cashflow.loc[idx, col]
                     operating_cf = safe_get_float(val)
 
-                # Look for Capital Expenditure
+                # Priority 3a: Purchase of PPE (operational CAPEX only - preferred)
                 if (
-                    "capital expenditure" in name or "purchase of ppe" in name
-                ) and capex is None:
+                    "purchase of ppe" in name or "net ppe purchase" in name
+                ) and ppe_capex is None:
                     val = cashflow.loc[idx, col]
-                    capex = safe_get_float(val)
+                    ppe_capex = safe_get_float(val)
 
-            # Calculate FCF if both components found
-            if operating_cf is not None and capex is not None:
-                # CAPEX is usually negative, use abs to ensure correct calc
-                fcf = operating_cf - abs(capex)
+                # Priority 3b: Total Capital Expenditure (includes acquisitions - fallback)
+                if "capital expenditure" in name and total_capex is None:
+                    val = cashflow.loc[idx, col]
+                    total_capex = safe_get_float(val)
+
+            # Use FCF in order of priority
+            if operating_cf is not None and ppe_capex is not None:
+                # Priority 1: OCF - PPE CAPEX (operational only, excludes M&A) - PREFERRED
+                calculated_fcf = operating_cf - abs(ppe_capex)
+                historical_fcf.append(calculated_fcf)
+                if i == 0:
+                    metadata["data_source"] = "Operating CF - Purchase of PPE"
+            elif fcf is not None and fcf != 0:
+                # Priority 2: Use direct FCF from Yahoo (may include M&A)
                 historical_fcf.append(fcf)
+                if i == 0:
+                    metadata["data_source"] = "Direct Free Cash Flow (Yahoo)"
+                    metadata["errors"].append(
+                        "Using Yahoo's FCF which may include M&A investments"
+                    )
+            elif operating_cf is not None and total_capex is not None:
+                # Priority 3: OCF - Total CAPEX (includes acquisitions)
+                calculated_fcf = operating_cf - abs(total_capex)
+                historical_fcf.append(calculated_fcf)
+                if i == 0:
+                    metadata["data_source"] = "Operating CF - Capital Expenditure"
+                    metadata["errors"].append(
+                        "Using total CAPEX (includes M&A); FCF may be understated"
+                    )
             elif operating_cf is not None:
-                # If no capex found, use operating CF (conservative)
+                # Last resort: Use operating CF (very conservative)
                 historical_fcf.append(operating_cf)
-                if i == 0:  # Only warn once
+                if i == 0:
                     metadata["errors"].append(
                         "CAPEX not found, using Operating CF directly"
                     )
+                    metadata["data_source"] = "Operating CF only (no CAPEX adjustment)"
 
         # Most recent year is first
         base_fcf = historical_fcf[0] if historical_fcf else 0.0
 
         metadata["success"] = len(historical_fcf) > 0
         metadata["years_found"] = len(historical_fcf)
-        metadata["data_source"] = "Yahoo Finance Cash Flow"
 
         return base_fcf, historical_fcf, metadata
 
