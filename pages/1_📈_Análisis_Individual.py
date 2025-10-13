@@ -731,9 +731,43 @@ else:
 # Calculate projected FCF from growth rates
 fcf_inputs = apply_growth_rates_to_base(base_fcf, growth_rate_inputs)
 
+# Detect if company is financial (bank, insurance, REIT)
+company_sector = info.get("sector", "") if info else ""
+financial_sectors = [
+    "financial services",
+    "banks",
+    "insurance",
+    "real estate",
+    "reit",
+    "capital markets",
+]
+is_financial_company = any(
+    fs in company_sector.lower() for fs in financial_sectors if company_sector
+)
+
+# Model selection for financial companies
+valuation_model = "DCF"  # Default
+if is_financial_company:
+    st.markdown("---")
+    st.info(
+        f"🏦 **Empresa Financiera Detectada**: {company_sector}\n\n"
+        "Las empresas financieras (bancos, aseguradoras, REITs) tienen estructuras de flujo de caja diferentes. "
+        "Recomendamos usar el **Dividend Discount Model (DDM)** en lugar de DCF tradicional."
+    )
+
+    valuation_model = st.radio(
+        "Selecciona el modelo de valoración:",
+        ["DCF (Free Cash Flow)", "DDM (Dividend Discount Model)"],
+        index=1,  # Default to DDM for financial companies
+        help="DCF usa flujos de caja libres. DDM usa dividendos (recomendado para financieras).",
+    )
+
+    # Simplify to DCF or DDM
+    valuation_model = "DDM" if "DDM" in valuation_model else "DCF"
+
 # DCF Calculation
 st.markdown("---")
-st.subheader("💰 Valoración DCF")
+st.subheader(f"💰 Valoración {valuation_model}")
 
 # Validate all inputs before proceeding
 try:
