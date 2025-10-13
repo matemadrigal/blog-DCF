@@ -330,31 +330,42 @@ class CompanyCatalog:
         Build comprehensive company catalog from all sources.
 
         Args:
-            include_online: Whether to fetch online lists (S&P 500, NASDAQ 100)
+            include_online: Whether to fetch online lists (NASDAQ/NYSE/AMEX)
 
         Returns:
             Number of unique companies in catalog
         """
         all_companies = []
 
-        # ALWAYS add static companies first (guaranteed to work)
+        # ALWAYS add static companies first (guaranteed to work, with sector info)
         static_companies = get_all_static_companies()
         all_companies.extend(static_companies)
         logger.info(f"Added {len(static_companies)} companies from static lists")
 
         # Add from online sources if requested
         if include_online:
+            # Try NASDAQ fetcher first (best free option - ~7K companies)
             try:
-                sp500 = self.get_sp500_companies()
-                all_companies.extend(sp500)
-                logger.info(f"Added {len(sp500)} S&P 500 companies")
-            except Exception as e:
-                logger.warning(f"Could not load S&P 500: {e}")
+                from .nasdaq_fetcher import get_nasdaq_fetcher
 
-            try:
-                all_companies.extend(self.get_nasdaq100_companies())
+                logger.info("Fetching companies from NASDAQ/NYSE/AMEX...")
+                fetcher = get_nasdaq_fetcher()
+                nasdaq_stocks = fetcher.get_all_stocks(use_api=True, use_ftp=True)
+                all_companies.extend(nasdaq_stocks)
+                logger.info(
+                    f"Added {len(nasdaq_stocks)} companies from NASDAQ/NYSE/AMEX"
+                )
             except Exception as e:
-                logger.warning(f"Could not load NASDAQ 100: {e}")
+                logger.warning(f"Could not load NASDAQ stocks: {e}")
+
+            # Fallback: Try S&P 500 from Wikipedia if NASDAQ failed
+            if len(all_companies) < 1000:
+                try:
+                    sp500 = self.get_sp500_companies()
+                    all_companies.extend(sp500)
+                    logger.info(f"Added {len(sp500)} S&P 500 companies")
+                except Exception as e:
+                    logger.warning(f"Could not load S&P 500: {e}")
 
         # Deduplicate by ticker
         seen_tickers = set()
