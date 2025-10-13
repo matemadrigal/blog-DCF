@@ -984,6 +984,24 @@ try:
             growth_rate_ddm, growth_details = calculate_dividend_growth_rate(
                 historical_dividends, method="cagr"
             )
+
+            # Cap growth rate for Gordon Model (perpetuity should be conservative)
+            # High historical growth is unrealistic for perpetuity
+            if growth_rate_ddm > 0.05:  # > 5%
+                original_growth = growth_rate_ddm
+                growth_rate_ddm = min(growth_rate_ddm, 0.05)  # Cap at 5%
+                growth_details["warnings"].append(
+                    f"⚠️ Crecimiento histórico ({original_growth:.2%}) muy alto para perpetuidad. "
+                    f"Ajustado a {growth_rate_ddm:.2%} para Gordon Model. "
+                    "Considera usar Two-Stage DDM para capturar alto crecimiento inicial."
+                )
+            elif growth_rate_ddm < -0.05:  # Large negative growth
+                original_growth = growth_rate_ddm
+                growth_rate_ddm = max(growth_rate_ddm, 0.01)  # Floor at 1%
+                growth_details["warnings"].append(
+                    f"⚠️ Crecimiento negativo ({original_growth:.2%}) ajustado a {growth_rate_ddm:.2%}. "
+                    "Considera usar Two-Stage DDM si esperas recuperación."
+                )
         else:
             growth_rate_ddm = 0.03  # Default conservative 3%
             growth_details = {
