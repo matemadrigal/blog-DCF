@@ -426,6 +426,7 @@ def validate_dcf_inputs(
     shares: int,
     cash: float,
     debt: float,
+    sector: Optional[str] = None,
 ) -> Tuple[bool, List[str]]:
     """
     Validate all DCF inputs before calculation.
@@ -437,19 +438,50 @@ def validate_dcf_inputs(
         shares: Shares outstanding
         cash: Cash
         debt: Total debt
+        sector: Company sector (to handle special cases like financials)
 
     Returns:
         Tuple of (is_valid, list_of_errors)
     """
     errors = []
+    warnings = []
+
+    # Financial companies (banks, insurance, REITs) use different metrics
+    # DCF with FCF doesn't apply well - should use DDM or P/B instead
+    financial_sectors = [
+        "financial services",
+        "banks",
+        "insurance",
+        "real estate",
+        "reit",
+        "capital markets",
+    ]
+
+    is_financial = False
+    if sector:
+        sector_lower = sector.lower()
+        is_financial = any(fs in sector_lower for fs in financial_sectors)
 
     # Validate base FCF
     if base_fcf == 0:
-        errors.append("Base FCF is zero - cannot calculate valuation")
+        if is_financial:
+            warnings.append(
+                "⚠️  Empresa financiera: FCF tradicional no aplica bien. Considera usar DDM o P/B"
+            )
+        else:
+            errors.append("No se pudo obtener FCF - los datos pueden estar incompletos")
     elif base_fcf < 0:
-        errors.append(
-            f"Base FCF is negative (${base_fcf/1e9:.2f}B) - company is burning cash"
-        )
+        if is_financial:
+            # For financial companies, negative FCF is often normal
+            warnings.append(
+                f"⚠️  FCF negativo (${base_fcf/1e9:.2f}B) es normal para empresas financieras. "
+                "El modelo DCF tradicional no es ideal para bancos/aseguradoras. "
+                "Recomendación: usar Dividend Discount Model (DDM) o Price-to-Book"
+            )
+        else:
+            errors.append(
+                f"FCF negativo (${base_fcf/1e9:.2f}B) - la empresa está quemando efectivo"
+            )
 
     # Validate WACC
     if wacc <= 0:
@@ -481,11 +513,16 @@ def validate_dcf_inputs(
 
     # Validate cash (warning only)
     if cash < 0:
-        errors.append(f"Cash is negative (${cash/1e9:.2f}B) - please verify")
+        warnings.append(f"Cash is negative (${cash/1e9:.2f}B) - please verify")
 
     # Validate debt (warning only)
     if debt < 0:
-        errors.append(f"Debt is negative (${debt/1e9:.2f}B) - please verify")
+        warnings.append(f"Debt is negative (${debt/1e9:.2f}B) - please verify")
 
+    # Combine errors and warnings
+    all_messages = errors + warnings
+
+    # Valid if no errors (warnings are OK)
     is_valid = len(errors) == 0
-    return is_valid, errors
+
+    return is_valid, all_messages

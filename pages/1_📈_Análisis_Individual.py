@@ -855,6 +855,7 @@ try:
                 st.markdown(terminal_growth_info["justification"])
 
     # Comprehensive input validation
+    company_sector = info.get("sector", None) if info else None
     is_valid, validation_errors = validate_dcf_inputs(
         base_fcf=base_fcf,
         wacc=r if r is not None else 0.08,
@@ -862,6 +863,7 @@ try:
         shares=shares,
         cash=cash,
         debt=total_debt,
+        sector=company_sector,  # Pass sector for financial companies handling
     )
 
     if not is_valid:
