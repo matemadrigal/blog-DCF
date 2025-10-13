@@ -924,7 +924,370 @@ try:
         )
         st.stop()
 
-    if use_enhanced_model:
+    # ========================================
+    # DIVIDEND DISCOUNT MODEL (DDM) BRANCH
+    # ========================================
+    if valuation_model == "DDM":
+        from src.models.ddm import DDMValuation
+        from src.utils.ddm_data_fetcher import (
+            get_dividend_data,
+            calculate_dividend_growth_rate,
+            get_payout_ratio,
+            get_roe,
+            get_cost_of_equity,
+        )
+
+        st.info(
+            "💡 **Usando Dividend Discount Model (DDM)** - Modelo recomendado para empresas financieras"
+        )
+
+        # Fetch dividend data
+        with st.spinner("📊 Obteniendo datos de dividendos..."):
+            dividend_per_share, historical_dividends, div_metadata = get_dividend_data(
+                ticker, max_years=5
+            )
+
+        # Display dividend information
+        col_div1, col_div2 = st.columns(2)
+        with col_div1:
+            if dividend_per_share > 0:
+                st.metric(
+                    "Dividendo Anual (DPS)",
+                    f"${dividend_per_share:.2f}",
+                    help=f"Fuente: {div_metadata['data_source']}",
+                )
+            else:
+                st.error(
+                    "⚠️ No hay datos de dividendos - la empresa puede no pagar dividendos"
+                )
+                st.info(
+                    "💡 **Sugerencia**: Las empresas financieras sin dividendos pueden usar el modelo DCF tradicional o P/B ratio"
+                )
+                st.stop()
+
+        with col_div2:
+            if historical_dividends and len(historical_dividends) > 1:
+                hist_div_display = " | ".join(
+                    [f"${d:.2f}" for d in historical_dividends[:4]]
+                )
+                st.caption(
+                    f"**Histórico de dividendos** (últimos {len(historical_dividends)} años):"
+                )
+                st.caption(hist_div_display)
+
+        # Show warnings if any
+        for warning in div_metadata.get("warnings", []):
+            st.warning(warning)
+
+        # Calculate dividend growth rate
+        if historical_dividends and len(historical_dividends) >= 2:
+            growth_rate_ddm, growth_details = calculate_dividend_growth_rate(
+                historical_dividends, method="cagr"
+            )
+        else:
+            growth_rate_ddm = 0.03  # Default conservative 3%
+            growth_details = {
+                "warnings": [
+                    "⚠️ Datos históricos insuficientes - usando crecimiento por defecto de 3%"
+                ]
+            }
+
+        # Get additional metrics
+        payout_ratio, payout_meta = get_payout_ratio(ticker)
+        roe, roe_meta = get_roe(ticker)
+        cost_of_equity, coe_meta = get_cost_of_equity(
+            ticker, risk_free_rate=0.04, market_risk_premium=0.06
+        )
+
+        # Display key DDM inputs
+        st.markdown("---")
+        st.markdown("### 📊 Inputs del Modelo DDM")
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            st.metric(
+                "Cost of Equity (r)",
+                f"{cost_of_equity:.2%}",
+                help=f"Calculado con CAPM. Beta: {coe_meta['inputs'].get('beta', 'N/A')}",
+            )
+            if coe_meta.get("warnings"):
+                for w in coe_meta["warnings"]:
+                    st.caption(w)
+
+        with col2:
+            st.metric(
+                "Crecimiento Dividendos (g)",
+                f"{growth_rate_ddm:.2%}",
+                help=f"Método: {growth_details.get('method', 'CAGR')}",
+            )
+            if growth_details.get("warnings"):
+                for w in growth_details["warnings"]:
+                    st.caption(w)
+
+        with col3:
+            if payout_ratio > 0:
+                st.metric(
+                    "Payout Ratio",
+                    f"{payout_ratio:.1%}",
+                    help="Dividendos / Ganancias",
+                )
+            else:
+                st.metric("Payout Ratio", "N/A")
+
+        with col4:
+            if roe != 0:
+                st.metric("ROE", f"{roe:.1%}", help="Return on Equity")
+            else:
+                st.metric("ROE", "N/A")
+
+        # DDM Model Selection
+        st.markdown("---")
+        st.markdown("### 🎯 Selección de Modelo DDM")
+
+        ddm_model_type = st.radio(
+            "Tipo de modelo:",
+            [
+                "Gordon Growth Model (Constant Growth)",
+                "Two-Stage DDM",
+                "H-Model (Linear Decline)",
+            ],
+            help="""
+            - **Gordon Growth**: Para empresas maduras con crecimiento estable
+            - **Two-Stage**: Para empresas en transición (alto crecimiento → estable)
+            - **H-Model**: Crecimiento que declina linealmente (más realista)
+            """,
+        )
+
+        # Initialize DDM valuation
+        ddm = DDMValuation(ticker)
+
+        # Calculate based on selected model
+        if "Gordon Growth" in ddm_model_type:
+            # Gordon Growth Model (simplest)
+            intrinsic_value, ddm_details = ddm.gordon_growth_model(
+                dividend_per_share=dividend_per_share,
+                cost_of_equity=cost_of_equity,
+                growth_rate=growth_rate_ddm,
+            )
+
+            fair_value_per_share = intrinsic_value
+            fair_value_total = intrinsic_value * shares if shares > 0 else 0
+            equity_value = fair_value_total  # DDM gives equity value directly
+
+        elif "Two-Stage" in ddm_model_type:
+            # Two-Stage DDM
+            st.markdown("#### Parámetros Two-Stage")
+            col_ts1, col_ts2 = st.columns(2)
+
+            with col_ts1:
+                high_growth_rate = (
+                    st.number_input(
+                        "Crecimiento alto (%)",
+                        min_value=0.0,
+                        max_value=50.0,
+                        value=max(growth_rate_ddm * 100, 5.0),
+                        step=1.0,
+                    )
+                    / 100
+                )
+
+            with col_ts2:
+                high_growth_years = st.number_input(
+                    "Años de alto crecimiento",
+                    min_value=1,
+                    max_value=15,
+                    value=5,
+                    step=1,
+                )
+
+            stable_growth_rate = (
+                st.number_input(
+                    "Crecimiento estable perpetuo (%)",
+                    min_value=0.0,
+                    max_value=10.0,
+                    value=min(growth_rate_ddm * 100, 3.5),
+                    step=0.5,
+                )
+                / 100
+            )
+
+            intrinsic_value, ddm_details = ddm.two_stage_ddm(
+                dividend_per_share=dividend_per_share,
+                cost_of_equity=cost_of_equity,
+                high_growth_rate=high_growth_rate,
+                stable_growth_rate=stable_growth_rate,
+                high_growth_years=high_growth_years,
+            )
+
+            fair_value_per_share = intrinsic_value
+            fair_value_total = intrinsic_value * shares if shares > 0 else 0
+            equity_value = fair_value_total
+
+        else:  # H-Model
+            # H-Model
+            st.markdown("#### Parámetros H-Model")
+            col_h1, col_h2 = st.columns(2)
+
+            with col_h1:
+                initial_growth_rate = (
+                    st.number_input(
+                        "Crecimiento inicial (%)",
+                        min_value=0.0,
+                        max_value=50.0,
+                        value=max(growth_rate_ddm * 100, 8.0),
+                        step=1.0,
+                    )
+                    / 100
+                )
+
+            with col_h2:
+                half_life_years = st.number_input(
+                    "Half-life (años)",
+                    min_value=1.0,
+                    max_value=15.0,
+                    value=5.0,
+                    step=1.0,
+                )
+
+            stable_growth_rate = (
+                st.number_input(
+                    "Crecimiento estable (%)",
+                    min_value=0.0,
+                    max_value=10.0,
+                    value=min(growth_rate_ddm * 100, 3.5),
+                    step=0.5,
+                )
+                / 100
+            )
+
+            intrinsic_value, ddm_details = ddm.h_model(
+                dividend_per_share=dividend_per_share,
+                cost_of_equity=cost_of_equity,
+                initial_growth_rate=initial_growth_rate,
+                stable_growth_rate=stable_growth_rate,
+                half_life_years=half_life_years,
+            )
+
+            fair_value_per_share = intrinsic_value
+            fair_value_total = intrinsic_value * shares if shares > 0 else 0
+            equity_value = fair_value_total
+
+        # Display DDM results
+        st.markdown("---")
+        st.markdown("### 💰 Resultados DDM")
+
+        # Show any errors from DDM calculation
+        if ddm_details.get("errors"):
+            st.error("❌ Errores en el cálculo DDM:")
+            for error in ddm_details["errors"]:
+                st.error(error)
+            st.stop()
+
+        # Show warnings
+        if ddm_details.get("warnings"):
+            for warning in ddm_details["warnings"]:
+                st.warning(warning)
+
+        # Main metrics
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            if fair_value_total > 0:
+                st.metric(
+                    "Equity Value",
+                    (
+                        f"${equity_value/1e9:.2f}B"
+                        if equity_value > 1e9
+                        else f"${equity_value/1e6:.2f}M"
+                    ),
+                    help="Valoración total del equity (DDM valora equity directamente)",
+                )
+
+        with col2:
+            if fair_value_per_share > 0:
+                st.metric(
+                    "Fair Value / Acción",
+                    f"${fair_value_per_share:.2f}",
+                    help="Valor intrínseco por acción según DDM",
+                )
+
+        with col3:
+            st.metric("Precio Mercado", f"${current_price:.2f}")
+
+        with col4:
+            if fair_value_per_share > 0:
+                upside = ((fair_value_per_share - current_price) / current_price) * 100
+                st.metric(
+                    "Upside/Downside",
+                    f"{upside:+.1f}%",
+                    delta=f"${fair_value_per_share - current_price:.2f}",
+                    delta_color="normal" if upside > 0 else "inverse",
+                )
+
+        # Show detailed calculation
+        with st.expander("🔍 Ver detalles del cálculo DDM"):
+            st.markdown(f"**Modelo usado:** {ddm_details['model']}")
+            st.markdown(f"**Fórmula:** {ddm_details['formula']}")
+
+            st.markdown("##### Inputs:")
+            for key, value in ddm_details["inputs"].items():
+                if isinstance(value, float):
+                    if value > 1:
+                        st.caption(f"• {key}: ${value:,.2f}")
+                    else:
+                        st.caption(f"• {key}: {value:.2%}")
+                else:
+                    st.caption(f"• {key}: {value}")
+
+            if "calculations" in ddm_details:
+                st.markdown("##### Cálculos intermedios:")
+                for key, value in ddm_details["calculations"].items():
+                    if isinstance(value, float):
+                        if value > 1:
+                            st.caption(f"• {key}: ${value:,.2f}")
+                        else:
+                            st.caption(f"• {key}: {value:.2%}")
+
+            # Show stage dividends for two-stage model
+            if "stage_1_dividends" in ddm_details and ddm_details["stage_1_dividends"]:
+                st.markdown("##### Stage 1: Dividendos proyectados")
+                stage_df = pd.DataFrame(ddm_details["stage_1_dividends"])
+                st.dataframe(
+                    stage_df.style.format({"dividend": "${:,.2f}", "pv": "${:,.2f}"}),
+                    hide_index=True,
+                )
+
+        # Calculate implied growth rate
+        implied_growth, implied_details = ddm.calculate_implied_growth_rate(
+            current_price, dividend_per_share, cost_of_equity
+        )
+
+        st.markdown("---")
+        st.markdown("### 🔮 Análisis de Mercado (Implied Growth)")
+        st.info(
+            f"**Crecimiento implícito en el precio actual**: {implied_growth:.2%}\n\n"
+            f"{implied_details.get('interpretation', '')}"
+        )
+
+        col_comp1, col_comp2 = st.columns(2)
+        with col_comp1:
+            st.metric("Tu estimación de crecimiento", f"{growth_rate_ddm:.2%}")
+        with col_comp2:
+            st.metric(
+                "Crecimiento implícito del mercado",
+                f"{implied_growth:.2%}",
+                delta=f"{(implied_growth - growth_rate_ddm)*100:+.1f}pp",
+            )
+
+        # Skip DCF calculation since we're using DDM
+        dcf_result = None
+        use_enhanced_model = False  # Flag to skip DCF display sections
+
+    # ========================================
+    # DCF MODEL BRANCH (Original)
+    # ========================================
+    elif use_enhanced_model:
         # Use Enhanced DCF Model
         enhanced_model = EnhancedDCFModel(wacc=r, terminal_growth=g)
 
