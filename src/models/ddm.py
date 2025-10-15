@@ -497,14 +497,29 @@ class DDMValuation:
             return 0.0, details
 
         # Calculate implied growth rate
-        # From V = D₁/(r-g), solving for g:
-        # g = r - D₁/V
-        # Approximating D₁ ≈ D₀ (current dividend)
-        implied_growth = cost_of_equity - (dividend_per_share / current_price)
+        # From Gordon Model: V = D₁/(r-g) where D₁ = D₀(1+g)
+        # Substituting: V = D₀(1+g)/(r-g)
+        # Rearranging: V(r-g) = D₀(1+g)
+        #              Vr - Vg = D₀ + D₀g
+        #              Vr - D₀ = Vg + D₀g
+        #              Vr - D₀ = g(V + D₀)
+        #              g = (Vr - D₀)/(V + D₀)
+        #
+        # This is the exact formula for implied growth rate
+
+        numerator = current_price * cost_of_equity - dividend_per_share
+        denominator = current_price + dividend_per_share
+
+        if denominator == 0:
+            details["error"] = "Cannot calculate implied growth (denominator zero)"
+            return 0.0, details
+
+        implied_growth = numerator / denominator
 
         details["implied_growth_rate"] = implied_growth
         details["interpretation"] = (
             f"Market expects {implied_growth:.2%} perpetual dividend growth"
         )
+        details["formula_used"] = "g = (V×r - D₀)/(V + D₀)"
 
         return implied_growth, details
