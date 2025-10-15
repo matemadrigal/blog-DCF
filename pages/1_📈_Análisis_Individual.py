@@ -985,19 +985,34 @@ try:
                 historical_dividends, method="cagr"
             )
 
+            # Store original growth for reference
+            original_historical_growth = growth_rate_ddm
+
+            # INTELLIGENT MODEL SELECTION: Auto-recommend Two-Stage for problematic growth patterns
+            recommend_two_stage = False
+            two_stage_reason = ""
+
+            if growth_rate_ddm < 0.0:  # Negative historical growth
+                recommend_two_stage = True
+                two_stage_reason = f"⚠️ **Crecimiento histórico NEGATIVO** ({original_historical_growth:.2%}). Gordon Model no es apropiado. Se recomienda **Two-Stage DDM** para modelar recuperación futura."
+            elif growth_rate_ddm < 0.03:  # Very low growth (<3%)
+                recommend_two_stage = True
+                two_stage_reason = f"⚠️ **Crecimiento histórico muy bajo** ({original_historical_growth:.2%}). Gordon Model puede sub-valorar. Se recomienda **Two-Stage DDM** para capturar potencial de recuperación."
+
             # Cap growth rate for Gordon Model (perpetuity should be conservative)
             # High historical growth is unrealistic for perpetuity
-            if growth_rate_ddm > 0.05:  # > 5%
+            # ADJUSTED: Raised cap from 5% to 8% and floor from 1% to 3% based on market validation
+            if growth_rate_ddm > 0.08:  # > 8%
                 original_growth = growth_rate_ddm
-                growth_rate_ddm = min(growth_rate_ddm, 0.05)  # Cap at 5%
+                growth_rate_ddm = min(growth_rate_ddm, 0.08)  # Cap at 8%
                 growth_details["warnings"].append(
                     f"⚠️ Crecimiento histórico ({original_growth:.2%}) muy alto para perpetuidad. "
                     f"Ajustado a {growth_rate_ddm:.2%} para Gordon Model. "
                     "Considera usar Two-Stage DDM para capturar alto crecimiento inicial."
                 )
-            elif growth_rate_ddm < -0.05:  # Large negative growth
+            elif growth_rate_ddm < -0.03:  # Large negative growth
                 original_growth = growth_rate_ddm
-                growth_rate_ddm = max(growth_rate_ddm, 0.01)  # Floor at 1%
+                growth_rate_ddm = max(growth_rate_ddm, 0.03)  # Floor at 3%
                 growth_details["warnings"].append(
                     f"⚠️ Crecimiento negativo ({original_growth:.2%}) ajustado a {growth_rate_ddm:.2%}. "
                     "Considera usar Two-Stage DDM si esperas recuperación."
@@ -1009,6 +1024,9 @@ try:
                     "⚠️ Datos históricos insuficientes - usando crecimiento por defecto de 3%"
                 ]
             }
+            recommend_two_stage = False
+            two_stage_reason = ""
+            original_historical_growth = 0.03
 
         # Get additional metrics
         payout_ratio, payout_meta = get_payout_ratio(ticker)
@@ -1063,6 +1081,16 @@ try:
         st.markdown("---")
         st.markdown("### 🎯 Selección de Modelo DDM")
 
+        # Show intelligent recommendation if Two-Stage is recommended
+        if recommend_two_stage:
+            st.warning(two_stage_reason)
+            st.info(
+                "💡 **Recomendación**: El sistema ha pre-seleccionado **Two-Stage DDM** basado en el análisis de crecimiento histórico."
+            )
+
+        # Default to Two-Stage if recommended, otherwise Gordon
+        default_model_index = 1 if recommend_two_stage else 0
+
         ddm_model_type = st.radio(
             "Tipo de modelo:",
             [
@@ -1070,6 +1098,7 @@ try:
                 "Two-Stage DDM",
                 "H-Model (Linear Decline)",
             ],
+            index=default_model_index,  # Pre-select based on intelligent detection
             help="""
             - **Gordon Growth**: Para empresas maduras con crecimiento estable
             - **Two-Stage**: Para empresas en transición (alto crecimiento → estable)
@@ -1096,6 +1125,26 @@ try:
         elif "Two-Stage" in ddm_model_type:
             # Two-Stage DDM
             st.markdown("#### Parámetros Two-Stage")
+
+            # INTELLIGENT DEFAULTS for Two-Stage
+            # High growth rate: Use ROE-based growth if available, otherwise conservative estimate
+            if roe > 0 and payout_ratio > 0:
+                # Sustainable growth = ROE × retention_ratio
+                retention_ratio = 1 - payout_ratio
+                sustainable_growth = roe * retention_ratio
+                default_high_growth = min(
+                    max(sustainable_growth * 100, 8.0), 15.0
+                )  # Between 8-15%
+                st.caption(
+                    f"💡 Crecimiento sostenible calculado (ROE × Retention): {sustainable_growth:.1%}"
+                )
+            else:
+                # For banks with low historical growth, assume recovery to industry average
+                default_high_growth = 10.0  # Conservative 10% for recovery phase
+
+            # Stable growth: GDP + inflation for financial services (typically 3-4%)
+            default_stable_growth = 3.5
+
             col_ts1, col_ts2 = st.columns(2)
 
             with col_ts1:
@@ -1104,8 +1153,9 @@ try:
                         "Crecimiento alto (%)",
                         min_value=0.0,
                         max_value=50.0,
-                        value=max(growth_rate_ddm * 100, 5.0),
+                        value=default_high_growth,
                         step=1.0,
+                        help="Crecimiento esperado en fase de recuperación/alto crecimiento",
                     )
                     / 100
                 )
@@ -1117,6 +1167,7 @@ try:
                     max_value=15,
                     value=5,
                     step=1,
+                    help="Duración de la fase de alto crecimiento antes de estabilización",
                 )
 
             stable_growth_rate = (
@@ -1124,8 +1175,9 @@ try:
                     "Crecimiento estable perpetuo (%)",
                     min_value=0.0,
                     max_value=10.0,
-                    value=min(growth_rate_ddm * 100, 3.5),
+                    value=default_stable_growth,
                     step=0.5,
+                    help="Crecimiento perpetuo a largo plazo (típicamente GDP + inflación)",
                 )
                 / 100
             )

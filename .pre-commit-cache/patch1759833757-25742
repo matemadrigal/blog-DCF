@@ -1,0 +1,10 @@
+diff --git a/requirements.txt b/requirements.txt
+index 9423160..3993fda 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -8,3 +8,4 @@ scipy>=1.13
+ statsmodels>=0.14
+ streamlit>=1.37
+ jinja2>=3.1
++pytest>=7.0
+\ No newline at end of file

@@ -559,9 +559,26 @@ class WACCCalculator:
                 - risk_adjustment
             )
 
-            # Apply constraints
-            # AJUSTADO: Reducido cap máximo de 4.5% a 3.5%
-            g_terminal = max(0.015, min(0.035, g_terminal))  # 1.5% - 3.5%
+            # Apply sector-specific constraints for terminal growth
+            # FASE 2 ADJUSTMENT: Different sectors have different long-term growth potential
+            sector = info.get("sector", "")
+
+            sector_terminal_ranges = {
+                "Technology": (0.030, 0.045),  # 3.0-4.5% (innovation driven)
+                "Communication Services": (0.025, 0.040),  # 2.5-4.0%
+                "Healthcare": (0.025, 0.040),  # 2.5-4.0% (demographics driven)
+                "Consumer Cyclical": (0.020, 0.035),  # 2.0-3.5%
+                "Consumer Defensive": (0.020, 0.030),  # 2.0-3.0%
+                "Financial Services": (0.025, 0.035),  # 2.5-3.5%
+                "Industrials": (0.020, 0.033),  # 2.0-3.3%
+                "Basic Materials": (0.015, 0.030),  # 1.5-3.0%
+                "Energy": (0.015, 0.030),  # 1.5-3.0%
+                "Utilities": (0.015, 0.025),  # 1.5-2.5% (regulated)
+                "Real Estate": (0.020, 0.030),  # 2.0-3.0%
+            }
+
+            min_g, max_g = sector_terminal_ranges.get(sector, (0.015, 0.035))
+            g_terminal = max(min_g, min(max_g, g_terminal))
 
             # Validate spread if WACC provided
             spread_adjusted = False

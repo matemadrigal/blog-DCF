@@ -490,6 +490,10 @@ def get_cost_of_equity(
     """
     Get cost of equity for a company using CAPM.
 
+    FASE 2 ADJUSTMENT: For financial companies (banks), apply beta adjustment
+    if company beta is significantly higher than industry average to avoid
+    over-penalizing stable banks with temporarily elevated betas.
+
     Args:
         ticker: Stock ticker
         risk_free_rate: Risk-free rate (default: 4%)
@@ -516,12 +520,42 @@ def get_cost_of_equity(
 
         # Get beta
         beta = safe_get_float(info.get("beta"))
+        original_beta = beta
 
         if beta == 0:
             metadata["errors"].append("Beta not available")
             # Use default beta of 1.0 (market risk)
             beta = 1.0
             metadata["warnings"].append("⚠️  Using default beta = 1.0")
+
+        # FASE 2: Adjust beta for financial companies with high betas
+        # Rationale: Bank betas can be temporarily elevated due to market stress,
+        # but large banks are typically stable businesses with betas ~1.0-1.2
+        sector = info.get("sector", "")
+        industry = info.get("industry", "")
+
+        is_financial = any(
+            keyword in sector.lower() or keyword in industry.lower()
+            for keyword in ["financial", "bank", "insurance", "capital markets"]
+        )
+
+        if is_financial and beta > 1.3:
+            # Beta seems too high for a financial institution
+            # Apply blended approach: 60% company beta + 40% industry average (1.1)
+            industry_beta = 1.1  # Typical beta for banks/financials
+            adjusted_beta = 0.60 * beta + 0.40 * industry_beta
+
+            metadata["warnings"].append(
+                f"⚠️  Beta ajustado para empresa financiera: {original_beta:.2f} → {adjusted_beta:.2f}"
+            )
+            metadata["warnings"].append(
+                "💡 Aplicado blend 60/40 con beta de industria (1.1) para evitar sobre-penalización"
+            )
+
+            beta = adjusted_beta
+            metadata["inputs"]["beta_original"] = original_beta
+            metadata["inputs"]["beta_adjusted"] = True
+            metadata["inputs"]["beta_industry"] = industry_beta
 
         metadata["inputs"]["beta"] = beta
 

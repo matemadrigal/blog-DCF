@@ -1,0 +1,549 @@
+diff --git "a/pages/1_\360\237\223\210_An\303\241lisis_Individual.py" "b/pages/1_\360\237\223\210_An\303\241lisis_Individual.py"
+index 9545377..ab87f8a 100644
+--- "a/pages/1_\360\237\223\210_An\303\241lisis_Individual.py"
++++ "b/pages/1_\360\237\223\210_An\303\241lisis_Individual.py"
+@@ -1084,7 +1084,9 @@ try:
+         # Show intelligent recommendation if Two-Stage is recommended
+         if recommend_two_stage:
+             st.warning(two_stage_reason)
+-            st.info("💡 **Recomendación**: El sistema ha pre-seleccionado **Two-Stage DDM** basado en el análisis de crecimiento histórico.")
++            st.info(
++                "💡 **Recomendación**: El sistema ha pre-seleccionado **Two-Stage DDM** basado en el análisis de crecimiento histórico."
++            )
+ 
+         # Default to Two-Stage if recommended, otherwise Gordon
+         default_model_index = 1 if recommend_two_stage else 0
+@@ -1130,8 +1132,12 @@ try:
+                 # Sustainable growth = ROE × retention_ratio
+                 retention_ratio = 1 - payout_ratio
+                 sustainable_growth = roe * retention_ratio
+-                default_high_growth = min(max(sustainable_growth * 100, 8.0), 15.0)  # Between 8-15%
+-                st.caption(f"💡 Crecimiento sostenible calculado (ROE × Retention): {sustainable_growth:.1%}")
++                default_high_growth = min(
++                    max(sustainable_growth * 100, 8.0), 15.0
++                )  # Between 8-15%
++                st.caption(
++                    f"💡 Crecimiento sostenible calculado (ROE × Retention): {sustainable_growth:.1%}"
++                )
+             else:
+                 # For banks with low historical growth, assume recovery to industry average
+                 default_high_growth = 10.0  # Conservative 10% for recovery phase
+diff --git a/src/utils/ddm_data_fetcher.py b/src/utils/ddm_data_fetcher.py
+index 502c556..8a6ff9f 100644
+--- a/src/utils/ddm_data_fetcher.py
++++ b/src/utils/ddm_data_fetcher.py
+@@ -549,7 +549,7 @@ def get_cost_of_equity(
+                 f"⚠️  Beta ajustado para empresa financiera: {original_beta:.2f} → {adjusted_beta:.2f}"
+             )
+             metadata["warnings"].append(
+-                f"💡 Aplicado blend 60/40 con beta de industria (1.1) para evitar sobre-penalización"
++                "💡 Aplicado blend 60/40 con beta de industria (1.1) para evitar sobre-penalización"
+             )
+ 
+             beta = adjusted_beta
+diff --git a/validate_against_market.py b/validate_against_market.py
+index 8f66e92..bcc6ca9 100644
+--- a/validate_against_market.py
++++ b/validate_against_market.py
+@@ -15,10 +15,10 @@ Empresas a testear (múltiples sectores):
+ """
+ 
+ import sys
+-sys.path.insert(0, '/home/mateo/blog-DCF')
++
++sys.path.insert(0, "/home/mateo/blog-DCF")
+ 
+ import yfinance as yf
+-import pandas as pd
+ from src.dcf.enhanced_model import EnhancedDCFModel
+ from src.dcf.wacc_calculator import WACCCalculator
+ from src.models.ddm import DDMValuation
+@@ -28,6 +28,7 @@ from src.utils.ddm_data_fetcher import (
+     get_cost_of_equity,
+ )
+ 
++
+ # Simple standalone functions without streamlit dependencies
+ def get_fcf_simple(ticker, years=5):
+     """Get FCF without aggregator."""
+@@ -41,14 +42,20 @@ def get_fcf_simple(ticker, years=5):
+         # Get operating cash flow
+         ocf_row = None
+         for idx in cashflow.index:
+-            if 'operating cash flow' in str(idx).lower() or 'total cash from operating' in str(idx).lower():
++            if (
++                "operating cash flow" in str(idx).lower()
++                or "total cash from operating" in str(idx).lower()
++            ):
+                 ocf_row = idx
+                 break
+ 
+         # Get capex
+         capex_row = None
+         for idx in cashflow.index:
+-            if 'capital expenditure' in str(idx).lower() or 'purchase of ppe' in str(idx).lower():
++            if (
++                "capital expenditure" in str(idx).lower()
++                or "purchase of ppe" in str(idx).lower()
++            ):
+                 capex_row = idx
+                 break
+ 
+@@ -64,24 +71,25 @@ def get_fcf_simple(ticker, years=5):
+ 
+         # Get historical
+         historical_fcf = []
+-        for col in cashflow.columns[:min(years, len(cashflow.columns))]:
++        for col in cashflow.columns[: min(years, len(cashflow.columns))]:
+             try:
+                 ocf_hist = float(cashflow.loc[ocf_row, col])
+                 capex_hist = abs(float(cashflow.loc[capex_row, col]))
+                 fcf_hist = ocf_hist - capex_hist
+                 historical_fcf.append(fcf_hist)
+-            except:
++            except Exception:
+                 pass
+ 
+         return {
+-            'success': True,
+-            'fcf': fcf,
+-            'historical_fcf': historical_fcf if historical_fcf else [fcf],
++            "success": True,
++            "fcf": fcf,
++            "historical_fcf": historical_fcf if historical_fcf else [fcf],
+         }
+     except Exception as e:
+         print(f"    Error getting FCF: {e}")
+         return None
+ 
++
+ def get_balance_sheet_simple(ticker):
+     """Get cash and debt without aggregator."""
+     try:
+@@ -96,14 +104,14 @@ def get_balance_sheet_simple(ticker):
+         # Get cash
+         cash = 0
+         for idx in balance_sheet.index:
+-            if 'cash' in str(idx).lower() and 'equivalents' in str(idx).lower():
++            if "cash" in str(idx).lower() and "equivalents" in str(idx).lower():
+                 cash = abs(float(balance_sheet.loc[idx, col]))
+                 break
+ 
+         # Get debt
+         debt = 0
+         for idx in balance_sheet.index:
+-            if 'total debt' in str(idx).lower() or 'long term debt' in str(idx).lower():
++            if "total debt" in str(idx).lower() or "long term debt" in str(idx).lower():
+                 debt = abs(float(balance_sheet.loc[idx, col]))
+                 break
+ 
+@@ -112,40 +120,43 @@ def get_balance_sheet_simple(ticker):
+         print(f"    Error getting balance sheet: {e}")
+         return 0, 0
+ 
++
+ def get_shares_simple(ticker):
+     """Get shares outstanding without aggregator."""
+     try:
+         stock = yf.Ticker(ticker)
+         info = stock.info
+-        shares = info.get('sharesOutstanding', 0)
++        shares = info.get("sharesOutstanding", 0)
+         return shares
+     except Exception as e:
+         print(f"    Error getting shares: {e}")
+         return 0
+ 
++
+ def get_analyst_consensus(ticker):
+     """Get analyst consensus price target from Yahoo Finance."""
+     try:
+         stock = yf.Ticker(ticker)
+         info = stock.info
+ 
+-        target_mean = info.get('targetMeanPrice', None)
+-        target_high = info.get('targetHighPrice', None)
+-        target_low = info.get('targetLowPrice', None)
+-        num_analysts = info.get('numberOfAnalystOpinions', None)
+-        current_price = info.get('currentPrice', info.get('regularMarketPrice', None))
++        target_mean = info.get("targetMeanPrice", None)
++        target_high = info.get("targetHighPrice", None)
++        target_low = info.get("targetLowPrice", None)
++        num_analysts = info.get("numberOfAnalystOpinions", None)
++        current_price = info.get("currentPrice", info.get("regularMarketPrice", None))
+ 
+         return {
+-            'target_mean': target_mean,
+-            'target_high': target_high,
+-            'target_low': target_low,
+-            'num_analysts': num_analysts,
+-            'current_price': current_price,
++            "target_mean": target_mean,
++            "target_high": target_high,
++            "target_low": target_low,
++            "num_analysts": num_analysts,
++            "current_price": current_price,
+         }
+     except Exception as e:
+         print(f"Error getting analyst data for {ticker}: {e}")
+         return None
+ 
++
+ def calculate_our_dcf(ticker):
+     """Calculate our DCF valuation."""
+     try:
+@@ -154,19 +165,19 @@ def calculate_our_dcf(ticker):
+         # Get data using simple functions
+         fcf_result = get_fcf_simple(ticker, years=5)
+ 
+-        if not fcf_result or not fcf_result.get('success'):
+-            print(f"  ⚠️  Could not get FCF data")
++        if not fcf_result or not fcf_result.get("success"):
++            print("  ⚠️  Could not get FCF data")
+             return None
+ 
+-        base_fcf = fcf_result['fcf']
+-        historical_fcf = fcf_result.get('historical_fcf', [base_fcf])
++        base_fcf = fcf_result["fcf"]
++        historical_fcf = fcf_result.get("historical_fcf", [base_fcf])
+ 
+         # Get balance sheet data
+         cash, debt = get_balance_sheet_simple(ticker)
+         shares = get_shares_simple(ticker)
+ 
+         if shares == 0:
+-            print(f"  ⚠️  Could not get shares outstanding")
++            print("  ⚠️  Could not get shares outstanding")
+             return None
+ 
+         # Calculate WACC
+@@ -178,7 +189,7 @@ def calculate_our_dcf(ticker):
+             use_industry_wacc=False,
+         )
+ 
+-        wacc = wacc_components['wacc']
++        wacc = wacc_components["wacc"]
+ 
+         # Terminal growth
+         terminal_growth_info = wacc_calc.calculate_company_terminal_growth(
+@@ -187,7 +198,7 @@ def calculate_our_dcf(ticker):
+             wacc=wacc,
+             validate_spread=True,
+         )
+-        terminal_growth = terminal_growth_info['terminal_growth']
++        terminal_growth = terminal_growth_info["terminal_growth"]
+ 
+         # Run DCF
+         model = EnhancedDCFModel(wacc=wacc, terminal_growth=terminal_growth)
+@@ -201,35 +212,40 @@ def calculate_our_dcf(ticker):
+             custom_growth_rates=None,  # Let model calculate
+         )
+ 
+-        fair_value_per_share = result['fair_value_per_share']
++        fair_value_per_share = result["fair_value_per_share"]
+ 
+         return {
+-            'fair_value': fair_value_per_share,
+-            'wacc': wacc,
+-            'terminal_growth': terminal_growth,
+-            'base_fcf': base_fcf / 1e9,  # in billions
+-            'method': 'DCF',
++            "fair_value": fair_value_per_share,
++            "wacc": wacc,
++            "terminal_growth": terminal_growth,
++            "base_fcf": base_fcf / 1e9,  # in billions
++            "method": "DCF",
+         }
+ 
+     except Exception as e:
+         print(f"  ❌ Error in DCF calculation: {e}")
+         return None
+ 
++
+ def calculate_our_ddm(ticker):
+     """Calculate our DDM valuation (for financials)."""
+     try:
+         print(f"\n  💰 Calculating DDM for {ticker}...")
+ 
+         # Get dividend data
+-        dividend_per_share, historical_dividends, div_metadata = get_dividend_data(ticker, max_years=5)
++        dividend_per_share, historical_dividends, div_metadata = get_dividend_data(
++            ticker, max_years=5
++        )
+ 
+         if dividend_per_share <= 0:
+-            print(f"  ⚠️  No dividend data")
++            print("  ⚠️  No dividend data")
+             return None
+ 
+         # Get growth rate
+         if len(historical_dividends) >= 2:
+-            growth_rate, _ = calculate_dividend_growth_rate(historical_dividends, method='cagr')
++            growth_rate, _ = calculate_dividend_growth_rate(
++                historical_dividends, method="cagr"
++            )
+             # Cap growth at 8% for Gordon Model (raised from 5% based on market validation)
+             growth_rate = min(growth_rate, 0.08)
+             growth_rate = max(growth_rate, 0.03)  # Floor raised from 1% to 3%
+@@ -247,22 +263,23 @@ def calculate_our_ddm(ticker):
+             growth_rate=growth_rate,
+         )
+ 
+-        if details.get('errors'):
++        if details.get("errors"):
+             print(f"  ❌ DDM errors: {details['errors']}")
+             return None
+ 
+         return {
+-            'fair_value': fair_value,
+-            'cost_of_equity': cost_of_equity,
+-            'growth_rate': growth_rate,
+-            'dividend': dividend_per_share,
+-            'method': 'DDM',
++            "fair_value": fair_value,
++            "cost_of_equity": cost_of_equity,
++            "growth_rate": growth_rate,
++            "dividend": dividend_per_share,
++            "method": "DDM",
+         }
+ 
+     except Exception as e:
+         print(f"  ❌ Error in DDM calculation: {e}")
+         return None
+ 
++
+ def compare_company(ticker, name, sector, use_ddm=False):
+     """Compare our valuation vs analyst consensus."""
+     print(f"\n{'='*80}")
+@@ -273,12 +290,14 @@ def compare_company(ticker, name, sector, use_ddm=False):
+     print("\n📈 Getting analyst consensus...")
+     analyst_data = get_analyst_consensus(ticker)
+ 
+-    if not analyst_data or analyst_data['target_mean'] is None:
++    if not analyst_data or analyst_data["target_mean"] is None:
+         print("  ⚠️  No analyst data available")
+         return None
+ 
+     print(f"  ✓ Analyst Mean Target: ${analyst_data['target_mean']:.2f}")
+-    print(f"  ✓ Analyst Range: ${analyst_data['target_low']:.2f} - ${analyst_data['target_high']:.2f}")
++    print(
++        f"  ✓ Analyst Range: ${analyst_data['target_low']:.2f} - ${analyst_data['target_high']:.2f}"
++    )
+     print(f"  ✓ Number of Analysts: {analyst_data['num_analysts']}")
+     print(f"  ✓ Current Price: ${analyst_data['current_price']:.2f}")
+ 
+@@ -296,7 +315,7 @@ def compare_company(ticker, name, sector, use_ddm=False):
+     print(f"\n💡 Our Valuation ({our_valuation['method']}):")
+     print(f"  ✓ Fair Value: ${our_valuation['fair_value']:.2f}")
+ 
+-    if our_valuation['method'] == 'DCF':
++    if our_valuation["method"] == "DCF":
+         print(f"  ✓ WACC: {our_valuation['wacc']:.2%}")
+         print(f"  ✓ Terminal Growth: {our_valuation['terminal_growth']:.2%}")
+         print(f"  ✓ Base FCF: ${our_valuation['base_fcf']:.2f}B")
+@@ -306,10 +325,10 @@ def compare_company(ticker, name, sector, use_ddm=False):
+         print(f"  ✓ Dividend: ${our_valuation['dividend']:.2f}")
+ 
+     # Comparison
+-    print(f"\n📊 Comparison:")
+-    our_fv = our_valuation['fair_value']
+-    analyst_target = analyst_data['target_mean']
+-    current_price = analyst_data['current_price']
++    print("\n📊 Comparison:")
++    our_fv = our_valuation["fair_value"]
++    analyst_target = analyst_data["target_mean"]
++    current_price = analyst_data["current_price"]
+ 
+     # Our valuation vs analyst consensus
+     diff_vs_analyst = ((our_fv - analyst_target) / analyst_target) * 100
+@@ -321,67 +340,67 @@ def compare_company(ticker, name, sector, use_ddm=False):
+     analyst_upside = ((analyst_target - current_price) / current_price) * 100
+ 
+     print(f"  • Current Price:        ${current_price:.2f}")
+-    print(f"  • Analyst Target:       ${analyst_target:.2f} ({analyst_upside:+.1f}% upside)")
++    print(
++        f"  • Analyst Target:       ${analyst_target:.2f} ({analyst_upside:+.1f}% upside)"
++    )
+     print(f"  • Our Fair Value:       ${our_fv:.2f} ({our_upside:+.1f}% upside)")
+     print(f"  • Difference:           {diff_vs_analyst:+.1f}% vs analysts")
+ 
+     # Interpretation
+-    print(f"\n🔍 Interpretation:")
++    print("\n🔍 Interpretation:")
+     if abs(diff_vs_analyst) < 10:
+-        print(f"  ✅ STRONG ALIGNMENT - Our model agrees with analysts (within 10%)")
++        print("  ✅ STRONG ALIGNMENT - Our model agrees with analysts (within 10%)")
+     elif abs(diff_vs_analyst) < 20:
+-        print(f"  ✓ GOOD ALIGNMENT - Reasonable agreement with analysts (within 20%)")
++        print("  ✓ GOOD ALIGNMENT - Reasonable agreement with analysts (within 20%)")
+     elif abs(diff_vs_analyst) < 30:
+-        print(f"  ⚠️  MODERATE DIVERGENCE - Some disagreement with analysts (20-30%)")
++        print("  ⚠️  MODERATE DIVERGENCE - Some disagreement with analysts (20-30%)")
+     else:
+-        print(f"  ⚠️  SIGNIFICANT DIVERGENCE - Major disagreement with analysts (>30%)")
++        print("  ⚠️  SIGNIFICANT DIVERGENCE - Major disagreement with analysts (>30%)")
+ 
+     if our_upside > 0 and analyst_upside > 0:
+-        print(f"  📈 Both our model and analysts see UPSIDE potential")
++        print("  📈 Both our model and analysts see UPSIDE potential")
+     elif our_upside < 0 and analyst_upside < 0:
+-        print(f"  📉 Both our model and analysts see DOWNSIDE risk")
++        print("  📉 Both our model and analysts see DOWNSIDE risk")
+     else:
+-        print(f"  🔀 DIVERGENCE: Our model and analysts disagree on direction")
++        print("  🔀 DIVERGENCE: Our model and analysts disagree on direction")
+ 
+     return {
+-        'ticker': ticker,
+-        'name': name,
+-        'sector': sector,
+-        'current_price': current_price,
+-        'analyst_target': analyst_target,
+-        'our_fair_value': our_fv,
+-        'diff_vs_analyst_pct': diff_vs_analyst,
+-        'our_upside_pct': our_upside,
+-        'analyst_upside_pct': analyst_upside,
+-        'method': our_valuation['method'],
++        "ticker": ticker,
++        "name": name,
++        "sector": sector,
++        "current_price": current_price,
++        "analyst_target": analyst_target,
++        "our_fair_value": our_fv,
++        "diff_vs_analyst_pct": diff_vs_analyst,
++        "our_upside_pct": our_upside,
++        "analyst_upside_pct": analyst_upside,
++        "method": our_valuation["method"],
+     }
+ 
++
+ # Test companies
+ companies = [
+     # Technology
+     ("AAPL", "Apple Inc.", "Technology", False),
+     ("MSFT", "Microsoft", "Technology", False),
+     ("GOOGL", "Alphabet (Google)", "Technology", False),
+-
+     # Banks (use DDM)
+     ("JPM", "JPMorgan Chase", "Banks", True),
+     ("BAC", "Bank of America", "Banks", True),
+     ("GS", "Goldman Sachs", "Banks", True),
+-
+     # Consumer
+     ("KO", "Coca-Cola", "Consumer Staples", False),
+     ("PEP", "PepsiCo", "Consumer Staples", False),
+     ("WMT", "Walmart", "Consumer Discretionary", False),
+-
+     # Healthcare
+     ("JNJ", "Johnson & Johnson", "Healthcare", False),
+     ("PFE", "Pfizer", "Healthcare", False),
+ ]
+ 
+ if __name__ == "__main__":
+-    print("\n" + "="*80)
++    print("\n" + "=" * 80)
+     print("MARKET VALIDATION - CROSS-CHECK AGAINST PROFESSIONAL ANALYSTS")
+-    print("="*80)
++    print("=" * 80)
+     print("\nComparing our DCF/DDM valuations with Wall Street analyst consensus")
+     print(f"Testing {len(companies)} companies across multiple sectors")
+ 
+@@ -395,18 +414,21 @@ if __name__ == "__main__":
+         except Exception as e:
+             print(f"\n❌ Error processing {ticker}: {e}")
+             import traceback
++
+             traceback.print_exc()
+ 
+     # Summary
+-    print("\n" + "="*80)
++    print("\n" + "=" * 80)
+     print("📊 SUMMARY - MODEL VALIDATION")
+-    print("="*80)
++    print("=" * 80)
+ 
+     if results:
+         print(f"\nSuccessfully validated {len(results)} companies:\n")
+ 
+         # Create comparison table
+-        print(f"{'Ticker':<8} {'Current':<10} {'Analyst':<10} {'Our FV':<10} {'Diff':<10} {'Agreement':<20}")
++        print(
++            f"{'Ticker':<8} {'Current':<10} {'Analyst':<10} {'Our FV':<10} {'Diff':<10} {'Agreement':<20}"
++        )
+         print("-" * 80)
+ 
+         strong_alignment = 0
+@@ -415,7 +437,7 @@ if __name__ == "__main__":
+         significant_divergence = 0
+ 
+         for r in results:
+-            diff_pct = r['diff_vs_analyst_pct']
++            diff_pct = r["diff_vs_analyst_pct"]
+ 
+             if abs(diff_pct) < 10:
+                 agreement = "✅ Strong"
+@@ -430,35 +452,51 @@ if __name__ == "__main__":
+                 agreement = "⚠️  Divergent"
+                 significant_divergence += 1
+ 
+-            print(f"{r['ticker']:<8} ${r['current_price']:<9.2f} ${r['analyst_target']:<9.2f} "
+-                  f"${r['our_fair_value']:<9.2f} {diff_pct:>+6.1f}%  {agreement:<20}")
++            print(
++                f"{r['ticker']:<8} ${r['current_price']:<9.2f} ${r['analyst_target']:<9.2f} "
++                f"${r['our_fair_value']:<9.2f} {diff_pct:>+6.1f}%  {agreement:<20}"
++            )
+ 
+         # Statistics
+         total = len(results)
+-        print("\n" + "="*80)
++        print("\n" + "=" * 80)
+         print("📈 VALIDATION STATISTICS:")
+-        print(f"  ✅ Strong Alignment (<10% diff):      {strong_alignment}/{total} ({strong_alignment/total*100:.1f}%)")
+-        print(f"  ✓  Good Alignment (10-20% diff):      {good_alignment}/{total} ({good_alignment/total*100:.1f}%)")
+-        print(f"  ⚠️  Moderate Divergence (20-30%):      {moderate_divergence}/{total} ({moderate_divergence/total*100:.1f}%)")
+-        print(f"  ⚠️  Significant Divergence (>30%):     {significant_divergence}/{total} ({significant_divergence/total*100:.1f}%)")
++        print(
++            f"  ✅ Strong Alignment (<10% diff):      {strong_alignment}/{total} ({strong_alignment/total*100:.1f}%)"
++        )
++        print(
++            f"  ✓  Good Alignment (10-20% diff):      {good_alignment}/{total} ({good_alignment/total*100:.1f}%)"
++        )
++        print(
++            f"  ⚠️  Moderate Divergence (20-30%):      {moderate_divergence}/{total} ({moderate_divergence/total*100:.1f}%)"
++        )
++        print(
++            f"  ⚠️  Significant Divergence (>30%):     {significant_divergence}/{total} ({significant_divergence/total*100:.1f}%)"
++        )
+ 
+         alignment_rate = (strong_alignment + good_alignment) / total * 100
+         print(f"\n  🎯 Overall Alignment Rate: {alignment_rate:.1f}%")
+ 
+         if alignment_rate >= 70:
+-            print(f"\n  ✅ EXCELLENT - Our model shows strong agreement with professional analysts")
++            print(
++                "\n  ✅ EXCELLENT - Our model shows strong agreement with professional analysts"
++            )
+         elif alignment_rate >= 50:
+-            print(f"\n  ✓  GOOD - Our model is reasonably aligned with professional analysts")
++            print(
++                "\n  ✓  GOOD - Our model is reasonably aligned with professional analysts"
++            )
+         else:
+-            print(f"\n  ⚠️  REVIEW NEEDED - Significant divergence from professional analysts")
++            print(
++                "\n  ⚠️  REVIEW NEEDED - Significant divergence from professional analysts"
++            )
+ 
+         # Average absolute difference
+-        avg_diff = sum(abs(r['diff_vs_analyst_pct']) for r in results) / len(results)
++        avg_diff = sum(abs(r["diff_vs_analyst_pct"]) for r in results) / len(results)
+         print(f"\n  📊 Average Absolute Difference: {avg_diff:.1f}%")
+ 
+     else:
+         print("\n❌ No results to analyze")
+ 
+-    print("\n" + "="*80)
++    print("\n" + "=" * 80)
+     print("VALIDATION COMPLETE")
+-    print("="*80 + "\n")
++    print("=" * 80 + "\n")

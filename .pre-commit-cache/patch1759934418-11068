@@ -1,0 +1,262 @@
+diff --git a/.gitignore b/.gitignore
+index a798c0b..f1cbc01 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -38,3 +38,6 @@ reports_output/
+ 
+ # Streamlit
+ .streamlit/secrets.toml
++
++# Environment variables
++.env
+diff --git a/README.md b/README.md
+index 4143f9a..de33059 100644
+--- a/README.md
++++ b/README.md
+@@ -10,7 +10,9 @@ Plataforma profesional de valoración de empresas mediante **Discounted Cash Flo
+ ## 🚀 Características
+ 
+ ### 📈 Análisis Individual
+-- Cálculo DCF con inputs manuales o autocompletado desde Yahoo Finance
++- Cálculo DCF con inputs manuales o **búsqueda inteligente multi-fuente**
++- **3 modos de datos**: Manual, Autocompletar (Yahoo), Multi-fuente (varios APIs)
++- **Estrategias de búsqueda**: Mejor calidad, Primera disponible, Combinar fuentes
+ - Métricas clave: Enterprise Value, Fair Value por acción, Upside/Downside
+ - Desglose detallado de flujos de caja proyectados
+ - Gráficos interactivos con Plotly
+@@ -69,6 +71,26 @@ pip install --upgrade pip setuptools wheel
+ pip install -r requirements.txt
+ ```
+ 
++### 4. Configurar APIs (Opcional pero recomendado)
++
++Para usar el modo **Multi-fuente** con mejor calidad de datos:
++
++```bash
++# Opción A: Variables de entorno
++cp .env.example .env
++# Edita .env y agrega tus API keys
++
++# Opción B: Streamlit secrets
++cp .streamlit/secrets.toml.example .streamlit/secrets.toml
++# Edita secrets.toml y agrega tus API keys
++```
++
++**Obtener API keys gratuitas:**
++- **Alpha Vantage**: https://www.alphavantage.co/support/#api-key (25 req/día)
++- **Financial Modeling Prep**: https://site.financialmodelingprep.com/developer/docs (250 req/día)
++
++📚 Ver guía completa: [docs/MULTI_SOURCE_DATA.md](docs/MULTI_SOURCE_DATA.md)
++
+ ## 🚀 Ejecución
+ 
+ ### Método 1: Comando directo
+@@ -91,12 +113,14 @@ La aplicación se abrirá en `http://localhost:8501`
+ 
+ 1. Ingresa un ticker (ej: AAPL, GOOGL, MSFT)
+ 2. Configura parámetros DCF:
+-   - **Modo**: Manual o Autocompletar (desde Yahoo Finance)
++   - **Modo**: Manual, Autocompletar (Yahoo Finance), o **Multi-fuente** (búsqueda inteligente)
++   - **Estrategia** (si usas Multi-fuente): Mejor calidad, Primera disponible, o Combinar fuentes
+    - **Tasa de descuento (r)**: Típicamente 8-15%
+    - **Crecimiento terminal (g)**: Típicamente 2-3%
+    - **Shares outstanding**: Dejar en 0 para autocompletar
+ 3. Revisa los resultados:
+    - Fair Value calculado
++   - **Métricas de calidad** (fuente, completitud, confianza)
+    - Comparación con precio de mercado
+    - Upside/Downside potencial
+ 4. Exporta:
+@@ -134,6 +158,12 @@ blog-DCF/
+ │   ├── dcf/
+ │   │   ├── model.py               # Modelo DCF core
+ │   │   └── fundamentals.py        # Normalización de datos
++│   ├── data_providers/            # 🆕 Sistema multi-fuente
++│   │   ├── base.py                # Clases base y FinancialData
++│   │   ├── yahoo_provider.py      # Yahoo Finance provider
++│   │   ├── alpha_vantage_provider.py  # Alpha Vantage provider
++│   │   ├── fmp_provider.py        # Financial Modeling Prep provider
++│   │   └── aggregator.py          # Búsqueda inteligente multi-fuente
+ │   ├── cache/
+ │   │   └── db.py                  # Sistema de caché SQLite
+ │   └── reports/
+@@ -149,10 +179,13 @@ blog-DCF/
+ 
+ - **Streamlit**: Framework web interactivo
+ - **yfinance**: Datos financieros de Yahoo Finance
++- **Alpha Vantage API**: Datos fundamentales de alta calidad
++- **Financial Modeling Prep API**: Estados financieros detallados
+ - **Plotly**: Gráficos interactivos profesionales
+ - **SQLite**: Base de datos persistente local
+ - **ReportLab**: Generación de informes PDF
+ - **Pandas/NumPy**: Procesamiento de datos
++- **Requests**: Cliente HTTP para APIs REST
+ 
+ ## 🎯 Metodología DCF
+ 
+@@ -199,7 +232,8 @@ pip install reportlab
+ 
+ ## 🔮 Próximas Mejoras
+ 
+-- [ ] Múltiples fuentes de datos (Alpha Vantage, Financial Modeling Prep)
++- [x] ✅ Múltiples fuentes de datos (Alpha Vantage, Financial Modeling Prep)
++- [x] ✅ Búsqueda inteligente con estrategias (mejor calidad, merge, fallback)
+ - [ ] Cálculo automático de WACC
+ - [ ] Proyecciones inteligentes basadas en histórico
+ - [ ] Análisis de sensibilidad (heat maps r vs g)
+diff --git "a/pages/1_\360\237\223\210_An\303\241lisis_Individual.py" "b/pages/1_\360\237\223\210_An\303\241lisis_Individual.py"
+index e3b7c80..28d934b 100644
+--- "a/pages/1_\360\237\223\210_An\303\241lisis_Individual.py"
++++ "b/pages/1_\360\237\223\210_An\303\241lisis_Individual.py"
+@@ -8,6 +8,7 @@ from datetime import date, timedelta, datetime
+ 
+ from src.dcf.model import dcf_value
+ from src.cache import DCFCache
++from src.data_providers.aggregator import get_data_aggregator
+ 
+ 
+ st.set_page_config(
+@@ -20,13 +21,14 @@ st.markdown(
+ )
+ 
+ 
+-# Initialize cache
++# Initialize cache and data aggregator
+ @st.cache_resource
+ def get_cache():
+     return DCFCache()
+ 
+ 
+ cache = get_cache()
++aggregator = get_data_aggregator()
+ 
+ 
+ # Sidebar inputs
+@@ -34,7 +36,30 @@ st.sidebar.header("Parámetros")
+ ticker = st.sidebar.text_input("Ticker (Yahoo Finance)", value="AAPL").upper()
+ 
+ st.sidebar.subheader("Parámetros DCF")
+-mode = st.sidebar.radio("Modo FCF", ["Manual", "Autocompletar"], index=0)
++
++# Data source selection
++available_providers = aggregator.get_available_providers()
++if len(available_providers) > 1:
++    st.sidebar.info(f"📡 Fuentes disponibles: {', '.join(available_providers)}")
++    data_strategy = st.sidebar.selectbox(
++        "Estrategia de datos",
++        ["best_quality", "first_available", "merge"],
++        format_func=lambda x: {
++            "best_quality": "Mejor Calidad",
++            "first_available": "Primera Disponible",
++            "merge": "Combinar Fuentes",
++        }[x],
++        help="best_quality: Compara todas las fuentes y elige la mejor\nfirst_available: Usa la primera que funcione\nmerge: Combina datos de múltiples fuentes",
++    )
++else:
++    data_strategy = "first_available"
++    st.sidebar.info(
++        f"📡 Usando: {available_providers[0] if available_providers else 'Yahoo Finance'}"
++    )
++
++mode = st.sidebar.radio(
++    "Modo FCF", ["Manual", "Autocompletar", "Multi-fuente"], index=0
++)
+ years = st.sidebar.number_input(
+     "Años de proyección", min_value=1, max_value=20, value=5
+ )
+@@ -116,24 +141,78 @@ st.subheader("📊 Proyecciones de Free Cash Flow")
+ 
+ # Autofill logic
+ autofill = []
+-if mode == "Autocompletar":
++data_source_used = None
++
++if mode == "Multi-fuente":
++    # Use multi-source aggregator
++    with st.spinner("🔍 Buscando datos en múltiples fuentes..."):
++        financial_data = aggregator.get_financial_data(
++            ticker, years, strategy=data_strategy
++        )
++        if financial_data:
++            # Calculate or get FCF
++            fcf_data = financial_data.calculate_fcf()
++            if fcf_data:
++                autofill = fcf_data
++                data_source_used = financial_data.data_source
++
++                # Update company info if available
++                if financial_data.company_name:
++                    company_name = financial_data.company_name
++                if financial_data.current_price:
++                    current_price = financial_data.current_price
++                if financial_data.shares_outstanding and shares == 0:
++                    shares = financial_data.shares_outstanding
++
++                # Show data quality metrics
++                st.info(
++                    f"📊 **Fuente**: {financial_data.data_source} | "
++                    f"**Completitud**: {financial_data.data_completeness:.1f}% | "
++                    f"**Confianza**: {financial_data.confidence_score:.1f}%"
++                )
++            else:
++                st.warning(
++                    "⚠️ No se pudieron calcular FCF desde multi-fuentes. Usando Yahoo Finance..."
++                )
++
++elif mode == "Autocompletar":
++    # Original Yahoo Finance only
+     try:
+-        t = yf.Ticker(ticker)
+-        cashflow = t.cashflow
+-        if not cashflow.empty:
+-            cols = list(cashflow.columns)[:years]
+-            for c in cols:
+-                op = None
+-                capex = None
+-                for idx in cashflow.index:
+-                    name = str(idx).lower()
+-                    if "operat" in name and op is None:
+-                        op = cashflow.loc[idx, c]
+-                    if "capital" in name and capex is None:
+-                        capex = cashflow.loc[idx, c]
+-                if op is not None and capex is not None:
+-                    autofill.append(float(op - capex))
+-    except Exception:
++        with st.spinner("🔍 Obteniendo datos desde Yahoo Finance..."):
++            t = yf.Ticker(ticker)
++            cashflow = t.cashflow
++            if not cashflow.empty:
++                cols = list(cashflow.columns)[:years]
++                for c in cols:
++                    op = None
++                    capex = None
++                    for idx in cashflow.index:
++                        name = str(idx).lower()
++                        # Look for Operating Cash Flow
++                        if "operating cash flow" in name and op is None:
++                            op = cashflow.loc[idx, c]
++                        # Look for Capital Expenditure (not stock repurchase!)
++                        if (
++                            "capital expenditure" in name or "purchase of ppe" in name
++                        ) and capex is None:
++                            capex = cashflow.loc[idx, c]
++                    if op is not None and capex is not None:
++                        # CAPEX is usually negative in Yahoo Finance, so we use abs
++                        autofill.append(float(op - abs(capex)))
++                data_source_used = "Yahoo Finance"
++
++                if autofill:
++                    st.success(
++                        f"✅ Autocompletado {len(autofill)} años de FCF desde Yahoo Finance"
++                    )
++                else:
++                    st.warning(
++                        "⚠️ No se encontraron datos de Operating Cash Flow y CAPEX"
++                    )
++            else:
++                st.warning(f"⚠️ No se encontraron datos de cash flow para {ticker}")
++    except Exception as e:
++        st.error(f"❌ Error al obtener datos: {str(e)}")
+         autofill = []
+ 
+ fcf_cols = st.columns(years)

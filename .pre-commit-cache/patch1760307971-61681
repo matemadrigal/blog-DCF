@@ -1,0 +1,131 @@
+diff --git a/src/data_providers/yahoo_screener_scraper.py b/src/data_providers/yahoo_screener_scraper.py
+index 49712a0..cc5d039 100644
+--- a/src/data_providers/yahoo_screener_scraper.py
++++ b/src/data_providers/yahoo_screener_scraper.py
+@@ -9,7 +9,7 @@ import requests
+ import time
+ import logging
+ from typing import List, Dict, Optional
+-from concurrent.futures import ThreadPoolExecutor, as_completed
++from concurrent.futures import ThreadPoolExecutor
+ 
+ logger = logging.getLogger(__name__)
+ 
+@@ -31,15 +31,21 @@ class YahooScreenerScraper:
+                 "operator": "and",
+                 "operands": [
+                     {"operator": "eq", "operands": ["region", "us"]},
+-                    {"operator": "or", "operands": [
+-                        {"operator": "eq", "operands": ["exchange", "NYQ"]},  # NYSE
+-                        {"operator": "eq", "operands": ["exchange", "NMS"]},  # NASDAQ
+-                        {"operator": "eq", "operands": ["exchange", "ASE"]},  # AMEX
+-                    ]}
+-                ]
++                    {
++                        "operator": "or",
++                        "operands": [
++                            {"operator": "eq", "operands": ["exchange", "NYQ"]},  # NYSE
++                            {
++                                "operator": "eq",
++                                "operands": ["exchange", "NMS"],
++                            },  # NASDAQ
++                            {"operator": "eq", "operands": ["exchange", "ASE"]},  # AMEX
++                        ],
++                    },
++                ],
+             },
+             "userId": "",
+-            "userIdType": "guid"
++            "userIdType": "guid",
+         }
+     }
+ 
+@@ -52,9 +58,11 @@ class YahooScreenerScraper:
+         """
+         self.max_workers = max_workers
+         self.session = requests.Session()
+-        self.session.headers.update({
+-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+-        })
++        self.session.headers.update(
++            {
++                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
++            }
++        )
+ 
+     def _fetch_page(self, offset: int, size: int = 250) -> Optional[Dict]:
+         """
+@@ -72,11 +80,7 @@ class YahooScreenerScraper:
+             payload["offset"] = offset
+             payload["size"] = size
+ 
+-            response = self.session.post(
+-                self.BASE_URL,
+-                json=payload,
+-                timeout=10
+-            )
++            response = self.session.post(self.BASE_URL, json=payload, timeout=10)
+ 
+             if response.status_code == 200:
+                 return response.json()
+@@ -159,7 +163,9 @@ class YahooScreenerScraper:
+                                 if stock:
+                                     all_stocks.append(stock)
+ 
+-                            logger.info(f"Page {page + 1}/{total_pages}: {len(quotes)} stocks")
++                            logger.info(
++                                f"Page {page + 1}/{total_pages}: {len(quotes)} stocks"
++                            )
+                     except Exception as e:
+                         logger.error(f"Error processing page {page}: {e}")
+ 
+@@ -188,7 +194,7 @@ class YahooScreenerScraper:
+                 "NAS": "NASDAQ",
+                 "ASE": "AMEX",
+                 "PNK": "OTC",
+-                "NGM": "NASDAQ"
++                "NGM": "NASDAQ",
+             }
+ 
+             exchange_code = quote.get("exchange", "")
+@@ -201,7 +207,7 @@ class YahooScreenerScraper:
+                 "sector": quote.get("sector", ""),
+                 "industry": quote.get("industry", ""),
+                 "market_cap": quote.get("marketCap"),
+-                "source": f"Yahoo Screener ({exchange})"
++                "source": f"Yahoo Screener ({exchange})",
+             }
+         except Exception as e:
+             logger.error(f"Error parsing quote: {e}")
+@@ -227,21 +233,20 @@ class YahooScreenerScraper:
+                     "operator": "and",
+                     "operands": [
+                         {"operator": "ne", "operands": ["region", "us"]},
+-                        {"operator": "or", "operands": [
+-                            {"operator": "eq", "operands": ["exchange", "NYQ"]},
+-                            {"operator": "eq", "operands": ["exchange", "NMS"]},
+-                        ]}
+-                    ]
++                        {
++                            "operator": "or",
++                            "operands": [
++                                {"operator": "eq", "operands": ["exchange", "NYQ"]},
++                                {"operator": "eq", "operands": ["exchange", "NMS"]},
++                            ],
++                        },
++                    ],
+                 },
+                 "userId": "",
+-                "userIdType": "guid"
++                "userIdType": "guid",
+             }
+ 
+-            response = self.session.post(
+-                self.BASE_URL,
+-                json=payload,
+-                timeout=10
+-            )
++            response = self.session.post(self.BASE_URL, json=payload, timeout=10)
+ 
+             if response.status_code == 200:
+                 result = response.json()

@@ -1,0 +1,11 @@
+diff --git a/src/dcf/__init__.py b/src/dcf/__init__.py
+index e0e3842..63a99ec 100644
+--- a/src/dcf/__init__.py
++++ b/src/dcf/__init__.py
+@@ -1,4 +1,5 @@
+ # DCF package
++from .fundamentals import FundamentalSnapshot, FundamentalNormalizationError, normalize_fundamentals
+ from .model import dcf_value
+ 
+-__all__ = ["dcf_value"]
++__all__ = ["dcf_value", "normalize_fundamentals", "FundamentalSnapshot", "FundamentalNormalizationError"]
