@@ -2259,36 +2259,39 @@ with col2:
     with col_html:
         if st.button("📄 Generar Informe HTML", use_container_width=True):
             try:
-                from src.reports.html_report_generator import HTMLReportGenerator
+                from src.reports.advanced_html_generator import AdvancedHTMLGenerator
+                from src.reports.report_calculations import DCFReportData
 
-                generator = HTMLReportGenerator()
-
-                # Build DCF result dict
-                dcf_result_data = {
-                    "fair_value_per_share": fair_value_per_share,
-                    "enterprise_value": fair_value_total,
-                    "equity_value": fair_value_total - total_debt + cash,
-                    "wacc": r,
-                    "terminal_growth": g,
-                    "projected_fcf": fcf_inputs,
-                    "growth_rates": growth_rate_inputs,
-                    "diluted_shares": shares,
-                    "cash": cash,
-                    "debt": total_debt,
-                }
-
-                # Add valuation metrics if available
-                if "valuation_metrics" in locals():
-                    dcf_result_data["valuation_metrics"] = valuation_metrics
-
-                # Generate HTML
-                html_content = generator.generate_report(
+                # Create DCFReportData object for professional report
+                dcf_data = DCFReportData(
                     ticker=ticker,
                     company_name=company_name,
-                    dcf_result=dcf_result_data,
-                    scenarios=scenarios,
+                    sector=info.get("sector", "") if info else "",
+                    industry=info.get("industry", "") if info else "",
+                    fair_value_total=equity_value,
+                    shares_outstanding=shares,
                     market_price=current_price,
-                    commentary=commentary,
+                    wacc=r,
+                    terminal_growth=g,
+                    base_fcf=base_fcf,
+                    projection_years=years,
+                    fcf_projections=fcf_inputs if len(fcf_inputs) == years else None,
+                    terminal_value=(
+                        dcf_result.get("terminal_value", 0)
+                        if dcf_result
+                        else fcf_inputs[-1] * (1 + g) / (r - g) if fcf_inputs else 0
+                    ),
+                    total_debt=total_debt,
+                    cash=cash,
+                    revenue=info.get("totalRevenue", 0) if info else 0,
+                    ebitda=info.get("ebitda", 0) if info else 0,
+                    net_income=info.get("netIncomeToCommon", 0) if info else 0,
+                )
+
+                # Generate professional HTML report with advanced charts
+                generator = AdvancedHTMLGenerator()
+                html_content = generator.generate_dcf_report(
+                    dcf_data=dcf_data, include_charts=True
                 )
 
                 st.download_button(
@@ -2299,6 +2302,15 @@ with col2:
                     use_container_width=True,
                 )
                 st.success("✅ Informe HTML generado correctamente")
+                st.info(
+                    "💡 **Diseño Profesional Activado**\n\n"
+                    "El reporte incluye:\n"
+                    "- 🎨 Tema azul oscuro estilo Bloomberg/Goldman Sachs\n"
+                    "- 📊 4 gráficos interactivos Plotly (Waterfall, Sensitivity, Value Breakdown, FCF)\n"
+                    "- 📥 Botón de descarga en cada gráfico (PNG alta resolución)\n"
+                    "- 🖨️ Optimizado para Ctrl+P → PDF perfecto\n"
+                    "- 💼 Tablas financieras avanzadas con color coding"
+                )
 
             except Exception as e:
                 st.error(f"Error generando informe HTML: {str(e)}")
