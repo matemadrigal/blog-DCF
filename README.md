@@ -1,6 +1,5 @@
 # DCF Valuation Platform 📊
 
-> **¿Eres el CEO?** Lee primero la [Guía Ejecutiva](README_CEO.md) o el [Inicio Rápido](QUICK_START.md)
 
 Plataforma profesional de valoración de empresas mediante **Discounted Cash Flow (DCF)** que permite:
 
