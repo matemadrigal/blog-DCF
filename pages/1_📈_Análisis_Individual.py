@@ -25,6 +25,7 @@ from src.utils.data_fetcher import (
     validate_dcf_inputs,
 )
 from src.core.intelligent_selector import IntelligentDataSelector
+from src.alerts import AlertSystem, AlertStatus
 
 
 st.set_page_config(
@@ -51,11 +52,18 @@ def get_intelligent_selector():
     return IntelligentDataSelector(data_aggregator=aggregator, cache_manager=cache)
 
 
+@st.cache_resource
+def get_alert_system():
+    cache = get_cache()
+    return AlertSystem(cache)
+
+
 cache = get_cache()
 aggregator = get_data_aggregator()
 catalog = get_company_catalog()
 fcf_scanner = get_fcf_scanner()
 intelligent_selector = get_intelligent_selector()
+alert_system = get_alert_system()
 
 
 # Sidebar inputs
@@ -1431,6 +1439,29 @@ try:
         },
     )
 
+    # === CHECK ALERTS ===
+    try:
+        triggered = alert_system.check_alerts(
+            ticker=ticker,
+            current_price=current_price,
+            current_upside=upside if 'upside' in locals() else None
+        )
+
+        if triggered:
+            st.success(f"""
+            🔔 **¡{len(triggered)} Alerta(s) Disparada(s)!**
+
+            Las siguientes alertas se han activado para {ticker}:
+            """)
+
+            for alert in triggered:
+                st.info(f"• {alert.message}")
+
+            st.markdown("Ve a la página de **🔔 Alertas** para más detalles.")
+    except Exception as e:
+        # Silently fail if alert system has issues
+        pass
+
     # === SENSITIVITY ANALYSIS SECTION ===
     st.markdown("---")
     st.subheader("📊 Análisis de Sensibilidad")
@@ -1632,6 +1663,261 @@ try:
                 f"Tasas de crecimiento FCF: {', '.join([f'{g:.1%}' for g in sc.growth_rates])}"
             )
             st.markdown("---")
+
+    # === ADVANCED SCENARIO ANALYSIS WITH RISK-ADJUSTED RECOMMENDATION ===
+    st.markdown("---")
+    st.markdown("### 🎯 Análisis de Riesgo y Recomendación")
+
+    try:
+        from src.dcf.enhanced_model import ScenarioAnalyzer, ScenarioType
+
+        # Create scenario analyzer
+        scenario_analyzer = ScenarioAnalyzer(
+            base_model=enhanced_model if use_enhanced_model else EnhancedDCFModel(wacc=r, terminal_growth=g),
+            pessimistic_probability=0.25,
+            base_probability=0.50,
+            optimistic_probability=0.25,
+        )
+
+        # Calculate base growth rates to pass to scenarios
+        base_growth_for_scenarios = growth_rate_inputs if growth_rate_inputs else None
+
+        # Calculate all scenarios using new analyzer
+        scenario_results = scenario_analyzer.calculate_all_scenarios(
+            base_fcf=base_fcf,
+            historical_fcf=historical_fcf if historical_fcf else [base_fcf],
+            cash=cash,
+            debt=total_debt,
+            diluted_shares=shares,
+            years=years,
+            base_growth_rates=base_growth_for_scenarios,
+        )
+
+        # Calculate probability-weighted value
+        weighted_fair_value = scenario_analyzer.calculate_probability_weighted_value(scenario_results)
+
+        # Generate risk-adjusted recommendation
+        recommendation = scenario_analyzer.generate_risk_adjusted_recommendation(
+            scenarios=scenario_results,
+            current_price=current_price,
+            weighted_fair_value=weighted_fair_value,
+        )
+
+        # Display recommendation prominently
+        st.markdown("#### 📋 Recomendación Ajustada por Riesgo")
+
+        rec_col1, rec_col2 = st.columns([2, 3])
+
+        with rec_col1:
+            # Recommendation badge
+            st.markdown(f"""
+            <div style="background-color: {recommendation['color']}; padding: 20px; border-radius: 10px; text-align: center;">
+                <h2 style="color: white; margin: 0;">{recommendation['recommendation']}</h2>
+                <p style="color: white; margin: 5px 0 0 0;">Confianza: {recommendation['confidence']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown("")
+
+            # Key metrics
+            st.metric(
+                "Valor Ponderado (Esperado)",
+                f"${weighted_fair_value:.2f}",
+                delta=f"{recommendation['weighted_upside']:+.1f}%",
+                help="Ponderado por probabilidad: 25% pesimista, 50% base, 25% optimista"
+            )
+
+        with rec_col2:
+            # Reasoning
+            st.markdown("**Análisis:**")
+            st.info(recommendation['reasoning'])
+
+            # Risk metrics
+            st.markdown("**Métricas de Riesgo:**")
+
+            risk_cols = st.columns(3)
+            with risk_cols[0]:
+                st.metric(
+                    "📉 Riesgo a la Baja",
+                    f"{recommendation.get('pessimistic_upside', 0):+.1f}%",
+                    help="Upside en escenario pesimista"
+                )
+            with risk_cols[1]:
+                st.metric(
+                    "📈 Potencial al Alza",
+                    f"{recommendation.get('optimistic_upside', 0):+.1f}%",
+                    help="Upside en escenario optimista"
+                )
+            with risk_cols[2]:
+                risk_reward = recommendation.get('risk_reward_ratio', 0)
+                if risk_reward != float('inf') and risk_reward > 0:
+                    st.metric(
+                        "⚖️ Ratio Riesgo/Retorno",
+                        f"{risk_reward:.2f}x",
+                        help="Potencial alcista / Riesgo bajista"
+                    )
+                else:
+                    st.metric("⚖️ Ratio Riesgo/Retorno", "N/A")
+
+        # Detailed scenario comparison table
+        st.markdown("---")
+        st.markdown("#### 📊 Comparación Detallada de Escenarios")
+
+        # Create comparison DataFrame
+        comparison_data = {
+            "Escenario": ["🔴 Pesimista", "🟡 Base", "🟢 Optimista", "🎯 Ponderado"],
+            "Fair Value": [
+                f"${scenario_results[ScenarioType.PESSIMISTIC]['fair_value_per_share']:.2f}",
+                f"${scenario_results[ScenarioType.BASE]['fair_value_per_share']:.2f}",
+                f"${scenario_results[ScenarioType.OPTIMISTIC]['fair_value_per_share']:.2f}",
+                f"${weighted_fair_value:.2f}",
+            ],
+            "Upside": [
+                f"{recommendation['pessimistic_upside']:+.1f}%",
+                f"{recommendation['base_upside']:+.1f}%",
+                f"{recommendation['optimistic_upside']:+.1f}%",
+                f"{recommendation['weighted_upside']:+.1f}%",
+            ],
+            "WACC": [
+                f"{scenario_results[ScenarioType.PESSIMISTIC]['wacc']:.2%}",
+                f"{scenario_results[ScenarioType.BASE]['wacc']:.2%}",
+                f"{scenario_results[ScenarioType.OPTIMISTIC]['wacc']:.2%}",
+                "-",
+            ],
+            "Terminal Growth": [
+                f"{scenario_results[ScenarioType.PESSIMISTIC]['terminal_growth']:.2%}",
+                f"{scenario_results[ScenarioType.BASE]['terminal_growth']:.2%}",
+                f"{scenario_results[ScenarioType.OPTIMISTIC]['terminal_growth']:.2%}",
+                "-",
+            ],
+            "Probabilidad": ["25%", "50%", "25%", "100%"],
+        }
+
+        comparison_df = pd.DataFrame(comparison_data)
+
+        # Style the table
+        st.dataframe(
+            comparison_df,
+            hide_index=True,
+            use_container_width=True,
+            column_config={
+                "Escenario": st.column_config.TextColumn("Escenario", width="medium"),
+                "Fair Value": st.column_config.TextColumn("Fair Value", width="medium"),
+                "Upside": st.column_config.TextColumn("Upside vs. Precio", width="medium"),
+                "WACC": st.column_config.TextColumn("WACC", width="small"),
+                "Terminal Growth": st.column_config.TextColumn("Terminal Growth", width="small"),
+                "Probabilidad": st.column_config.TextColumn("Prob.", width="small"),
+            }
+        )
+
+        # Range visualization (Tornado chart style)
+        st.markdown("---")
+        st.markdown("#### 📊 Visualización de Rango de Valoración")
+
+        fig_range = go.Figure()
+
+        # Get values
+        pess_val = scenario_results[ScenarioType.PESSIMISTIC]['fair_value_per_share']
+        base_val = scenario_results[ScenarioType.BASE]['fair_value_per_share']
+        opt_val = scenario_results[ScenarioType.OPTIMISTIC]['fair_value_per_share']
+
+        # Add error bar showing full range
+        fig_range.add_trace(go.Scatter(
+            x=[base_val],
+            y=["Valoración DCF"],
+            error_x=dict(
+                type='data',
+                symmetric=False,
+                array=[opt_val - base_val],
+                arrayminus=[base_val - pess_val],
+                color='rgba(100, 100, 100, 0.3)',
+                thickness=30,
+            ),
+            mode='markers',
+            marker=dict(size=15, color='#ffa726'),
+            name='Base',
+            showlegend=True,
+        ))
+
+        # Add markers for each scenario
+        fig_range.add_trace(go.Scatter(
+            x=[pess_val],
+            y=["Valoración DCF"],
+            mode='markers',
+            marker=dict(size=12, color='#ef5350', symbol='triangle-left'),
+            name='Pesimista',
+            showlegend=True,
+        ))
+
+        fig_range.add_trace(go.Scatter(
+            x=[opt_val],
+            y=["Valoración DCF"],
+            mode='markers',
+            marker=dict(size=12, color='#66bb6a', symbol='triangle-right'),
+            name='Optimista',
+            showlegend=True,
+        ))
+
+        # Add current price line
+        fig_range.add_vline(
+            x=current_price,
+            line_dash="dash",
+            line_color="blue",
+            annotation_text=f"Precio Actual: ${current_price:.2f}",
+            annotation_position="top",
+        )
+
+        # Add weighted value line
+        fig_range.add_vline(
+            x=weighted_fair_value,
+            line_dash="dot",
+            line_color="purple",
+            annotation_text=f"Valor Ponderado: ${weighted_fair_value:.2f}",
+            annotation_position="bottom",
+        )
+
+        fig_range.update_layout(
+            title="Rango de Fair Value: Pesimista → Base → Optimista",
+            xaxis_title="Fair Value por Acción ($)",
+            showlegend=True,
+            height=250,
+            yaxis=dict(showticklabels=False),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+
+        st.plotly_chart(fig_range, use_container_width=True)
+
+        # Insights
+        with st.expander("💡 Insights del Análisis de Escenarios"):
+            st.markdown("**¿Cómo interpretar esta recomendación?**")
+
+            st.markdown(f"""
+            - **Rango de valoración**: ${pess_val:.2f} - ${opt_val:.2f} (diferencia de {recommendation.get('range_percentage', 0):.1f}%)
+            - **Precio actual**: ${current_price:.2f}
+            - **Valor esperado ponderado**: ${weighted_fair_value:.2f}
+
+            **Escenarios:**
+            - 🔴 **Pesimista (25%)**: Asume mayor riesgo (WACC +2%), menor crecimiento (-40%), terminal growth reducido (-1%)
+            - 🟡 **Base (50%)**: Usa parámetros actuales sin ajustes
+            - 🟢 **Optimista (25%)**: Asume menor riesgo (WACC -1%), mayor crecimiento (+40%), terminal growth aumentado (+0.5%)
+
+            **La recomendación considera**:
+            - Si TODOS los escenarios muestran upside positivo → STRONG BUY
+            - Si el riesgo a la baja es limitado y el upside es atractivo → BUY
+            - Si hay alto riesgo en el escenario pesimista → SELL/STRONG SELL
+            - La relación riesgo/retorno debe ser favorable (>1.5x preferible)
+            """)
+
+            if recommendation.get('weighted_upside', 0) > 15:
+                st.success("✅ **Oportunidad atractiva**: El upside ponderado supera el 15% con riesgo controlado.")
+            elif recommendation.get('weighted_upside', 0) < -10:
+                st.warning("⚠️ **Sobrevaloración**: El precio actual supera significativamente el valor ponderado.")
+            else:
+                st.info("ℹ️ **Valoración equilibrada**: El precio está cerca del valor estimado.")
+
+    except Exception as e:
+        st.error(f"❌ Error en análisis de escenarios avanzado: {str(e)}")
+        st.caption("Continuando con análisis básico...")
 
     st.markdown("---")
 
@@ -2357,3 +2643,113 @@ with col2:
             st.info(
                 "💡 **Informe PDF no disponible**\n\nPara generar PDFs instala: `pip install reportlab`\n\nMientras tanto, usa el formato HTML que tiene todas las funcionalidades."
             )
+
+    # === EXCEL EXPORT SECTION ===
+    st.markdown("---")
+    st.subheader("📊 Exportar a Excel")
+
+    excel_col1, excel_col2 = st.columns([2, 1])
+
+    with excel_col1:
+        st.markdown("""
+        **Exporta tu análisis DCF completo a Excel** con múltiples hojas:
+        - 📄 Resumen Ejecutivo con métricas clave
+        - 📈 Proyecciones de FCF con fórmulas
+        - 🔥 Análisis de Sensibilidad (r vs g)
+        - 📊 Escenarios (Pesimista/Base/Optimista)
+        - 💾 Datos originales para recalcular
+        """)
+
+    with excel_col2:
+        st.info("**Formato profesional** con colores, fórmulas y gráficos")
+
+    if st.button("📥 Exportar a Excel", type="primary", use_container_width=True):
+        try:
+            from src.reports.excel_exporter import ExcelExporter
+
+            with st.spinner("Generando archivo Excel..."):
+                exporter = ExcelExporter()
+
+                # Prepare sensitivity data if available
+                sensitivity_df = None
+                if 'sensitivity_heatmap_data' in locals():
+                    sensitivity_df = sensitivity_heatmap_data
+
+                # Prepare scenarios if available (prefer scenario_results from new analyzer)
+                scenarios_data = None
+                if 'scenario_results' in locals():
+                    # Use new ScenarioAnalyzer results
+                    from src.dcf.enhanced_model import ScenarioType
+                    scenarios_data = {
+                        'pessimistic': scenario_results[ScenarioType.PESSIMISTIC],
+                        'base': scenario_results[ScenarioType.BASE],
+                        'optimistic': scenario_results[ScenarioType.OPTIMISTIC]
+                    }
+                elif 'scenarios' in locals():
+                    # Fallback to old SensitivityAnalyzer results
+                    scenarios_data = {
+                        'pessimistic': {
+                            'fair_value_per_share': scenarios['pessimistic'].fair_value_per_share,
+                            'wacc': scenarios['pessimistic'].wacc,
+                            'terminal_growth': scenarios['pessimistic'].terminal_growth,
+                            'enterprise_value': scenarios['pessimistic'].enterprise_value,
+                            'growth_rates': scenarios['pessimistic'].growth_rates,
+                        },
+                        'base': {
+                            'fair_value_per_share': scenarios['base'].fair_value_per_share,
+                            'wacc': scenarios['base'].wacc,
+                            'terminal_growth': scenarios['base'].terminal_growth,
+                            'enterprise_value': scenarios['base'].enterprise_value,
+                            'growth_rates': scenarios['base'].growth_rates,
+                        },
+                        'optimistic': {
+                            'fair_value_per_share': scenarios['optimistic'].fair_value_per_share,
+                            'wacc': scenarios['optimistic'].wacc,
+                            'terminal_growth': scenarios['optimistic'].terminal_growth,
+                            'enterprise_value': scenarios['optimistic'].enterprise_value,
+                            'growth_rates': scenarios['optimistic'].growth_rates,
+                        }
+                    }
+
+                # Export to Excel
+                excel_file = exporter.export_dcf_analysis(
+                    ticker=ticker,
+                    fair_value=fair_value_per_share,
+                    current_price=current_price,
+                    discount_rate=r,
+                    growth_rate=g,
+                    fcf_projections=fcf_inputs,
+                    shares_outstanding=shares,
+                    terminal_value=terminal_value if 'terminal_value' in locals() else None,
+                    enterprise_value=equity_value if 'equity_value' in locals() else None,
+                    sensitivity_data=sensitivity_df,
+                    scenarios=scenarios_data,
+                    metadata={
+                        'company_name': company_name,
+                        'analysis_mode': 'intelligent',
+                        'date': datetime.now().strftime('%Y-%m-%d')
+                    }
+                )
+
+                # Download button
+                st.download_button(
+                    label="⬇️ Descargar Excel",
+                    data=excel_file,
+                    file_name=f"DCF_Analysis_{ticker}_{datetime.now().strftime('%Y%m%d')}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True
+                )
+
+                st.success("✅ Archivo Excel generado correctamente!")
+                st.info("""
+                **El archivo incluye:**
+                - ✅ Resumen ejecutivo con recomendación
+                - ✅ Proyecciones con fórmulas de Excel
+                - ✅ Análisis de sensibilidad
+                - ✅ Comparación de escenarios
+                - ✅ Datos originales para manipular
+                """)
+
+        except Exception as e:
+            st.error(f"Error al generar Excel: {e}")
+            st.info("Asegúrate de que openpyxl esté instalado: pip install openpyxl")

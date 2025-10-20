@@ -8,6 +8,15 @@ Plataforma profesional de valoración de empresas mediante **Discounted Cash Flo
 3. **Visualizar evolución histórica** Fair Value vs Precio
 4. **Generar informes PDF** profesionales
 
+## 🆕 Nuevas Funcionalidades (Oct 2025)
+
+- 🎯 **Análisis de Escenarios**: Pesimista/Base/Optimista con recomendación ajustada por riesgo
+- 🔔 **Sistema de Alertas**: Notificaciones automáticas cuando se cumplen condiciones
+- 📥 **Exportación a Excel**: Reportes profesionales multi-hoja con fórmulas
+- 📊 **Dashboard Ejecutivo**: KPIs, gráficos interactivos, Top 5 oportunidades
+
+Ver: [FEATURES_IMPLEMENTED.md](docs/FEATURES_IMPLEMENTED.md) | [IMPLEMENTACION_ANALISIS_ESCENARIOS.md](IMPLEMENTACION_ANALISIS_ESCENARIOS.md)
+
 ## Documentación Rápida
 
 - 📘 [README_CEO.md](README_CEO.md) - Guía ejecutiva para no técnicos
@@ -22,9 +31,12 @@ Plataforma profesional de valoración de empresas mediante **Discounted Cash Flo
 - Cálculo DCF con inputs manuales o **búsqueda inteligente multi-fuente**
 - **3 modos de datos**: Manual, Autocompletar (Yahoo), Multi-fuente (varios APIs)
 - **Estrategias de búsqueda**: Mejor calidad, Primera disponible, Combinar fuentes
-- Métricas clave: Enterprise Value, Fair Value por acción, Upside/Downside
+- **🎯 Análisis de Escenarios**: Pesimista/Base/Optimista con recomendación ajustada por riesgo
+- **Valor ponderado por probabilidad** (25%/50%/25%)
+- **Recomendaciones inteligentes**: STRONG BUY/BUY/HOLD/SELL/STRONG SELL con confianza
+- Métricas clave: Enterprise Value, Fair Value por acción, Upside/Downside, Risk/Reward Ratio
 - Desglose detallado de flujos de caja proyectados
-- Gráficos interactivos con Plotly
+- Gráficos interactivos con Plotly (incluyendo rango de valoración)
 - Comparación histórica Fair Value vs Precio de Mercado
 
 ### 📊 Dashboard

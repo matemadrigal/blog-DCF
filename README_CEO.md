@@ -131,6 +131,12 @@ Una vez que el proyecto esté en GitHub, puedes:
    ./start.sh
    ```
 
+## Mejoras Futuras
+
+¿Quieres ver qué se puede mejorar? Lee:
+- 🚀 [QUICK_WINS.md](QUICK_WINS.md) - Top 5 mejoras de alto impacto (1-2 días)
+- 📋 [MEJORAS_SUGERIDAS_2025.md](MEJORAS_SUGERIDAS_2025.md) - 20 mejoras detalladas con roadmap
+
 ## Soporte
 
 Para documentación técnica completa, ver [README.md](README.md)
