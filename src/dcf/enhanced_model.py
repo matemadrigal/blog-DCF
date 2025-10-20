@@ -103,20 +103,21 @@ class EnhancedDCFModel:
         avg_growth = max(-0.10, min(0.40, conservative_growth))
 
         # Determine growth tiers based on historical performance and volatility
-        # UPDATED: More realistic growth rates to avoid systematic undervaluation
-        # Volatility tolerance increased - high volatility in high-growth is normal
+        # FINANCIAL AUDIT FIX: Capped maximum growth rates to prevent overvaluation
+        # Max Y1 growth: 35% (reduced from 40%)
+        # Reasoning: Only handful of companies sustain 40%+ growth (TSLA, NVDA peak years)
         # High average growth = more optimistic
 
         if avg_growth > 0.50:
-            # Exceptional growth (e.g., explosive tech) → Very Aggressive
-            tier1 = [0.40, 0.35]  # Years 1-2: 35-40%
-            tier2 = [0.28, 0.22]  # Years 3-4: 22-28%
-            tier3 = [0.15]  # Year 5: 15%
+            # Exceptional growth (e.g., explosive tech) → Aggressive but Capped
+            tier1 = [0.35, 0.30]  # Years 1-2: 30-35% (CAPPED from 35-40%)
+            tier2 = [0.25, 0.20]  # Years 3-4: 20-25% (reduced from 22-28%)
+            tier3 = [0.14]  # Year 5: 14% (reduced from 15%)
         elif avg_growth > 0.30:
-            # Very high growth → Very Aggressive
-            tier1 = [0.35, 0.30]  # Years 1-2: 30-35%
-            tier2 = [0.25, 0.20]  # Years 3-4: 20-25%
-            tier3 = [0.14]  # Year 5: 14%
+            # Very high growth → Aggressive
+            tier1 = [0.32, 0.28]  # Years 1-2: 28-32% (reduced from 30-35%)
+            tier2 = [0.23, 0.19]  # Years 3-4: 19-23% (reduced from 20-25%)
+            tier3 = [0.13]  # Year 5: 13% (reduced from 14%)
         elif avg_growth > 0.20:
             # High growth → Aggressive
             tier1 = [0.28, 0.25]  # Years 1-2: 25-28%
@@ -234,21 +235,53 @@ class EnhancedDCFModel:
         enterprise_value: float,
         cash: float = 0.0,
         debt: float = 0.0,
+        minority_interests: float = 0.0,
+        preferred_stock: float = 0.0,
+        pension_adjustments: float = 0.0,
     ) -> float:
         """
         Calculate equity value from enterprise value.
 
-        Formula: Equity Value = EV + Cash - Debt
+        FINANCIAL AUDIT FIX: Complete equity bridge with all adjustments
+
+        Formula (Complete):
+        Equity Value = EV + Cash - Debt - Minority Interests - Preferred Stock - Pension Adj
+
+        Standard Formula (Damodaran):
+        - Enterprise Value: Value to ALL claim holders (debt + equity)
+        - Cash: Add back (non-operating asset)
+        - Debt: Subtract (financial obligation)
+        - Minority Interests: Subtract (value belongs to minority shareholders)
+        - Preferred Stock: Subtract (senior claim, not common equity)
+        - Pension Adjustments: Subtract if underfunded (liability)
 
         Args:
             enterprise_value: Enterprise value from DCF
             cash: Cash and cash equivalents
-            debt: Total debt
+            debt: Total debt (current + long-term)
+            minority_interests: Non-controlling interests (optional, default 0)
+            preferred_stock: Preferred stock value (optional, default 0)
+            pension_adjustments: Unfunded pension obligations (optional, default 0)
 
         Returns:
-            Equity value
+            Equity value (common equity)
+
+        Example:
+            EV = $1,000M
+            Cash = $200M
+            Debt = $300M
+            Minority = $50M
+            Preferred = $25M
+            → Equity = 1000 + 200 - 300 - 50 - 25 = $825M
         """
-        equity_value = enterprise_value + cash - debt
+        equity_value = (
+            enterprise_value
+            + cash
+            - debt
+            - minority_interests
+            - preferred_stock
+            - pension_adjustments
+        )
         return equity_value
 
     def calculate_fair_value_per_share(

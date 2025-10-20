@@ -14,8 +14,11 @@ Plataforma profesional de valoración de empresas mediante **Discounted Cash Flo
 - 🔔 **Sistema de Alertas**: Notificaciones automáticas cuando se cumplen condiciones
 - 📥 **Exportación a Excel**: Reportes profesionales multi-hoja con fórmulas
 - 📊 **Dashboard Ejecutivo**: KPIs, gráficos interactivos, Top 5 oportunidades
+- 🎨 **Gráficos Mejorados**: Waterfall DCF, Heatmap animado, exportación PNG/SVG/HTML
+- ⚡ **WACC Dinámico**: Beta ajustado (Blume), Hamada, risk-free rate actualizado, country risk premium
+- 📄 **Executive PDF**: Cover page de 1-min, gráficos vectoriales, branding, comparación S&P 500
 
-Ver: [FEATURES_IMPLEMENTED.md](docs/FEATURES_IMPLEMENTED.md) | [IMPLEMENTACION_ANALISIS_ESCENARIOS.md](IMPLEMENTACION_ANALISIS_ESCENARIOS.md)
+Ver: [FEATURES_IMPLEMENTED](docs/FEATURES_IMPLEMENTED.md) | [ANALISIS_ESCENARIOS](IMPLEMENTACION_ANALISIS_ESCENARIOS.md) | [GRAFICOS_MEJORADOS](docs/GRAFICOS_INTERACTIVOS_MEJORADOS.md) | [WACC_DINAMICO](docs/WACC_DINAMICO_IMPLEMENTADO.md) | [EXECUTIVE_PDF](EXECUTIVE_PDF_RESUMEN.txt)
 
 ## Documentación Rápida
 

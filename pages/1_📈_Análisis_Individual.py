@@ -1664,6 +1664,95 @@ try:
             )
             st.markdown("---")
 
+    # === ENHANCED SENSITIVITY HEATMAP ===
+    st.markdown("---")
+    st.markdown("### 🔥 Heatmap de Sensibilidad Mejorado")
+    st.caption("Explora cómo varían los fair values según diferentes combinaciones de WACC y crecimiento")
+
+    try:
+        from src.visualization.enhanced_charts import EnhancedChartGenerator
+
+        chart_gen = EnhancedChartGenerator()
+
+        # Generate sensitivity matrix
+        wacc_range = np.linspace(max(0.01, r - 0.04), r + 0.04, 9)  # 9 values around base WACC
+        growth_range = np.linspace(max(0.005, g - 0.02), min(r - 0.01, g + 0.02), 9)  # 9 values around base growth
+
+        sensitivity_matrix = np.zeros((len(wacc_range), len(growth_range)))
+
+        # Calculate DCF for each combination
+        for i, wacc_val in enumerate(wacc_range):
+            for j, growth_val in enumerate(growth_range):
+                if wacc_val > growth_val:  # Valid only if WACC > growth
+                    try:
+                        temp_model = EnhancedDCFModel(wacc=wacc_val, terminal_growth=growth_val)
+                        temp_result = temp_model.full_dcf_valuation(
+                            base_fcf=base_fcf if 'base_fcf' in locals() else fcf_inputs[0],
+                            historical_fcf=historical_fcf if historical_fcf else [base_fcf if 'base_fcf' in locals() else fcf_inputs[0]],
+                            cash=cash,
+                            debt=total_debt,
+                            diluted_shares=shares,
+                            years=years,
+                            custom_growth_rates=growth_rate_inputs,
+                            normalize_base=False,
+                        )
+                        sensitivity_matrix[i, j] = temp_result['fair_value_per_share']
+                    except:
+                        sensitivity_matrix[i, j] = 0
+                else:
+                    sensitivity_matrix[i, j] = 0
+
+        # Find base case index
+        base_wacc_idx = np.argmin(np.abs(wacc_range - r))
+        base_growth_idx = np.argmin(np.abs(growth_range - g))
+
+        # Create enhanced heatmap
+        fig_heatmap = chart_gen.create_enhanced_heatmap(
+            sensitivity_matrix=sensitivity_matrix,
+            discount_rates=wacc_range,
+            growth_rates=growth_range,
+            current_price=current_price,
+            base_case_index=(base_wacc_idx, base_growth_idx),
+        )
+
+        st.plotly_chart(fig_heatmap, use_container_width=True)
+
+        # Store for Excel export
+        sensitivity_heatmap_data = pd.DataFrame(
+            sensitivity_matrix,
+            index=[f'{w:.2%}' for w in wacc_range],
+            columns=[f'{g:.2%}' for g in growth_range]
+        )
+
+        # Export options for heatmap
+        heat_export_col1, heat_export_col2 = st.columns(2)
+        with heat_export_col1:
+            if st.button("📥 Descargar Heatmap PNG", key="heatmap_png"):
+                try:
+                    img_bytes = chart_gen.export_chart_to_image(fig_heatmap, format='png', width=1400, height=900)
+                    st.download_button(
+                        "⬇️ Guardar PNG",
+                        data=img_bytes,
+                        file_name=f"heatmap_{ticker}_{datetime.now().strftime('%Y%m%d')}.png",
+                        mime="image/png",
+                    )
+                    st.success("✅ Heatmap PNG generado")
+                except ImportError:
+                    st.warning("⚠️ Instala kaleido para exportar: pip install kaleido")
+
+        with heat_export_col2:
+            html_heatmap = chart_gen.export_chart_to_html(fig_heatmap)
+            st.download_button(
+                "📥 Descargar Heatmap HTML",
+                data=html_heatmap,
+                file_name=f"heatmap_{ticker}_{datetime.now().strftime('%Y%m%d')}.html",
+                mime="text/html",
+            )
+
+    except Exception as e:
+        st.error(f"Error al generar heatmap mejorado: {e}")
+        st.caption("Continuando sin heatmap...")
+
     # === ADVANCED SCENARIO ANALYSIS WITH RISK-ADJUSTED RECOMMENDATION ===
     st.markdown("---")
     st.markdown("### 🎯 Análisis de Riesgo y Recomendación")
@@ -1991,6 +2080,87 @@ try:
                 delta="Positivo" if net_cash > 0 else "Negativo",
                 delta_color="normal" if net_cash > 0 else "inverse",
             )
+
+        # === WATERFALL CHART ===
+        st.markdown("---")
+        st.markdown("#### 📊 DCF Waterfall - Breakdown Visual")
+        st.caption("Visualización del camino desde flujos de caja hasta valor por acción")
+
+        try:
+            from src.visualization.enhanced_charts import EnhancedChartGenerator
+
+            chart_gen = EnhancedChartGenerator()
+
+            # Get data from dcf_result if available
+            if dcf_result:
+                pv_fcf_list = dcf_result.get('pv_fcf', [])
+                terminal_value_undiscounted = dcf_result.get('terminal_value', 0)
+                pv_terminal_value = dcf_result.get('pv_terminal_value', 0)
+            else:
+                # Calculate manually
+                pv_fcf_list = [cf / ((1 + r) ** i) for i, cf in enumerate(fcf_inputs, start=1)]
+                terminal_value_undiscounted = fcf_inputs[-1] * (1 + g) / (r - g) if fcf_inputs and r > g else 0
+                pv_terminal_value = terminal_value_undiscounted / ((1 + r) ** len(fcf_inputs)) if fcf_inputs else 0
+
+            fig_waterfall = chart_gen.create_waterfall_chart(
+                ticker=ticker,
+                base_fcf=base_fcf if 'base_fcf' in locals() else fcf_inputs[0] if fcf_inputs else 0,
+                projected_fcf=fcf_inputs,
+                pv_fcf=pv_fcf_list,
+                terminal_value=terminal_value_undiscounted,
+                pv_terminal=pv_terminal_value,
+                enterprise_value=fair_value_total,
+                cash=cash,
+                debt=total_debt,
+                equity_value=equity_value,
+                shares=shares,
+                fair_value_per_share=fair_value_per_share,
+            )
+
+            st.plotly_chart(fig_waterfall, use_container_width=True)
+
+            # Export options
+            export_col1, export_col2, export_col3 = st.columns(3)
+            with export_col1:
+                if st.button("📥 Descargar PNG", key="waterfall_png"):
+                    try:
+                        img_bytes = chart_gen.export_chart_to_image(fig_waterfall, format='png')
+                        st.download_button(
+                            "⬇️ Guardar PNG",
+                            data=img_bytes,
+                            file_name=f"waterfall_{ticker}_{datetime.now().strftime('%Y%m%d')}.png",
+                            mime="image/png",
+                        )
+                        st.success("✅ PNG generado")
+                    except ImportError:
+                        st.warning("⚠️ Instala kaleido para exportar: pip install kaleido")
+
+            with export_col2:
+                if st.button("📥 Descargar SVG", key="waterfall_svg"):
+                    try:
+                        svg_bytes = chart_gen.export_chart_to_image(fig_waterfall, format='svg')
+                        st.download_button(
+                            "⬇️ Guardar SVG",
+                            data=svg_bytes,
+                            file_name=f"waterfall_{ticker}_{datetime.now().strftime('%Y%m%d')}.svg",
+                            mime="image/svg+xml",
+                        )
+                        st.success("✅ SVG generado")
+                    except ImportError:
+                        st.warning("⚠️ Instala kaleido para exportar: pip install kaleido")
+
+            with export_col3:
+                html_str = chart_gen.export_chart_to_html(fig_waterfall)
+                st.download_button(
+                    "📥 Descargar HTML",
+                    data=html_str,
+                    file_name=f"waterfall_{ticker}_{datetime.now().strftime('%Y%m%d')}.html",
+                    mime="text/html",
+                )
+
+        except Exception as e:
+            st.error(f"Error al generar waterfall chart: {e}")
+            st.caption("Continuando con gráfico básico...")
 
     else:
         # Show Original Model results
@@ -2382,42 +2552,92 @@ try:
         else:
             price_dates, price_values = [], []
 
-        # Create chart
-        fig = go.Figure()
+        # Create enhanced animated chart
+        try:
+            from src.visualization.enhanced_charts import EnhancedChartGenerator
 
-        if price_dates:
-            fig.add_trace(
-                go.Scatter(
-                    x=price_dates,
-                    y=price_values,
-                    mode="lines",
-                    name="Precio de Mercado",
-                    line=dict(color="#1f77b4", width=2),
-                )
+            chart_gen = EnhancedChartGenerator()
+
+            # Enable/disable animation
+            enable_animation = st.checkbox(
+                "🎬 Activar animación temporal",
+                value=len(dcf_dates) > 10,
+                help="Anima la evolución histórica (recomendado para 10+ datos)"
             )
 
-        if dcf_dates:
-            fig.add_trace(
-                go.Scatter(
-                    x=dcf_dates,
-                    y=dcf_values,
-                    mode="lines+markers",
-                    name="Fair Value (DCF)",
-                    line=dict(color="#ff7f0e", width=2, dash="dash"),
-                    marker=dict(size=8),
-                )
+            fig = chart_gen.create_animated_temporal_chart(
+                dates=list(dcf_dates) if dcf_dates else list(price_dates),
+                fair_values=list(dcf_values) if dcf_values else [0] * len(price_dates),
+                market_prices=list(price_values) if price_values else [0] * len(dcf_dates),
+                ticker=ticker,
+                animate=enable_animation,
             )
 
-        fig.update_layout(
-            title=f"{ticker} - Fair Value vs Precio de Mercado",
-            xaxis_title="Fecha",
-            yaxis_title="Precio por Acción ($)",
-            hovermode="x unified",
-            height=500,
-            legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01),
-        )
+            st.plotly_chart(fig, use_container_width=True)
 
-        st.plotly_chart(fig, use_container_width=True)
+            # Export options for temporal chart
+            temp_export_col1, temp_export_col2 = st.columns(2)
+            with temp_export_col1:
+                if st.button("📥 Descargar Gráfico Temporal PNG", key="temporal_png"):
+                    try:
+                        img_bytes = chart_gen.export_chart_to_image(fig, format='png', width=1400, height=1000)
+                        st.download_button(
+                            "⬇️ Guardar PNG",
+                            data=img_bytes,
+                            file_name=f"temporal_{ticker}_{datetime.now().strftime('%Y%m%d')}.png",
+                            mime="image/png",
+                        )
+                        st.success("✅ PNG generado")
+                    except ImportError:
+                        st.warning("⚠️ Instala kaleido para exportar: pip install kaleido")
+
+            with temp_export_col2:
+                html_temporal = chart_gen.export_chart_to_html(fig)
+                st.download_button(
+                    "📥 Descargar HTML Interactivo",
+                    data=html_temporal,
+                    file_name=f"temporal_{ticker}_{datetime.now().strftime('%Y%m%d')}.html",
+                    mime="text/html",
+                )
+
+        except Exception as e:
+            st.error(f"Error al generar gráfico animado: {e}")
+            # Fallback to basic chart
+            fig = go.Figure()
+
+            if price_dates:
+                fig.add_trace(
+                    go.Scatter(
+                        x=price_dates,
+                        y=price_values,
+                        mode="lines",
+                        name="Precio de Mercado",
+                        line=dict(color="#1f77b4", width=2),
+                    )
+                )
+
+            if dcf_dates:
+                fig.add_trace(
+                    go.Scatter(
+                        x=dcf_dates,
+                        y=dcf_values,
+                        mode="lines+markers",
+                        name="Fair Value (DCF)",
+                        line=dict(color="#ff7f0e", width=2, dash="dash"),
+                        marker=dict(size=8),
+                    )
+                )
+
+            fig.update_layout(
+                title=f"{ticker} - Fair Value vs Precio de Mercado",
+                xaxis_title="Fecha",
+                yaxis_title="Precio por Acción ($)",
+                hovermode="x unified",
+                height=500,
+                legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01),
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
 
         # Analysis
         if dcf_values and price_values:
