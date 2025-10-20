@@ -1,11 +1,21 @@
 # DCF Valuation Platform 📊
 
+> **¿Eres el CEO?** Lee primero la [Guía Ejecutiva](README_CEO.md) o el [Inicio Rápido](QUICK_START.md)
+
 Plataforma profesional de valoración de empresas mediante **Discounted Cash Flow (DCF)** que permite:
 
 1. **Calcular Fair Value** de acciones mediante modelo DCF
 2. **Comparar con precio de mercado** en tiempo real
 3. **Visualizar evolución histórica** Fair Value vs Precio
 4. **Generar informes PDF** profesionales
+
+## Documentación Rápida
+
+- 📘 [README_CEO.md](README_CEO.md) - Guía ejecutiva para no técnicos
+- 🚀 [QUICK_START.md](QUICK_START.md) - Inicio en 3 pasos
+- 📁 [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Estructura del proyecto
+- 📚 [docs/MULTI_SOURCE_DATA.md](docs/MULTI_SOURCE_DATA.md) - Guía de fuentes de datos
+- 🔧 [docs/technical/](docs/technical/) - Documentación técnica detallada
 
 ## 🚀 Características
 
@@ -93,19 +103,32 @@ cp .streamlit/secrets.toml.example .streamlit/secrets.toml
 
 ## 🚀 Ejecución
 
-### Método 1: Comando directo
+### Método Recomendado: Script único
+
+```bash
+# Solo la primera vez
+chmod +x start.sh
+./start.sh install
+
+# Cada vez que quieras usar la aplicación
+./start.sh
+```
+
+### Método Alternativo: Comando directo
 
 ```bash
 source .venv/bin/activate
 streamlit run app.py
 ```
 
-### Método 2: Task de VS Code
-
-1. `Ctrl+Shift+P` → "Tasks: Run Task"
-2. Seleccionar "Streamlit: Run app.py"
-
 La aplicación se abrirá en `http://localhost:8501`
+
+### Otros comandos útiles
+
+```bash
+./start.sh stop     # Detener la aplicación
+./start.sh help     # Ver ayuda
+```
 
 ## 📖 Uso
 

@@ -28,16 +28,38 @@ dist/
 pip-wheel-metadata/
 
 # Database & cache
-data/
-*.db
-*.sqlite3
+data/*.db
+data/*.sqlite3
+.company_catalog_cache.json
+.pre-commit-cache/
 
-# Generated reports
+# Generated reports (keep structure, ignore content)
+outputs/pdfs/*.pdf
+outputs/reports/*.csv
 reports_output/
-*.pdf
+!outputs/pdfs/.gitkeep
+!outputs/reports/.gitkeep
 
 # Streamlit
 .streamlit/secrets.toml
 
 # Environment variables
 .env
+
+# Temporary files and scripts
+*.sh~
+*.pyc
+*.pyo
+.dashrc
+force_restart.sh
+restart_dash.sh
+run_dash*.sh
+
+# Legacy documentation (moved to docs/)
+AUDIT_*.md
+DASH_*.md
+ERROR_*.md
+FIX_*.md
+MIGRATION_*.md
+PORT_*.md
+START_HERE.md
