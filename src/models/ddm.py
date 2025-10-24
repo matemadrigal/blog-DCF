@@ -62,6 +62,102 @@ class DDMValuation:
         return retention_ratio * roe
 
     @staticmethod
+    def normalize_growth_for_perpetuity(
+        historical_growth: float,
+        sustainable_growth: float,
+        cost_of_equity: float,
+        weight_historical: float = 0.3,
+    ) -> Tuple[float, Dict[str, Any]]:
+        """
+        Normalize growth rate for perpetuity using multiple approaches.
+
+        This addresses the critical issue of using unrealistic perpetual growth rates.
+
+        Methodology (Best Practice):
+        1. Cap historical growth at 5% (nominal GDP growth)
+        2. Calculate sustainable growth from fundamentals (ROE × retention)
+        3. Blend historical and sustainable with conservative weighting
+        4. Ensure (r - g) > 2% minimum spread
+
+        Args:
+            historical_growth: Historical dividend growth rate (CAGR)
+            sustainable_growth: Fundamental growth (ROE × retention ratio)
+            cost_of_equity: Required return (for validation)
+            weight_historical: Weight on historical (default 30%, rest on sustainable)
+
+        Returns:
+            Tuple of (normalized_growth, details)
+        """
+        details = {
+            "method": "Normalized Perpetual Growth",
+            "inputs": {
+                "historical_growth": historical_growth,
+                "sustainable_growth": sustainable_growth,
+                "cost_of_equity": cost_of_equity,
+            },
+            "warnings": [],
+        }
+
+        # Cap historical at 5% (nominal GDP growth)
+        MAX_PERPETUAL = 0.05
+        capped_historical = min(historical_growth, MAX_PERPETUAL)
+
+        if capped_historical < historical_growth:
+            details["warnings"].append(
+                f"📉 Historical growth {historical_growth:.2%} capped at {MAX_PERPETUAL:.1%} (GDP growth)"
+            )
+
+        # Cap sustainable at 5% as well
+        capped_sustainable = min(sustainable_growth, MAX_PERPETUAL)
+
+        if capped_sustainable < sustainable_growth:
+            details["warnings"].append(
+                f"📉 Sustainable growth {sustainable_growth:.2%} capped at {MAX_PERPETUAL:.1%}"
+            )
+
+        # Blend the two approaches (conservative: more weight on sustainable)
+        blended_growth = (
+            weight_historical * capped_historical
+            + (1 - weight_historical) * capped_sustainable
+        )
+
+        details["calculations"] = {
+            "capped_historical": capped_historical,
+            "capped_sustainable": capped_sustainable,
+            "weight_historical": weight_historical,
+            "weight_sustainable": 1 - weight_historical,
+            "blended_growth": blended_growth,
+        }
+
+        # Ensure minimum spread of 2%
+        MIN_SPREAD = 0.02
+        max_allowed_growth = cost_of_equity - MIN_SPREAD
+
+        if blended_growth > max_allowed_growth:
+            details["warnings"].append(
+                f"⚠️  Blended growth {blended_growth:.2%} exceeds safe maximum {max_allowed_growth:.2%}"
+            )
+            blended_growth = max_allowed_growth
+            details["calculations"]["final_adjustment"] = "Capped to ensure 2% spread"
+
+        # Additional conservatism: Use lower of blended or 4%
+        CONSERVATIVE_CAP = 0.04
+        final_growth = min(blended_growth, CONSERVATIVE_CAP)
+
+        if final_growth < blended_growth:
+            details["warnings"].append(
+                f"📉 Applied conservative cap: {blended_growth:.2%} → {final_growth:.2%}"
+            )
+
+        details["normalized_growth"] = final_growth
+        details["interpretation"] = (
+            f"Normalized perpetual growth: {final_growth:.2%} "
+            f"(blend of historical {capped_historical:.2%} and sustainable {capped_sustainable:.2%})"
+        )
+
+        return final_growth, details
+
+    @staticmethod
     def gordon_growth_model(
         dividend_per_share: float,
         cost_of_equity: float,
@@ -82,6 +178,11 @@ class DDMValuation:
         - Dividends grow at constant rate g forever
         - g < r (growth rate less than discount rate)
         - Company has stable dividend policy
+
+        CRITICAL MATHEMATICAL CONSTRAINTS (Rigor Financiero):
+        - g MUST be < r by at least 2.0% (200 bps) to avoid explosion
+        - g should typically be ≤ 5% for perpetuity (conservative)
+        - For financials, g ≤ nominal GDP growth (~4-5%)
 
         Best for:
         - Mature companies with predictable dividends
@@ -120,29 +221,89 @@ class DDMValuation:
             )
             return 0.0, details
 
+        # CRITICAL: Check mathematical constraint r - g > 0
+        spread = cost_of_equity - growth_rate
+
         if growth_rate >= cost_of_equity:
             details["errors"].append(
-                f"Growth rate ({growth_rate:.2%}) must be less than cost of equity ({cost_of_equity:.2%})"
+                f"⛔ CRITICAL ERROR: Growth rate ({growth_rate:.2%}) must be less than cost of equity ({cost_of_equity:.2%})"
+            )
+            details["errors"].append(
+                f"⛔ Mathematical impossibility: Cannot have perpetual growth ≥ discount rate"
             )
             return 0.0, details
 
-        if growth_rate < 0:
+        # STRICT VALIDATION: Minimum spread of 2% (200 bps) required
+        MIN_SPREAD_BPS = 0.02  # 2% minimum spread
+        if spread < MIN_SPREAD_BPS:
+            details["errors"].append(
+                f"⛔ UNSAFE SPREAD: (r - g) = {spread:.2%} is too small (minimum 2.0% required)"
+            )
+            details["errors"].append(
+                f"⛔ Small spreads cause valuation explosion - reduce g or increase r"
+            )
             details["warnings"].append(
-                f"⚠️  Negative growth rate ({growth_rate:.2%}) - implies declining dividends"
+                f"💡 Suggested: Use g ≤ {(cost_of_equity - MIN_SPREAD_BPS):.2%} for this cost of equity"
+            )
+            return 0.0, details
+
+        # WARNING: Spread < 3% is risky
+        if spread < 0.03:
+            details["warnings"].append(
+                f"⚠️  CAUTION: Thin spread (r - g) = {spread:.2%} may lead to inflated valuations"
             )
 
-        if growth_rate > 0.10:
+        # Validate growth rate reasonableness
+        if growth_rate < 0:
             details["warnings"].append(
-                f"⚠️  High growth rate ({growth_rate:.2%}) - perpetual growth >10% may be unrealistic"
+                f"⚠️  Negative growth rate ({growth_rate:.2%}) - implies perpetually declining dividends"
+            )
+
+        # STRICT: For perpetual growth, cap at 5% (nominal GDP growth)
+        MAX_PERPETUAL_GROWTH = 0.05
+        if growth_rate > MAX_PERPETUAL_GROWTH:
+            details["errors"].append(
+                f"⛔ UNREALISTIC PERPETUAL GROWTH: {growth_rate:.2%} > {MAX_PERPETUAL_GROWTH:.1%}"
+            )
+            details["errors"].append(
+                f"⛔ No company can grow faster than economy forever"
+            )
+            details["warnings"].append(
+                f"💡 For high growth companies, use Two-Stage DDM instead"
+            )
+            details["warnings"].append(
+                f"💡 Suggested perpetual g: 2-4% (inflation + modest real growth)"
+            )
+            return 0.0, details
+
+        # Warning for growth > 4%
+        if growth_rate > 0.04:
+            details["warnings"].append(
+                f"⚠️  High perpetual growth ({growth_rate:.2%}) - consider using 2-4% for conservatism"
             )
 
         # Calculate D₁ (next year's dividend)
         d1 = dividend_per_share * (1 + growth_rate)
-        details["calculations"] = {"D₁ (Next Year Dividend)": d1}
+        details["calculations"] = {
+            "D₁ (Next Year Dividend)": d1,
+            "Spread (r - g)": spread,
+            "Spread (bps)": spread * 10000,
+        }
 
         # Calculate intrinsic value
-        intrinsic_value = d1 / (cost_of_equity - growth_rate)
+        intrinsic_value = d1 / spread
         details["intrinsic_value"] = intrinsic_value
+
+        # Sanity check: Flag extreme valuations
+        if dividend_per_share > 0:
+            price_to_dividend_ratio = intrinsic_value / dividend_per_share
+            if price_to_dividend_ratio > 50:
+                details["warnings"].append(
+                    f"⚠️  EXTREME VALUATION: P/D ratio = {price_to_dividend_ratio:.1f}x (typically 10-30x)"
+                )
+                details["warnings"].append(
+                    "⚠️  Valuation may be inflated due to optimistic growth assumptions"
+                )
 
         return intrinsic_value, details
 

@@ -427,6 +427,7 @@ class WACCCalculator:
         use_dynamic_risk_free_rate: bool = False,
         country_code: str = "USA",
         target_debt_to_equity: Optional[float] = None,
+        apply_country_risk_to_beta: bool = True,  # [AuditFix] NEW parameter
     ) -> dict:
         """
         Calculate WACC dynamically with advanced adjustments.
@@ -446,6 +447,7 @@ class WACCCalculator:
         - Beta desapalancado/reapalancado (Hamada formula)
         - Risk-free rate dinámico (US Treasury real-time)
         - Country Risk Premium (para mercados emergentes)
+        - [AuditFix] Country risk via beta adjustment (avoid double-counting)
 
         Args:
             ticker: Stock ticker
@@ -456,6 +458,7 @@ class WACCCalculator:
             use_dynamic_risk_free_rate: Fetch current treasury yields (default False)
             country_code: ISO country code for risk premium (default "USA")
             target_debt_to_equity: Target D/E ratio for relevering beta (default None = use current)
+            apply_country_risk_to_beta: [AuditFix] Apply CRP via beta adjustment (True) vs separately (False)
 
         Returns:
             Dictionary with WACC components and final WACC
@@ -536,6 +539,11 @@ class WACCCalculator:
             'beta_final': beta_raw,
         }
 
+        # [AuditFix] CORRECT ORDER: Blume → Hamada
+        # Rationale: Blume adjusts for mean reversion (statistical property)
+        # Then Hamada adjusts for leverage (financial risk)
+        # This order is correct per CFA standards
+
         # Step 1: Apply Blume adjustment (if enabled)
         if apply_blume_adjustment:
             beta_blume = self.adjust_beta_blume(beta_raw)
@@ -545,6 +553,13 @@ class WACCCalculator:
             beta_blume = beta_raw
 
         # Step 2: Unlever/Relever beta (if target D/E specified)
+        # [AuditFix] Uses MARGINAL tax rate (self.tax_rate = 21%) for leverage effects
+        # Marginal tax rate is correct for:
+        # - Beta unlevering/relevering (captures marginal effect of debt)
+        # - WACC tax shield calculation (incremental benefit)
+        # Effective tax rate would be used for:
+        # - Historical FCF calculations (actual taxes paid)
+        # - Normalized earnings adjustments
         if target_debt_to_equity is not None and market_cap > 0:
             # Calculate current D/E ratio
             current_de = total_debt / market_cap if market_cap > 0 else 0
@@ -574,12 +589,65 @@ class WACCCalculator:
             rf_source = rf_desc
 
         # === NEW: COUNTRY RISK PREMIUM ===
-        country_risk_premium, crp_desc = self.get_country_risk_premium(country_code)
+        # [AuditFix] Two methods to incorporate country risk (avoid double-counting):
+        #
+        # METHOD 1 (apply_country_risk_to_beta=True, DEFAULT):
+        #   Adjust beta: β_adjusted = β + λ × (CRP / ERP)
+        #   Then: Re = Rf + β_adjusted × ERP
+        #   Rationale: If company has λ exposure to country risk, increase beta accordingly
+        #   This is Damodaran's recommended method for multinationals
+        #
+        # METHOD 2 (apply_country_risk_to_beta=False):
+        #   Add CRP separately: Re = Rf + β × ERP + λ × CRP
+        #   Rationale: For purely domestic companies, add full country risk
+        #   Risk: May double-count if beta already reflects country exposure
+        #
+        # λ (lambda) = exposure to country risk (0-1)
+        # - λ=1.0: Company fully exposed to country risk (domestic-only)
+        # - λ=0.5: Company 50% exposed (multinational)
+        # - λ=0.0: Company not exposed (pure international revenue)
 
-        # Calculate cost of equity with adjustments
-        # Re = Rf + β × (Rm - Rf) + Country Risk Premium
+        country_risk_premium, crp_desc = self.get_country_risk_premium(country_code)
         equity_risk_premium = self.market_return - self.risk_free_rate
-        cost_of_equity = self.risk_free_rate + (beta_final * equity_risk_premium) + country_risk_premium
+
+        # [BugFix #6] Validate ERP is reasonable before division
+        # Very low ERP (<2%) can cause absurd beta adjustments
+        MIN_ERP_FOR_CRP_ADJUSTMENT = 0.02  # 2% minimum for numerical stability
+
+        # [AuditFix] Apply country risk premium method
+        if (apply_country_risk_to_beta and
+            country_risk_premium > 0 and
+            equity_risk_premium >= MIN_ERP_FOR_CRP_ADJUSTMENT):
+            # METHOD 1: Adjust beta (Damodaran method)
+            # β_adjusted = β + λ × (CRP / ERP)
+            lambda_exposure = 1.0  # Default: assume full country exposure
+            # TODO: Add parameter to specify lambda_exposure for multinationals
+
+            beta_crp_adjustment = lambda_exposure * (country_risk_premium / equity_risk_premium)
+            beta_final_with_crp = beta_final + beta_crp_adjustment
+
+            # Track adjustment
+            beta_adjustments['beta_country_risk_adjusted'] = beta_final_with_crp
+            beta_adjustments['crp_beta_adjustment'] = beta_crp_adjustment
+            beta_adjustments['beta_final'] = beta_final_with_crp
+
+            # Calculate Re with adjusted beta (no separate CRP)
+            cost_of_equity = self.risk_free_rate + (beta_final_with_crp * equity_risk_premium)
+
+            beta_source += f" → CRP via beta (+{beta_crp_adjustment:.3f})"
+            crp_desc += " (applied via beta adjustment)"
+        else:
+            # METHOD 2: Add CRP separately (original method or fallback)
+            # Re = Rf + β × ERP + CRP
+            cost_of_equity = self.risk_free_rate + (beta_final * equity_risk_premium) + country_risk_premium
+
+            if country_risk_premium > 0:
+                # [BugFix #6] Explain why falling back to separate addition
+                if equity_risk_premium < MIN_ERP_FOR_CRP_ADJUSTMENT:
+                    crp_desc += (f" (added separately - ERP too low "
+                                f"[{equity_risk_premium:.2%}] for beta adjustment)")
+                else:
+                    crp_desc += " (added separately - may double-count if beta includes country risk)"
 
         # Calculate cost of debt
         cost_of_debt = self.calculate_cost_of_debt(ticker, total_debt, interest_expense)

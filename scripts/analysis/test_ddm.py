@@ -44,21 +44,21 @@ def test_bank(ticker: str, name: str):
         print(f"   ❌ No dividend data - cannot use DDM for {ticker}")
         return
 
-    # 2. Calculate growth rate
-    print("\n2️⃣ Calculating dividend growth rate...")
+    # 2. Calculate HISTORICAL growth rate (for reference, not direct use)
+    print("\n2️⃣ Calculating historical dividend growth rate...")
     if len(historical_dividends) >= 2:
-        growth_rate, growth_details = calculate_dividend_growth_rate(
+        historical_growth, growth_details = calculate_dividend_growth_rate(
             historical_dividends, method="cagr"
         )
-        print(f"   ✓ Growth rate (CAGR): {growth_rate:.2%}")
+        print(f"   ✓ Historical Growth (CAGR): {historical_growth:.2%}")
         if growth_details.get("warnings"):
             for w in growth_details["warnings"]:
                 print(f"   ⚠️  {w}")
     else:
-        growth_rate = 0.03
-        print("   ⚠️  Insufficient data - using default 3% growth")
+        historical_growth = 0.03
+        print("   ⚠️  Insufficient data - using default 3% historical growth")
 
-    # 3. Get additional metrics
+    # 3. Get additional metrics (needed for sustainable growth calculation)
     print("\n3️⃣ Fetching additional metrics...")
     payout_ratio, payout_meta = get_payout_ratio(ticker)
     roe, roe_meta = get_roe(ticker)
@@ -73,14 +73,40 @@ def test_bank(ticker: str, name: str):
     print(f"   ✓ Cost of Equity: {cost_of_equity:.2%}")
     print(f"   ✓ Beta: {coe_meta['inputs'].get('beta', 'N/A')}")
 
-    # 4. Calculate DDM valuation (Gordon Growth Model)
-    print("\n4️⃣ Calculating Gordon Growth Model valuation...")
+    # 4. Calculate SUSTAINABLE growth and NORMALIZE for perpetuity
+    print("\n4️⃣ Calculating sustainable and normalized growth...")
     ddm = DDMValuation(ticker)
+
+    # Calculate sustainable growth (ROE × retention ratio)
+    if roe > 0 and payout_ratio > 0:
+        sustainable_growth = ddm.calculate_sustainable_growth_rate(roe, payout_ratio)
+        print(f"   ✓ Sustainable Growth (ROE × retention): {sustainable_growth:.2%}")
+    else:
+        sustainable_growth = 0.03
+        print("   ⚠️  Using default 3% sustainable growth")
+
+    # Normalize growth for perpetuity (CRITICAL FIX)
+    normalized_growth, norm_details = ddm.normalize_growth_for_perpetuity(
+        historical_growth=historical_growth,
+        sustainable_growth=sustainable_growth,
+        cost_of_equity=cost_of_equity,
+        weight_historical=0.30,  # 30% historical, 70% sustainable (conservative)
+    )
+
+    print(f"   ✓ Normalized Perpetual Growth: {normalized_growth:.2%}")
+    print(f"   📊 {norm_details['interpretation']}")
+
+    if norm_details.get("warnings"):
+        for w in norm_details["warnings"]:
+            print(f"   {w}")
+
+    # 5. Calculate DDM valuation (Gordon Growth Model) with NORMALIZED growth
+    print("\n5️⃣ Calculating Gordon Growth Model valuation...")
 
     intrinsic_value, ddm_details = ddm.gordon_growth_model(
         dividend_per_share=dividend_per_share,
         cost_of_equity=cost_of_equity,
-        growth_rate=growth_rate,
+        growth_rate=normalized_growth,  # Use normalized growth, not historical!
     )
 
     if ddm_details.get("errors"):
@@ -95,8 +121,8 @@ def test_bank(ticker: str, name: str):
         for w in ddm_details["warnings"]:
             print(f"   ⚠️  {w}")
 
-    # 5. Get current price for comparison
-    print("\n5️⃣ Comparing with market price...")
+    # 6. Get current price for comparison
+    print("\n6️⃣ Comparing with market price...")
     try:
         import yfinance as yf
 
@@ -106,7 +132,7 @@ def test_bank(ticker: str, name: str):
         if current_price > 0:
             upside = ((intrinsic_value - current_price) / current_price) * 100
             print(f"   ✓ Current Price: ${current_price:.2f}")
-            print(f"   ✓ Fair Value: ${intrinsic_value:.2f}")
+            print(f"   ✓ Fair Value (DDM): ${intrinsic_value:.2f}")
             print(f"   ✓ Upside/Downside: {upside:+.1f}%")
 
             if upside > 10:
@@ -120,16 +146,18 @@ def test_bank(ticker: str, name: str):
     except Exception as e:
         print(f"   ⚠️  Error fetching price: {e}")
 
-    # 6. Calculate implied growth rate
-    print("\n6️⃣ Calculating implied growth rate (reverse DDM)...")
+    # 7. Calculate implied growth rate
+    print("\n7️⃣ Calculating implied growth rate (reverse DDM)...")
     if current_price > 0:
         implied_growth, implied_details = ddm.calculate_implied_growth_rate(
             current_price, dividend_per_share, cost_of_equity
         )
-        print(f"   ✓ Implied Growth Rate: {implied_growth:.2%}")
-        print(f"   ✓ Your Estimate: {growth_rate:.2%}")
-        diff = (implied_growth - growth_rate) * 100
-        print(f"   ✓ Difference: {diff:+.1f}pp")
+        print(f"   ✓ Market Implied Growth: {implied_growth:.2%}")
+        print(f"   ✓ Historical Growth: {historical_growth:.2%}")
+        print(f"   ✓ Sustainable Growth: {sustainable_growth:.2%}")
+        print(f"   ✓ Normalized Growth (used): {normalized_growth:.2%}")
+        diff = (implied_growth - normalized_growth) * 100
+        print(f"   ✓ Market vs Normalized: {diff:+.1f}pp")
         print(f"   📊 {implied_details.get('interpretation', '')}")
 
     print(f"\n{'='*80}")
