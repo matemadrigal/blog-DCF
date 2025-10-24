@@ -35,7 +35,9 @@ data/*.sqlite3
 
 # Generated reports (keep structure, ignore content)
 outputs/pdfs/*.pdf
+outputs/reports/*.html
 outputs/reports/*.csv
+outputs/reports/*.png
 reports_output/
 !outputs/pdfs/.gitkeep
 !outputs/reports/.gitkeep
@@ -63,3 +65,7 @@ FIX_*.md
 MIGRATION_*.md
 PORT_*.md
 START_HERE.md
+*_RESUMEN.txt
+*_SUMMARY.md
+IMPLEMENTACION_*.md
+MEJORAS_*.md

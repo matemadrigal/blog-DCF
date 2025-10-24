@@ -18,13 +18,18 @@ Plataforma profesional de valoración de empresas mediante **Discounted Cash Flo
 - ⚡ **WACC Dinámico**: Beta ajustado (Blume), Hamada, risk-free rate actualizado, country risk premium
 - 📄 **Executive PDF**: Cover page de 1-min, gráficos vectoriales, branding, comparación S&P 500
 
-Ver: [FEATURES_IMPLEMENTED](docs/FEATURES_IMPLEMENTED.md) | [ANALISIS_ESCENARIOS](IMPLEMENTACION_ANALISIS_ESCENARIOS.md) | [GRAFICOS_MEJORADOS](docs/GRAFICOS_INTERACTIVOS_MEJORADOS.md) | [WACC_DINAMICO](docs/WACC_DINAMICO_IMPLEMENTADO.md) | [EXECUTIVE_PDF](EXECUTIVE_PDF_RESUMEN.txt)
+## Documentación
 
-## Documentación Rápida
+### Inicio Rápido
+- 🚀 [QUICK_START.md](docs/project/QUICK_START.md) - Inicio en 3 pasos
+- 📁 [PROJECT_STRUCTURE.md](docs/project/PROJECT_STRUCTURE.md) - Estructura del proyecto
 
-- 📘 [README_CEO.md](README_CEO.md) - Guía ejecutiva para no técnicos
-- 🚀 [QUICK_START.md](QUICK_START.md) - Inicio en 3 pasos
-- 📁 [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Estructura del proyecto
+### Implementaciones y Auditorías
+- 📋 [Implementaciones](docs/implementations/) - Historial de funcionalidades implementadas
+- 🔍 [Auditorías](docs/audits/) - Reportes de auditoría y correcciones
+- 📦 [Archivo histórico](docs/archive/) - Documentación legacy
+
+### Guías Técnicas
 - 📚 [docs/MULTI_SOURCE_DATA.md](docs/MULTI_SOURCE_DATA.md) - Guía de fuentes de datos
 - 🔧 [docs/technical/](docs/technical/) - Documentación técnica detallada
 
@@ -185,30 +190,39 @@ La aplicación se abrirá en `http://localhost:8501`
 
 ```
 blog-DCF/
-├── app.py                          # Página principal (landing)
-├── pages/                          # Páginas multipágina Streamlit
+├── app.py                          # Aplicación principal Streamlit
+├── pages/                          # Páginas Streamlit multi-page
 │   ├── 1_📈_Análisis_Individual.py
 │   ├── 2_📊_Dashboard.py
 │   ├── 3_⚖️_Comparador.py
 │   └── 4_📅_Histórico.py
-├── src/
-│   ├── dcf/
-│   │   ├── model.py               # Modelo DCF core
-│   │   └── fundamentals.py        # Normalización de datos
-│   ├── data_providers/            # 🆕 Sistema multi-fuente
-│   │   ├── base.py                # Clases base y FinancialData
-│   │   ├── yahoo_provider.py      # Yahoo Finance provider
-│   │   ├── alpha_vantage_provider.py  # Alpha Vantage provider
-│   │   ├── fmp_provider.py        # Financial Modeling Prep provider
-│   │   └── aggregator.py          # Búsqueda inteligente multi-fuente
-│   ├── cache/
-│   │   └── db.py                  # Sistema de caché SQLite
-│   └── reports/
-│       └── pdf_generator.py       # Generador de informes PDF
-├── data/
-│   └── dcf_cache.db               # Base de datos SQLite (creada automáticamente)
+├── src/                            # Código fuente
+│   ├── alerts/                     # Sistema de alertas
+│   ├── cache/                      # Gestión de caché SQLite
+│   ├── companies/                  # Catálogo de empresas
+│   ├── core/                       # Lógica core
+│   ├── dash_app/                   # Dashboard ejecutivo
+│   ├── data_providers/             # Proveedores de datos (Yahoo, Alpha Vantage, FMP)
+│   ├── dcf/                        # Modelo DCF y fundamentales
+│   ├── models/                     # Modelos de datos
+│   ├── reports/                    # Generación de reportes (PDF, Excel)
+│   ├── utils/                      # Utilidades generales
+│   └── visualization/              # Gráficos y visualizaciones
+├── data/                           # Datos y bases de datos
+│   └── dcf_cache.db               # Caché SQLite (auto-generada)
+├── outputs/                        # Archivos generados
+│   ├── pdfs/                      # Reportes PDF
+│   └── reports/                   # Reportes HTML/CSV
+├── docs/                          # Documentación
+│   ├── project/                   # Estructura y guías de inicio
+│   ├── implementations/           # Historial de implementaciones
+│   ├── audits/                    # Reportes de auditoría
+│   ├── archive/                   # Documentación legacy
+│   └── technical/                 # Documentación técnica
 ├── tests/                         # Tests unitarios
+├── scripts/                       # Scripts de utilidad
 ├── requirements.txt               # Dependencias Python
+├── start.sh                       # Script de inicio
 └── README.md                      # Este archivo
 ```
 
