@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DCF Valuation Report - PFE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Professional Financial Theme - Inspired by Bloomberg/Goldman Sachs */
+        :root {
+            --primary-dark: #0A1929;
+            --primary: #1E3A5F;
+            --primary-light: #2E4A6F;
+            --accent: #2E7D32;
+            --danger: #C62828;
+            --warning: #F57C00;
+            --gold: #F9A825;
+            --muted: #64748B;
+            --border: #E2E8F0;
+            --bg-light: #F8FAFC;
+            --bg-card: #FFFFFF;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-light);
+            color: var(--primary-dark);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header Section */
+        .report-header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(10, 25, 41, 0.2);
+        }
+
+        .report-title {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .report-subtitle {
+            font-size: 18px;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .report-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .meta-item {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .kpi-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin-bottom: 4px;
+        }
+
+        .kpi-subvalue {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        /* Recommendation Badge */
+        .recommendation-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-success {
+            background: #D1F4E0;
+            color: var(--accent);
+        }
+
+        .badge-warning {
+            background: #FFE8CC;
+            color: var(--warning);
+        }
+
+        .badge-danger {
+            background: #FFE0E0;
+            color: var(--danger);
+        }
+
+        /* Section */
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        /* Charts */
+        .chart-container {
+            margin: 20px 0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* Table */
+        .financial-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .financial-table thead {
+            background: var(--primary-dark);
+            color: white;
+        }
+
+        .financial-table th {
+            padding: 12px 16px;
+            text-align: right;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .financial-table th:first-child {
+            text-align: left;
+        }
+
+        .financial-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            text-align: right;
+        }
+
+        .financial-table td:first-child {
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .financial-table tbody tr:hover {
+            background: var(--bg-light);
+        }
+
+        /* Warning Box */
+        .warning-box {
+            background: #FFF4E6;
+            border-left: 4px solid var(--warning);
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .warning-box-title {
+            font-weight: 700;
+            color: var(--warning);
+            margin-bottom: 8px;
+        }
+
+        .warning-item {
+            font-size: 13px;
+            color: #8B5A00;
+            margin: 4px 0;
+        }
+
+        /* Footer */
+        .report-footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px dashed var(--border);
+            text-align: center;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+            }
+
+            .container {
+                max-width: 100%;
+                padding: 0;
+            }
+
+            .section {
+                page-break-inside: avoid;
+                box-shadow: none;
+            }
+
+            .kpi-card {
+                box-shadow: none;
+            }
+
+            .chart-container {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="report-header">
+            <div class="report-title">PFE - Pfizer Inc.</div>
+            <div class="report-subtitle">DCF Valuation Report</div>
+            <div class="report-meta">
+                <div class="meta-item">Healthcare</div>
+                <div class="meta-item">Generated: 2025-10-25 00:28</div>
+            </div>
+        </div>
+
+        <!-- KPI Grid -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">Fair Value / Share</div>
+                <div class="kpi-value">$37.75</div>
+                <div class="kpi-subvalue">Current: $24.76</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Upside / Downside</div>
+                <div class="kpi-value" style="color: var(--accent)">
+                    52.47%
+                </div>
+                <div class="kpi-subvalue">
+                    <span class="recommendation-badge badge-success">
+                        COMPRA FUERTE
+                    </span>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Enterprise Value</div>
+                <div class="kpi-value">$257.81B</div>
+                <div class="kpi-subvalue">Market Cap: $140.77B</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">WACC / Terminal Growth</div>
+                <div class="kpi-value">7.92%</div>
+                <div class="kpi-subvalue">g = 3.12%</div>
+            </div>
+        </div>
+
+        <!-- Warnings (if any) -->
+        
+
+        <!-- DCF Waterfall Chart -->
+        
+        <div class="section">
+            <div class="section-title">DCF Waterfall Analysis</div>
+            <div class="chart-container">
+                <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.1.1.min.js" integrity="sha256-HUEFyfiTnZJxCxur99FjbKYTvKSzwDaD3/x5TqHpFu4=" crossorigin="anonymous"></script>                <div id="waterfall_chart" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("waterfall_chart")) {                    Plotly.newPlot(                        "waterfall_chart",                        [{"connector":{"line":{"color":"#E2E8F0"}},"decreasing":{"marker":{"color":"#C62828"}},"increasing":{"marker":{"color":"#2E7D32"}},"measure":["relative","relative","total","relative","total"],"name":"DCF Components","orientation":"v","text":["$52.2B","$205.6B","$0.0B","$-43.2B","$0.0B"],"textposition":"outside","totals":{"marker":{"color":"#1E3A5F"}},"x":["PV FCF\u003cbr\u003e(Years 1-5)","PV Terminal\u003cbr\u003eValue","Enterprise\u003cbr\u003eValue","Less\u003cbr\u003eNet Debt","Equity\u003cbr\u003eValue"],"y":[52.167254898586165,205.63977519626263,0,-43.172,0],"type":"waterfall"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"title":{"font":{"size":18,"color":"#0A1929"},"text":"DCF Waterfall Analysis"},"font":{"family":"Inter, sans-serif"},"yaxis":{"title":{"text":"Value ($B)"},"gridcolor":"#E2E8F0"},"margin":{"l":50,"r":50,"t":80,"b":50},"showlegend":false,"paper_bgcolor":"white","plot_bgcolor":"white","height":400},                        {"displayModeBar": true, "toImageButtonOptions": {"height": 600, "width": 1000}, "responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+            </div>
+        </div>
+        
+
+        <!-- Sensitivity Analysis -->
+        
+        <div class="section">
+            <div class="section-title">Sensitivity Analysis</div>
+            <div class="chart-container">
+                <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.1.1.min.js" integrity="sha256-HUEFyfiTnZJxCxur99FjbKYTvKSzwDaD3/x5TqHpFu4=" crossorigin="anonymous"></script>                <div id="sensitivity_chart" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("sensitivity_chart")) {                    Plotly.newPlot(                        "sensitivity_chart",                        [{"colorbar":{"title":{"text":"Fair Value\u003cbr\u003eper Share ($)"}},"colorscale":[[0,"#C62828"],[0.5,"#F57C00"],[1,"#2E7D32"]],"showscale":true,"text":[["$34","$29","$26","$23","$21"],["$42","$35","$30","$27","$24"],["$56","$45","$37","$32","$28"],["$81","$60","$47","$39","$33"],["$150","$91","$65","$51","$42"]],"textfont":{"size":10},"texttemplate":"%{text}","x":["6.3%","7.1%","7.9%","8.7%","9.5%"],"y":["1.1%","2.1%","3.1%","4.1%","5.1%"],"z":[[33.56906958721541,29.14016685307005,25.743697074169173,23.0563360510056,20.877004609020116],[41.95161370661342,35.31046278603821,30.484597984219008,26.819226555116007,23.94067560896452],[55.555300223643336,44.56359455861074,37.20293410179746,31.929133527495754,27.96489559776122],[81.46444718122495,59.979318254308495,47.461895314278905,39.26703569166959,33.485386264675306],[150.1632670662741,90.78767669358864,65.06179478256104,50.69632462148259,41.52722457576116]],"type":"heatmap"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"title":{"font":{"size":18,"color":"#0A1929"},"text":"Sensitivity Analysis: Fair Value per Share"},"xaxis":{"title":{"text":"WACC (Discount Rate)"},"side":"bottom"},"font":{"family":"Inter, sans-serif"},"margin":{"l":80,"r":80,"t":80,"b":80},"yaxis":{"title":{"text":"Terminal Growth Rate"}},"paper_bgcolor":"white","plot_bgcolor":"white","height":400,"annotations":[{"arrowcolor":"#0A1929","arrowhead":2,"arrowsize":1,"arrowwidth":2,"ax":-40,"ay":-40,"bgcolor":"white","bordercolor":"#0A1929","borderwidth":2,"font":{"color":"#0A1929","size":12},"showarrow":true,"text":"Base\u003cbr\u003eCase","x":"7.9%","y":"3.1%"}]},                        {"displayModeBar": true, "responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+            </div>
+        </div>
+        
+
+        <!-- Value Breakdown -->
+        
+        <div class="section">
+            <div class="section-title">Enterprise Value Composition</div>
+            <div class="chart-container">
+                <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.1.1.min.js" integrity="sha256-HUEFyfiTnZJxCxur99FjbKYTvKSzwDaD3/x5TqHpFu4=" crossorigin="anonymous"></script>                <div id="value_breakdown_chart" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("value_breakdown_chart")) {                    Plotly.newPlot(                        "value_breakdown_chart",                        [{"hole":0.4,"hovertemplate":"\u003cb\u003e%{label}\u003c\u002fb\u003e\u003cbr\u003e$%{value:.2f}B\u003cbr\u003e%{percent}\u003cextra\u003e\u003c\u002fextra\u003e","labels":["PV of Projected FCF","PV of Terminal Value"],"marker":{"colors":["#1E3A5F","#2E4A6F"],"line":{"color":"white","width":2}},"textfont":{"size":12},"textinfo":"label+percent","values":[52167254898.58617,205639775196.26263],"type":"pie"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"title":{"font":{"size":18,"color":"#0A1929"},"text":"Enterprise Value Composition"},"legend":{"orientation":"h","y":-0.1},"font":{"family":"Inter, sans-serif"},"margin":{"l":50,"r":50,"t":80,"b":80},"showlegend":true,"paper_bgcolor":"white","height":400},                        {"displayModeBar": true, "responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+            </div>
+        </div>
+        
+
+        <!-- FCF Projections -->
+        
+        <div class="section">
+            <div class="section-title">Free Cash Flow Projections</div>
+            <div class="chart-container">
+                <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.1.1.min.js" integrity="sha256-HUEFyfiTnZJxCxur99FjbKYTvKSzwDaD3/x5TqHpFu4=" crossorigin="anonymous"></script>                <div id="fcf_projection_chart" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("fcf_projection_chart")) {                    Plotly.newPlot(                        "fcf_projection_chart",                        [{"marker":{"color":"#1E3A5F"},"name":"Free Cash Flow","text":["$12.1B","$12.7B","$13.1B","$13.6B","$14.0B"],"textposition":"outside","x":[1,2,3,4,5],"y":[12.13968,12.6859656,13.129974395999998,13.589523499859997,13.997209204855796],"type":"bar","xaxis":"x","yaxis":"y"},{"line":{"color":"#2E7D32","width":3},"marker":{"size":8},"mode":"lines+markers","name":"YoY Growth","text":["+23.4%","+4.5%","+3.5%","+3.5%","+3.0%"],"textposition":"top center","x":[1,2,3,4,5],"y":[23.43345195729537,4.5,3.499999999999985,3.4999999999999907,3.000000000000001],"type":"scatter","xaxis":"x","yaxis":"y2"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,0.94],"title":{"text":"Year"},"gridcolor":"#E2E8F0"},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"FCF ($B)"},"gridcolor":"#E2E8F0"},"yaxis2":{"anchor":"x","overlaying":"y","side":"right","title":{"text":"Growth Rate (%)"},"showgrid":false},"title":{"font":{"size":18,"color":"#0A1929"},"text":"Free Cash Flow Projections"},"font":{"family":"Inter, sans-serif"},"legend":{"orientation":"h","y":-0.15},"margin":{"l":50,"r":50,"t":80,"b":80},"paper_bgcolor":"white","plot_bgcolor":"white","height":400},                        {"displayModeBar": true, "responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+            </div>
+        </div>
+        
+
+        <!-- DCF Parameters Table -->
+        <div class="section">
+            <div class="section-title">Valuation Parameters</div>
+            <table class="financial-table">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Value</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>WACC</td>
+                        <td>7.92%</td>
+                        <td>Weighted Average Cost of Capital</td>
+                    </tr>
+                    <tr>
+                        <td>Terminal Growth Rate</td>
+                        <td>3.12%</td>
+                        <td>Perpetuity growth assumption</td>
+                    </tr>
+                    <tr>
+                        <td>Projection Period</td>
+                        <td>5 years</td>
+                        <td>Explicit forecast period</td>
+                    </tr>
+                    <tr>
+                        <td>Base FCF</td>
+                        <td>$9.84B</td>
+                        <td>Latest year free cash flow</td>
+                    </tr>
+                    <tr>
+                        <td>Total Debt</td>
+                        <td>$63.65B</td>
+                        <td>Interest-bearing debt</td>
+                    </tr>
+                    <tr>
+                        <td>Cash & Equivalents</td>
+                        <td>$20.48B</td>
+                        <td>Liquid assets</td>
+                    </tr>
+                    <tr>
+                        <td>Net Debt</td>
+                        <td>$43.17B</td>
+                        <td>Total Debt - Cash</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="report-footer">
+            <div>DISCLAIMER: This report is for educational purposes only and does not constitute investment advice.</div>
+            <div>DCF valuation based on 5-year projection with 3.12% terminal growth.</div>
+            <div>Generated with Claude Code DCF Platform · 2025-10-25 00:28</div>
+        </div>
+    </div>
+</body>
+</html>
