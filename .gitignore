@@ -69,3 +69,8 @@ START_HERE.md
 *_SUMMARY.md
 IMPLEMENTACION_*.md
 MEJORAS_*.md
+
+# Streamlit secrets
+.streamlit/secrets.toml
+.streamlit/credentials.toml
+
