@@ -323,7 +323,7 @@ class IntelligentDataSelector:
         elif quality.confidence >= 0.5:
             return "🟠 Aceptable"
         else:
-            return "🔴 Baja"
+            return "🔴 Low"
 
     def get_explanation(self, quality: DataQuality) -> str:
         """
@@ -336,19 +336,19 @@ class IntelligentDataSelector:
             Explanation string
         """
         lines = [
-            f"**Fuente:** {quality.source}",
-            f"**Método:** {quality.method}",
-            f"**Confianza:** {quality.confidence:.0%}",
-            f"**Completitud:** {quality.completeness:.0%}",
+            f"**Source:** {quality.source}",
+            f"**Method:** {quality.method}",
+            f"**Confidence:** {quality.confidence:.0%}",
+            f"**Completeness:** {quality.completeness:.0%}",
         ]
 
         if quality.fallback_used:
             lines.append(
-                "⚠️ *Usando fuente de respaldo (fuente principal no disponible)*"
+                "⚠️ *Using fallback source (primary source not available)*"
             )
 
         if quality.metadata:
             if "years_found" in quality.metadata:
-                lines.append(f"**Años históricos:** {quality.metadata['years_found']}")
+                lines.append(f"**Historical years:** {quality.metadata['years_found']}")
 
         return "\n".join(lines)

@@ -454,53 +454,53 @@ class ValuationMetricsCalculator:
         # EV/EBITDA interpretation
         if metrics.ev_ebitda:
             if metrics.ev_ebitda < 8:
-                interpretation["ev_ebitda"] = "🟢 Potencialmente subvaluada"
+                interpretation["ev_ebitda"] = "🟢 Potentially undervalued"
             elif metrics.ev_ebitda < 12:
-                interpretation["ev_ebitda"] = "🟡 Valoración moderada"
+                interpretation["ev_ebitda"] = "🟡 Moderate valuation"
             elif metrics.ev_ebitda < 15:
-                interpretation["ev_ebitda"] = "🟠 Valoración elevada"
+                interpretation["ev_ebitda"] = "🟠 Elevated valuation"
             else:
                 interpretation["ev_ebitda"] = (
-                    "🔴 Valoración muy elevada o alta expectativa de crecimiento"
+                    "🔴 Very high valuation or high growth expectations"
                 )
         else:
             interpretation["ev_ebitda"] = (
-                "⚪ No disponible (EBITDA negativo o sin datos)"
+                "⚪ Not available (negative EBITDA or no data)"
             )
 
         # P/E interpretation
         if metrics.pe_ratio:
             if metrics.pe_ratio < 15:
-                interpretation["pe_ratio"] = "🟢 Potencialmente subvaluada"
+                interpretation["pe_ratio"] = "🟢 Potentially undervalued"
             elif metrics.pe_ratio < 20:
-                interpretation["pe_ratio"] = "🟡 Valoración razonable"
+                interpretation["pe_ratio"] = "🟡 Reasonable valuation"
             elif metrics.pe_ratio < 25:
-                interpretation["pe_ratio"] = "🟠 Valoración elevada"
+                interpretation["pe_ratio"] = "🟠 Elevated valuation"
             else:
                 interpretation["pe_ratio"] = (
-                    "🔴 Valoración muy elevada o alta expectativa de crecimiento"
+                    "🔴 Very high valuation or high growth expectations"
                 )
         else:
             interpretation["pe_ratio"] = (
-                "⚪ No disponible (beneficios negativos o sin datos)"
+                "⚪ Not available (negative earnings or no data)"
             )
 
         # P/B interpretation
         if metrics.pb_ratio:
             if metrics.pb_ratio < 1:
                 interpretation["pb_ratio"] = (
-                    "🟢 Cotizando por debajo del valor en libros"
+                    "🟢 Trading below book value"
                 )
             elif metrics.pb_ratio < 2:
-                interpretation["pb_ratio"] = "🟡 Prima moderada sobre valor contable"
+                interpretation["pb_ratio"] = "🟡 Moderate premium over book value"
             elif metrics.pb_ratio < 3:
-                interpretation["pb_ratio"] = "🟠 Prima significativa"
+                interpretation["pb_ratio"] = "🟠 Significant premium"
             else:
                 interpretation["pb_ratio"] = (
-                    "🔴 Prima muy elevada (negocio de alto valor intangible)"
+                    "🔴 Very high premium (high intangible value business)"
                 )
         else:
-            interpretation["pb_ratio"] = "⚪ No disponible"
+            interpretation["pb_ratio"] = "⚪ Not available"
 
         return interpretation
 
@@ -529,31 +529,31 @@ class ValuationMetricsCalculator:
 
         # DCF signal
         if comparison["dcf_upside"] > 20:
-            comparison["dcf_signal"] = "🟢 Fuertemente subvaluada (DCF)"
+            comparison["dcf_signal"] = "🟢 Strongly undervalued (DCF)"
         elif comparison["dcf_upside"] > 10:
-            comparison["dcf_signal"] = "🟢 Subvaluada (DCF)"
+            comparison["dcf_signal"] = "🟢 Undervalued (DCF)"
         elif comparison["dcf_upside"] > -10:
-            comparison["dcf_signal"] = "🟡 Valoración justa (DCF)"
+            comparison["dcf_signal"] = "🟡 Fair valuation (DCF)"
         else:
-            comparison["dcf_signal"] = "🔴 Sobrevaluada (DCF)"
+            comparison["dcf_signal"] = "🔴 Overvalued (DCF)"
 
         # Relative valuation signals
         signals = []
 
         if metrics.ev_ebitda:
             if metrics.ev_ebitda < 10:
-                signals.append("🟢 EV/EBITDA bajo")
+                signals.append("🟢 Low EV/EBITDA")
             elif metrics.ev_ebitda > 15:
-                signals.append("🔴 EV/EBITDA alto")
+                signals.append("🔴 High EV/EBITDA")
 
         if metrics.pe_ratio:
             if metrics.pe_ratio < 15:
-                signals.append("🟢 P/E bajo")
+                signals.append("🟢 Low P/E")
             elif metrics.pe_ratio > 25:
-                signals.append("🔴 P/E alto")
+                signals.append("🔴 High P/E")
 
         comparison["relative_signals"] = (
-            signals if signals else ["🟡 Métricas en rango normal"]
+            signals if signals else ["🟡 Metrics in normal range"]
         )
 
         # Overall consensus
@@ -563,19 +563,19 @@ class ValuationMetricsCalculator:
 
         if dcf_bullish and relative_bullish:
             comparison["consensus"] = (
-                "🟢 COMPRA FUERTE - DCF y métricas relativas confirman subvaluación"
+                "🟢 STRONG BUY - DCF and relative metrics confirm undervaluation"
             )
         elif dcf_bullish and not relative_bearish:
-            comparison["consensus"] = "🟢 COMPRA - DCF sugiere valor"
+            comparison["consensus"] = "🟢 BUY - DCF suggests value"
         elif not dcf_bullish and relative_bullish:
             comparison["consensus"] = (
-                "🟡 NEUTRAL - Señales mixtas entre DCF y métricas relativas"
+                "🟡 NEUTRAL - Mixed signals between DCF and relative metrics"
             )
         elif not dcf_bullish and relative_bearish:
             comparison["consensus"] = (
-                "🔴 EVITAR - DCF y métricas relativas sugieren sobrevaluación"
+                "🔴 AVOID - DCF and relative metrics suggest overvaluation"
             )
         else:
-            comparison["consensus"] = "🟡 NEUTRAL - Valoración en rango justo"
+            comparison["consensus"] = "🟡 NEUTRAL - Valuation in fair range"
 
         return comparison

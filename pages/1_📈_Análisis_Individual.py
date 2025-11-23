@@ -1,11 +1,25 @@
 """Individual company DCF analysis with Fair Value vs Market Price comparison."""
 
 import streamlit as st
-import yfinance as yf
-import pandas as pd
-import numpy as np
-import plotly.graph_objects as go
 from datetime import date, timedelta, datetime
+
+# Safe imports with error handling
+try:
+    import yfinance as yf
+except ImportError as e:
+    from src.utils.error_handler import handle_import_error
+    handle_import_error(e, 'yfinance')
+    st.stop()
+
+try:
+    import pandas as pd
+    import numpy as np
+    import plotly.graph_objects as go
+except ImportError as e:
+    from src.utils.error_handler import handle_import_error
+    missing_module = str(e).split("'")[1] if "'" in str(e) else "unknown"
+    handle_import_error(e, missing_module)
+    st.stop()
 
 from src.dcf.model import dcf_value
 from src.dcf.enhanced_model import EnhancedDCFModel
@@ -29,13 +43,45 @@ from src.alerts import AlertSystem, AlertStatus
 
 
 st.set_page_config(
-    page_title="Análisis Individual - DCF", page_icon="📈", layout="wide"
+    page_title="Individual Analysis - DCF", page_icon="💼", layout="wide"
 )
 
-st.title("📈 Análisis Individual")
-st.markdown(
-    "Calcula el Fair Value de una acción mediante DCF y compáralo con el precio de mercado."
-)
+# Load custom CSS
+def load_css():
+    import os
+    css_paths = [
+        "assets/custom.css",
+        "./assets/custom.css",
+        os.path.join(os.path.dirname(__file__), "..", "assets", "custom.css")
+    ]
+    
+    css_content = None
+    for path in css_paths:
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                css_content = f.read()
+                break
+        except FileNotFoundError:
+            continue
+    
+    if css_content:
+        st.markdown(f"<style>{css_content}</style>", unsafe_allow_html=True)
+
+load_css()
+
+# Modern Header
+st.markdown("""
+<div style="margin-bottom: 2rem;">
+    <h1 style="background: linear-gradient(135deg, #0066FF 0%, #00D4AA 100%);
+               -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+               font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem;">
+        Individual Analysis
+    </h1>
+    <p style="color: #B4B9D1; font-size: 1.1rem;">
+        Calculate the Fair Value of a stock using DCF and compare it with market price
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
 
 # Initialize cache and data aggregator
@@ -67,16 +113,16 @@ alert_system = get_alert_system()
 
 
 # Sidebar inputs
-st.sidebar.header("Selección de Empresa")
+st.sidebar.header("Selección de Company")
 
 # Company selection mode
 selection_mode = st.sidebar.radio(
     "Modo de selección",
-    ["Búsqueda manual", "Lista con filtros"],
-    help="Elige cómo quieres seleccionar la empresa",
+    ["Manual search", "List with filters"],
+    help="Choose how you want to select the company",
 )
 
-if selection_mode == "Búsqueda manual":
+if selection_mode == "Manual search":
     # Original text input
     ticker = st.sidebar.text_input("Ticker (Yahoo Finance)", value="AAPL").upper()
 
@@ -92,26 +138,26 @@ else:
     search_query = st.sidebar.text_input(
         "🔍 Buscar",
         placeholder="Ej: Apple, MSFT, Tech...",
-        help="Busca por ticker o nombre de empresa",
+        help="Search by ticker or company name",
     )
 
     # Sector filter
     sector_filter = st.sidebar.selectbox(
-        "Sector", ["Todos"] + all_sectors, help="Filtra por sector"
+        "Sector", ["All"] + all_sectors, help="Filter by sector"
     )
 
     # Alphabetical filter
     alpha_filter = st.sidebar.selectbox(
         "Letra inicial",
         ["Todas"] + list("ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
-        help="Filtra por primera letra del ticker",
+        help="Filter by first letter of ticker",
     )
 
     # FCF sorting
     fcf_sort = st.sidebar.selectbox(
-        "Ordenar por FCF",
-        ["Sin ordenar", "FCF más alto", "FCF más bajo"],
-        help="Ordena empresas por su FCF del año base",
+        "Sort by FCF",
+        ["Unsorted", "Highest FCF", "Lowest FCF"],
+        help="Sort companies by their base year FCF",
     )
 
     # Apply filters
@@ -130,7 +176,7 @@ else:
         ]
 
     # Sector filter
-    if sector_filter != "Todos":
+    if sector_filter != "All":
         filtered_companies = [
             c for c in filtered_companies if c["sector"] == sector_filter
         ]
@@ -144,21 +190,21 @@ else:
     # FCF sorting
     if fcf_sort != "Sin ordenar":
         # Scan companies if needed
-        if st.sidebar.button("🔄 Actualizar FCF de empresas filtradas"):
-            with st.spinner(f"Escaneando {len(filtered_companies)} empresas..."):
+        if st.sidebar.button("🔄 Update FCF of filtered companies"):
+            with st.spinner(f"Scanning {len(filtered_companies)} companies..."):
                 progress_bar = st.sidebar.progress(0)
                 status_text = st.sidebar.empty()
 
                 def progress_callback(current, total, ticker):
                     progress_bar.progress(current / total)
-                    status_text.text(f"Escaneando {ticker}... ({current}/{total})")
+                    status_text.text(f"Scanning {ticker}... ({current}/{total})")
 
                 tickers = [c["ticker"] for c in filtered_companies]
                 fcf_scanner.scan_companies(tickers, progress_callback)
 
                 progress_bar.empty()
                 status_text.empty()
-                st.sidebar.success(f"✅ {len(filtered_companies)} empresas escaneadas")
+                st.sidebar.success(f"✅ {len(filtered_companies)} companies scanned")
 
         # Add FCF to companies
         for company in filtered_companies:
@@ -166,13 +212,13 @@ else:
             company["fcf"] = cached_fcf if cached_fcf is not None else 0.0
 
         # Sort by FCF
-        if fcf_sort == "FCF más alto":
+        if fcf_sort == "Highest FCF":
             filtered_companies.sort(key=lambda x: x.get("fcf", 0), reverse=True)
-        elif fcf_sort == "FCF más bajo":
+        elif fcf_sort == "Lowest FCF":
             filtered_companies.sort(key=lambda x: x.get("fcf", 0))
 
     # Display filtered companies
-    st.sidebar.markdown(f"**{len(filtered_companies)} empresas encontradas**")
+    st.sidebar.markdown(f"**{len(filtered_companies)} companies found**")
 
     # Create display options
     display_options = []
@@ -187,17 +233,17 @@ else:
 
     if display_options:
         selected_display = st.sidebar.selectbox(
-            "Selecciona empresa", display_options, help="Lista de empresas filtradas"
+            "Select company", display_options, help="List of filtered companies"
         )
 
         # Extract ticker from selection
         ticker = selected_display.split(" - ")[0]
     else:
-        st.sidebar.warning("⚠️ No se encontraron empresas con estos filtros")
+        st.sidebar.warning("⚠️ No companies found with these filters")
         ticker = "AAPL"
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("Parámetros DCF")
+st.sidebar.subheader("DCF Parameters")
 
 # Data source selection
 available_providers = aggregator.get_available_providers()
@@ -207,7 +253,7 @@ if len(available_providers) > 1:
         "Estrategia de datos",
         ["best_quality", "first_available", "merge"],
         format_func=lambda x: {
-            "best_quality": "Mejor Calidad",
+            "best_quality": "Best Quality",
             "first_available": "Primera Disponible",
             "merge": "Combinar Fuentes",
         }[x],
@@ -232,13 +278,13 @@ st.sidebar.info(
 - ✅ Terminal growth por empresa
 - ✅ Normalización si es necesaria
 
-*Sin configuración manual requerida.*
+*No manual configuration required.*
 """
 )
 
 # Advanced options (collapsed by default)
 with st.sidebar.expander("⚙️ Opciones Avanzadas (opcional)"):
-    st.caption("El sistema usa valores óptimos por defecto")
+    st.caption("The system uses optimal default values")
 
     # WACC calculation method
     st.markdown("### 🎯 Método de Cálculo WACC")
@@ -250,12 +296,12 @@ with st.sidebar.expander("⚙️ Opciones Avanzadas (opcional)"):
     )
 
     wacc_method = st.radio(
-        "Selecciona el método de cálculo:",
+        "Select calculation method:",
         ["company_specific", "industry_damodaran", "custom"],
         format_func=lambda x: {
-            "company_specific": "🔬 Calculado por empresa (CAPM)",
+            "company_specific": "🔬 Calculated per company (CAPM)",
             "industry_damodaran": "🏭 Promedio de industria (Damodaran)",
-            "custom": "✏️ Manual (personalizado)",
+            "custom": "✏️ Manual (custom)",
         }[x],
         index=0,  # Default: company_specific
     )
@@ -266,14 +312,14 @@ with st.sidebar.expander("⚙️ Opciones Avanzadas (opcional)"):
             """
             **🔬 WACC Calculado (Método CAPM)**
 
-            Calcula el WACC específico de la empresa usando:
+            Calculates company-specific WACC using:
             - Beta de la acción (riesgo sistemático)
             - Estructura de capital real (deuda/equity)
             - Cost of equity (CAPM): Re = Rf + β × (Rm - Rf)
             - Cost of debt con tax shield
-            - Ajustes por beta alto para empresas de crecimiento
+            - Adjustments for high beta growth companies
 
-            ✅ **Recomendado**: Para análisis detallado de empresas individuales
+            ✅ **Recommended**: For detailed analysis of individual companies
             """
         )
     elif wacc_method == "industry_damodaran":
@@ -293,11 +339,11 @@ with st.sidebar.expander("⚙️ Opciones Avanzadas (opcional)"):
     else:  # custom
         st.info(
             """
-            **✏️ WACC Manual**
+            **✏️ Manual WACC**
 
             Ingresa tu propio valor de WACC si:
             - Tienes una estimación propia
-            - Quieres probar diferentes escenarios
+            - You want to test different scenarios
             - Tienes información privilegiada del costo de capital
 
             ⚠️ Asegúrate de que WACC > terminal growth (mínimo 4pp de diferencia)
@@ -336,7 +382,7 @@ normalize_fcf = True  # Always normalize FCF base by default
 normalization_method = "weighted_average"  # Default normalization method
 
 years = st.sidebar.number_input(
-    "Años de proyección", min_value=1, max_value=20, value=10  # Changed from 5 to 10
+    "Projection years", min_value=1, max_value=20, value=10  # Changed from 5 to 10
 )
 
 # Handle WACC based on selected method
@@ -359,7 +405,7 @@ shares_input = st.sidebar.number_input(
     "Shares outstanding",
     min_value=0,
     value=st.session_state.shares_input,
-    help="Dejar en 0 para autocompletar (diluted shares). Puedes ingresar el valor manualmente.",
+    help="Leave at 0 to auto-complete (diluted shares). You can enter the value manually.",
     key="shares_input_widget",
 )
 
@@ -444,7 +490,7 @@ def get_balance_sheet_data(ticker: str):
         return float(cash) if cash else 0.0, float(total_debt) if total_debt else 0.0
 
     except Exception as e:
-        st.warning(f"⚠️ Error al obtener balance: {str(e)}")
+        st.warning(f"⚠️ Error retrieving balance sheet: {str(e)}")
         return 0.0, 0.0
 
 
@@ -517,7 +563,7 @@ def get_base_fcf_from_yahoo(ticker: str):
         return base_fcf, historical_fcf
 
     except Exception as e:
-        st.error(f"❌ Error al obtener FCF base: {str(e)}")
+        st.error(f"❌ Error retrieving base FCF: {str(e)}")
         return 0.0, []
 
 
@@ -526,7 +572,7 @@ df_prices = load_price_data(ticker)
 info = get_ticker_info(ticker)
 
 if df_prices.empty:
-    st.error(f"❌ No se encontraron datos para {ticker}")
+    st.error(f"❌ No data found for {ticker}")
     st.stop()
 
 current_price = float(df_prices["Close"].iloc[-1])
@@ -543,19 +589,19 @@ col1, col2, col3 = st.columns([2, 1, 1])
 with col1:
     st.subheader(f"{company_name} ({ticker})")
 with col2:
-    st.metric("Precio Actual", f"${current_price:.2f}")
+    st.metric("Current Price", f"${current_price:.2f}")
 with col3:
     if shares > 0:
         st.metric(
             "Shares",
             f"{shares/1e9:.2f}B" if shares > 1e9 else f"{shares/1e6:.2f}M",
-            help=f"Fuente: {shares_source}",
+            help=f"Source: {shares_source}",
         )
     else:
         st.error("⚠️ No shares data")
 
 # Show data sources in an expander
-with st.expander("📊 Ver fuentes de datos"):
+with st.expander("📊 View data sources"):
     st.markdown("**Shares Outstanding:**")
     st.caption(f"✓ {shares_source}")
     if shares > 0:
@@ -576,7 +622,7 @@ with st.expander("📊 Ver fuentes de datos"):
 
 # FCF Input Section
 st.markdown("---")
-st.subheader("📊 Proyecciones de Free Cash Flow")
+st.subheader("📊 Free Cash Flow Projections")
 
 # ✅ INTELLIGENT FCF FETCH: System automatically selects best source
 with st.spinner("🤖 Seleccionando mejor fuente de datos disponible..."):
@@ -591,7 +637,7 @@ quality_explanation = intelligent_selector.get_explanation(fcf_quality)
 col_quality, col_fcf = st.columns([1, 2])
 with col_quality:
     st.metric(
-        "Calidad de Datos",
+        "Data Quality",
         quality_badge,
         help="Indicador de confianza de los datos obtenidos",
     )
@@ -603,12 +649,12 @@ with col_fcf:
             if base_fcf > 1e9
             else f"${base_fcf/1e6:.2f}M" if base_fcf > 1e6 else f"${base_fcf:,.0f}"
         )
-        st.metric("FCF Base", fcf_display, help=f"Fuente: {fcf_quality.source}")
+        st.metric("Base FCF", fcf_display, help=f"Source: {fcf_quality.source}")
     else:
-        st.error("No se pudo obtener FCF")
+        st.error("Could not retrieve FCF")
 
 # Show detailed quality info in expander
-with st.expander("🔍 Ver detalles de calidad de datos"):
+with st.expander("🔍 View data quality details"):
     st.markdown(quality_explanation)
 
 # Calculate growth rates intelligently
@@ -647,7 +693,7 @@ if base_fcf > 0:
             ]
         )
         st.info(
-            f"📊 **FCF Base**: {fcf_display} | **Histórico** (últimos años): {hist_display}"
+            f"📊 **Base FCF**: {fcf_display} | **Historical** (recent years): {hist_display}"
         )
 
         # Show normalization info if enabled
@@ -665,10 +711,10 @@ if base_fcf > 0:
             )
             diff_pct = ((normalized_fcf - base_fcf) / base_fcf) * 100
             st.success(
-                f"🎯 **FCF Normalizado** ({normalization_method}): {norm_display} ({diff_pct:+.1f}% vs año actual)"
+                f"🎯 **Normalized FCF** ({normalization_method}): {norm_display} ({diff_pct:+.1f}% vs current year)"
             )
     else:
-        st.info(f"📊 **Año Base FCF**: {fcf_display}")
+        st.info(f"📊 **Base Year FCF**: {fcf_display}")
 
 # Growth rate inputs
 # Display in rows if more than 5 years for better UX
@@ -683,17 +729,17 @@ if years <= 5:
                 else 2.0
             )
             val = st.number_input(
-                f"Año {i+1}",
+                f"Year {i+1}",
                 value=float(default_rate),
                 format="%.2f",
                 step=0.5,
                 key=f"growth_{i}",
-                help="% de crecimiento respecto al año anterior",
+                help="% growth relative to previous year",
             )
             growth_rate_inputs.append(float(val) / 100)  # Convert to decimal
 else:
     # Display in 2 rows for better visibility with 6+ years
-    st.markdown("**Tasas de crecimiento anual (%)**")
+    st.markdown("**Annual growth rates (%)**")
     growth_rate_inputs = []
 
     # First row: Years 1-5
@@ -706,12 +752,12 @@ else:
                 else 2.0
             )
             val = st.number_input(
-                f"Año {i+1}",
+                f"Year {i+1}",
                 value=float(default_rate),
                 format="%.2f",
                 step=0.5,
                 key=f"growth_{i}",
-                help="% de crecimiento respecto al año anterior",
+                help="% growth relative to previous year",
             )
             growth_rate_inputs.append(float(val) / 100)
 
@@ -726,12 +772,12 @@ else:
                     else 2.0
                 )
                 val = st.number_input(
-                    f"Año {i+1}",
+                    f"Year {i+1}",
                     value=float(default_rate),
                     format="%.2f",
                     step=0.5,
                     key=f"growth_{i}",
-                    help="% de crecimiento respecto al año anterior",
+                    help="% growth relative to previous year",
                 )
                 growth_rate_inputs.append(float(val) / 100)
 
@@ -758,13 +804,13 @@ valuation_model = "DCF"  # Default
 if is_financial_company:
     st.markdown("---")
     st.info(
-        f"🏦 **Empresa Financiera Detectada**: {company_sector}\n\n"
-        "Las empresas financieras (bancos, aseguradoras, REITs) tienen estructuras de flujo de caja diferentes. "
+        f"🏦 **Company Financiera Detectada**: {company_sector}\n\n"
+        "Financial companies (banks, insurers, REITs) have different cash flow structures. "
         "Recomendamos usar el **Dividend Discount Model (DDM)** en lugar de DCF tradicional."
     )
 
     valuation_model = st.radio(
-        "Selecciona el modelo de valoración:",
+        "Select valuation model:",
         ["DCF (Free Cash Flow)", "DDM (Dividend Discount Model)"],
         index=1,  # Default to DDM for financial companies
         help="DCF usa flujos de caja libres. DDM usa dividendos (recomendado para financieras).",
@@ -775,7 +821,7 @@ if is_financial_company:
 
 # DCF Calculation
 st.markdown("---")
-st.subheader(f"💰 Valoración {valuation_model}")
+st.subheader(f"💰 {valuation_model} Valuation")
 
 # Validate all inputs before proceeding
 try:
@@ -823,9 +869,9 @@ try:
 
         # Show WACC value prominently
         st.sidebar.metric(
-            "WACC (Tasa de Descuento)",
+            "WACC (Discount Rate)",
             f"{r:.2%}",
-            help="Weighted Average Cost of Capital - Tasa usada para descontar flujos futuros",
+            help="Weighted Average Cost of Capital - Rate used to discount future cash flows",
         )
 
         # Show components based on method
@@ -841,7 +887,7 @@ try:
         else:
             # Company-specific WACC components
             if wacc_components.get("beta"):
-                st.sidebar.caption(f"• Beta Empresa: {wacc_components['beta']:.2f}")
+                st.sidebar.caption(f"• Beta Company: {wacc_components['beta']:.2f}")
                 st.sidebar.caption(
                     f"• Cost of Equity (Re): {wacc_components['cost_of_equity']:.2%}"
                 )
@@ -893,7 +939,7 @@ try:
             terminal_growth_info
             and terminal_growth_info.get("method") == "company_specific"
         ):
-            with st.sidebar.expander("🔍 Ver cálculo detallado"):
+            with st.sidebar.expander("🔍 View detailed calculation"):
                 st.markdown(terminal_growth_info["justification"])
 
     # Comprehensive input validation
@@ -909,7 +955,7 @@ try:
     )
 
     if not is_valid:
-        st.error("❌ Errores de validación detectados:")
+        st.error("❌ Validation errors detected:")
         for error in validation_errors:
             st.warning(f"⚠️ {error}")
 
@@ -917,10 +963,10 @@ try:
         st.info(
             """
         **Sugerencias:**
-        - Si el FCF es 0, prueba con modo 'Autocompletar' o 'Multi-fuente'
-        - Si shares = 0, ingresa el número de acciones manualmente en el sidebar
+        - If FCF is 0, try 'Auto-complete' or 'Multi-source' mode
+        - If shares = 0, enter the number of shares manually in the sidebar
         - Si WACC ≤ g, reduce el terminal growth o aumenta WACC
-        - Verifica que los datos del ticker sean correctos
+        - Verify that ticker data is correct
         """
         )
         st.stop()
@@ -928,7 +974,7 @@ try:
     # Additional WACC validation
     if r is None or r <= g:
         st.error(
-            f"⚠️ La tasa de descuento (r={r:.2%}) debe ser mayor que g ({g:.2%}). Ajusta los parámetros."
+            f"⚠️ The discount rate (r={r:.2%}) must be greater than g ({g:.2%}). Adjust the parameters."
         )
         st.stop()
 
@@ -946,7 +992,7 @@ try:
         )
 
         st.info(
-            "💡 **Usando Dividend Discount Model (DDM)** - Modelo recomendado para empresas financieras"
+            "💡 **Using Dividend Discount Model (DDM)** - Recommended model for financial companies"
         )
 
         # Fetch dividend data
@@ -960,16 +1006,16 @@ try:
         with col_div1:
             if dividend_per_share > 0:
                 st.metric(
-                    "Dividendo Anual (DPS)",
+                    "Annual Dividend (DPS)",
                     f"${dividend_per_share:.2f}",
-                    help=f"Fuente: {div_metadata['data_source']}",
+                    help=f"Source: {div_metadata['data_source']}",
                 )
             else:
                 st.error(
-                    "⚠️ No hay datos de dividendos - la empresa puede no pagar dividendos"
+                    "⚠️ No dividend data - the company may not pay dividends"
                 )
                 st.info(
-                    "💡 **Sugerencia**: Las empresas financieras sin dividendos pueden usar el modelo DCF tradicional o P/B ratio"
+                    "💡 **Suggestion**: Financial companies without dividends can use traditional DCF model or P/B ratio"
                 )
                 st.stop()
 
@@ -1002,10 +1048,10 @@ try:
 
             if growth_rate_ddm < 0.0:  # Negative historical growth
                 recommend_two_stage = True
-                two_stage_reason = f"⚠️ **Crecimiento histórico NEGATIVO** ({original_historical_growth:.2%}). Gordon Model no es apropiado. Se recomienda **Two-Stage DDM** para modelar recuperación futura."
+                two_stage_reason = f"⚠️ **NEGATIVE historical growth** ({original_historical_growth:.2%}). Gordon Model is not appropriate. **Two-Stage DDM** is recommended to model future recovery."
             elif growth_rate_ddm < 0.03:  # Very low growth (<3%)
                 recommend_two_stage = True
-                two_stage_reason = f"⚠️ **Crecimiento histórico muy bajo** ({original_historical_growth:.2%}). Gordon Model puede sub-valorar. Se recomienda **Two-Stage DDM** para capturar potencial de recuperación."
+                two_stage_reason = f"⚠️ **Very low historical growth** ({original_historical_growth:.2%}). Gordon Model may undervalue. **Two-Stage DDM** is recommended to capture recovery potential."
 
             # Cap growth rate for Gordon Model (perpetuity should be conservative)
             # High historical growth is unrealistic for perpetuity
@@ -1014,22 +1060,22 @@ try:
                 original_growth = growth_rate_ddm
                 growth_rate_ddm = min(growth_rate_ddm, 0.08)  # Cap at 8%
                 growth_details["warnings"].append(
-                    f"⚠️ Crecimiento histórico ({original_growth:.2%}) muy alto para perpetuidad. "
-                    f"Ajustado a {growth_rate_ddm:.2%} para Gordon Model. "
-                    "Considera usar Two-Stage DDM para capturar alto crecimiento inicial."
+                    f"⚠️ Historical growth ({original_growth:.2%}) too high for perpetuity. "
+                    f"Adjusted to {growth_rate_ddm:.2%} for Gordon Model. "
+                    "Consider using Two-Stage DDM to capture high initial growth."
                 )
             elif growth_rate_ddm < -0.03:  # Large negative growth
                 original_growth = growth_rate_ddm
                 growth_rate_ddm = max(growth_rate_ddm, 0.03)  # Floor at 3%
                 growth_details["warnings"].append(
-                    f"⚠️ Crecimiento negativo ({original_growth:.2%}) ajustado a {growth_rate_ddm:.2%}. "
-                    "Considera usar Two-Stage DDM si esperas recuperación."
+                    f"⚠️ Negative growth ({original_growth:.2%}) adjusted to {growth_rate_ddm:.2%}. "
+                    "Consider using Two-Stage DDM if you expect recovery."
                 )
         else:
             growth_rate_ddm = 0.03  # Default conservative 3%
             growth_details = {
                 "warnings": [
-                    "⚠️ Datos históricos insuficientes - usando crecimiento por defecto de 3%"
+                    "⚠️ Insufficient historical data - using default growth of 3%"
                 ]
             }
             recommend_two_stage = False
@@ -1061,7 +1107,7 @@ try:
 
         with col2:
             st.metric(
-                "Crecimiento Dividendos (g)",
+                "Dividend Growth (g)",
                 f"{growth_rate_ddm:.2%}",
                 help=f"Método: {growth_details.get('method', 'CAGR')}",
             )
@@ -1093,7 +1139,7 @@ try:
         if recommend_two_stage:
             st.warning(two_stage_reason)
             st.info(
-                "💡 **Recomendación**: El sistema ha pre-seleccionado **Two-Stage DDM** basado en el análisis de crecimiento histórico."
+                "💡 **Recommendation**: The system has pre-selected **Two-Stage DDM** based on historical growth analysis."
             )
 
         # Default to Two-Stage if recommended, otherwise Gordon
@@ -1108,9 +1154,9 @@ try:
             ],
             index=default_model_index,  # Pre-select based on intelligent detection
             help="""
-            - **Gordon Growth**: Para empresas maduras con crecimiento estable
-            - **Two-Stage**: Para empresas en transición (alto crecimiento → estable)
-            - **H-Model**: Crecimiento que declina linealmente (más realista)
+            - **Gordon Growth**: For mature companies with stable growth
+            - **Two-Stage**: For companies in transition (high growth → stable)
+            - **H-Model**: Growth that declines linearly (more realistic)
             """,
         )
 
@@ -1132,7 +1178,7 @@ try:
 
         elif "Two-Stage" in ddm_model_type:
             # Two-Stage DDM
-            st.markdown("#### Parámetros Two-Stage")
+            st.markdown("#### Two-Stage Parameters")
 
             # INTELLIGENT DEFAULTS for Two-Stage
             # High growth rate: Use ROE-based growth if available, otherwise conservative estimate
@@ -1144,7 +1190,7 @@ try:
                     max(sustainable_growth * 100, 8.0), 15.0
                 )  # Between 8-15%
                 st.caption(
-                    f"💡 Crecimiento sostenible calculado (ROE × Retention): {sustainable_growth:.1%}"
+                    f"💡 Sustainable growth calculated (ROE × Retention): {sustainable_growth:.1%}"
                 )
             else:
                 # For banks with low historical growth, assume recovery to industry average
@@ -1158,34 +1204,34 @@ try:
             with col_ts1:
                 high_growth_rate = (
                     st.number_input(
-                        "Crecimiento alto (%)",
+                        "High growth (%)",
                         min_value=0.0,
                         max_value=50.0,
                         value=default_high_growth,
                         step=1.0,
-                        help="Crecimiento esperado en fase de recuperación/alto crecimiento",
+                        help="Expected growth in recovery/high growth phase",
                     )
                     / 100
                 )
 
             with col_ts2:
                 high_growth_years = st.number_input(
-                    "Años de alto crecimiento",
+                    "Years of high growth",
                     min_value=1,
                     max_value=15,
                     value=5,
                     step=1,
-                    help="Duración de la fase de alto crecimiento antes de estabilización",
+                        help="Duration of high growth phase before stabilization",
                 )
 
             stable_growth_rate = (
                 st.number_input(
-                    "Crecimiento estable perpetuo (%)",
+                    "Stable perpetual growth (%)",
                     min_value=0.0,
                     max_value=10.0,
                     value=default_stable_growth,
                     step=0.5,
-                    help="Crecimiento perpetuo a largo plazo (típicamente GDP + inflación)",
+                        help="Long-term perpetual growth (typically GDP + inflation)",
                 )
                 / 100
             )
@@ -1204,13 +1250,13 @@ try:
 
         else:  # H-Model
             # H-Model
-            st.markdown("#### Parámetros H-Model")
+            st.markdown("#### H-Model Parameters")
             col_h1, col_h2 = st.columns(2)
 
             with col_h1:
                 initial_growth_rate = (
                     st.number_input(
-                        "Crecimiento inicial (%)",
+                        "Initial growth (%)",
                         min_value=0.0,
                         max_value=50.0,
                         value=max(growth_rate_ddm * 100, 8.0),
@@ -1230,7 +1276,7 @@ try:
 
             stable_growth_rate = (
                 st.number_input(
-                    "Crecimiento estable (%)",
+                    "Stable growth (%)",
                     min_value=0.0,
                     max_value=10.0,
                     value=min(growth_rate_ddm * 100, 3.5),
@@ -1279,7 +1325,7 @@ try:
                         if equity_value > 1e9
                         else f"${equity_value/1e6:.2f}M"
                     ),
-                    help="Valoración total del equity (DDM valora equity directamente)",
+                    help="Total equity valuation (DDM values equity directly)",
                 )
 
         with col2:
@@ -1291,7 +1337,7 @@ try:
                 )
 
         with col3:
-            st.metric("Precio Mercado", f"${current_price:.2f}")
+            st.metric("Market Price", f"${current_price:.2f}")
 
         with col4:
             if fair_value_per_share > 0:
@@ -1304,7 +1350,7 @@ try:
                 )
 
         # Show detailed calculation
-        with st.expander("🔍 Ver detalles del cálculo DDM"):
+        with st.expander("🔍 View DDM calculation details"):
             st.markdown(f"**Modelo usado:** {ddm_details['model']}")
             st.markdown(f"**Fórmula:** {ddm_details['formula']}")
 
@@ -1342,18 +1388,18 @@ try:
         )
 
         st.markdown("---")
-        st.markdown("### 🔮 Análisis de Mercado (Implied Growth)")
+        st.markdown("### 🔮 Market Analysis (Implied Growth)")
         st.info(
-            f"**Crecimiento implícito en el precio actual**: {implied_growth:.2%}\n\n"
+            f"**Implied growth in current price**: {implied_growth:.2%}\n\n"
             f"{implied_details.get('interpretation', '')}"
         )
 
         col_comp1, col_comp2 = st.columns(2)
         with col_comp1:
-            st.metric("Tu estimación de crecimiento", f"{growth_rate_ddm:.2%}")
+            st.metric("Your growth estimate", f"{growth_rate_ddm:.2%}")
         with col_comp2:
             st.metric(
-                "Crecimiento implícito del mercado",
+                "Market implied growth",
                 f"{implied_growth:.2%}",
                 delta=f"{(implied_growth - growth_rate_ddm)*100:+.1f}pp",
             )
@@ -1451,25 +1497,25 @@ try:
             st.success(f"""
             🔔 **¡{len(triggered)} Alerta(s) Disparada(s)!**
 
-            Las siguientes alertas se han activado para {ticker}:
+            The following alerts have been triggered for {ticker}:
             """)
 
             for alert in triggered:
                 st.info(f"• {alert.message}")
 
-            st.markdown("Ve a la página de **🔔 Alertas** para más detalles.")
+            st.markdown("Go to the **🔔 Alerts** page for more details.")
     except Exception as e:
         # Silently fail if alert system has issues
         pass
 
     # === SENSITIVITY ANALYSIS SECTION ===
     st.markdown("---")
-    st.subheader("📊 Análisis de Sensibilidad")
+    st.subheader("📊 Sensitivity Analysis")
 
     # Run sensitivity analysis
     sensitivity_analyzer = SensitivityAnalyzer()
 
-    with st.spinner("Calculando escenarios..."):
+    with st.spinner("Calculating scenarios..."):
         scenarios = sensitivity_analyzer.calculate_scenarios(
             enhanced_model=(
                 enhanced_model
@@ -1492,7 +1538,7 @@ try:
         )
 
     # Display scenario results
-    st.markdown("### 🎯 Escenarios de Valoración")
+    st.markdown("### 🎯 Valuation Scenarios")
 
     col_pess, col_base, col_opt = st.columns(3)
 
@@ -1502,14 +1548,14 @@ try:
             (pess.fair_value_per_share - current_price) / current_price
         ) * 100
         st.metric(
-            "🔴 Pesimista",
+            "🔴 Pessimistic",
             f"${pess.fair_value_per_share:.2f}",
             delta=f"{pess_change:+.1f}%",
             help=f"WACC: {pess.wacc:.2%} | Terminal g: {pess.terminal_growth:.2%}",
         )
         st.caption(f"WACC: {pess.wacc:.2%}")
         st.caption(f"Terminal g: {pess.terminal_growth:.2%}")
-        st.caption(f"Promedio crecimiento FCF: {np.mean(pess.growth_rates):.1%}")
+        st.caption(f"Average FCF growth: {np.mean(pess.growth_rates):.1%}")
 
     with col_base:
         base_scenario = scenarios["base"]
@@ -1517,7 +1563,7 @@ try:
             (base_scenario.fair_value_per_share - current_price) / current_price
         ) * 100
         st.metric(
-            "🟡 Caso Base",
+            "🟡 Base Case",
             f"${base_scenario.fair_value_per_share:.2f}",
             delta=f"{base_change:+.1f}%",
             help=f"WACC: {base_scenario.wacc:.2%} | Terminal g: {base_scenario.terminal_growth:.2%}",
@@ -1525,7 +1571,7 @@ try:
         st.caption(f"WACC: {base_scenario.wacc:.2%}")
         st.caption(f"Terminal g: {base_scenario.terminal_growth:.2%}")
         st.caption(
-            f"Promedio crecimiento FCF: {np.mean(base_scenario.growth_rates):.1%}"
+            f"Average FCF growth: {np.mean(base_scenario.growth_rates):.1%}"
         )
 
     with col_opt:
@@ -1539,58 +1585,58 @@ try:
         )
         st.caption(f"WACC: {opt.wacc:.2%}")
         st.caption(f"Terminal g: {opt.terminal_growth:.2%}")
-        st.caption(f"Promedio crecimiento FCF: {np.mean(opt.growth_rates):.1%}")
+        st.caption(f"Average FCF growth: {np.mean(opt.growth_rates):.1%}")
 
     # Calculate probability-weighted value
     prob_weighted = sensitivity_analyzer.calculate_probability_weighted_value(scenarios)
     min_val, median_val, max_val = sensitivity_analyzer.calculate_value_range(scenarios)
 
     st.markdown("---")
-    st.markdown("### 📈 Resumen Estadístico")
+    st.markdown("### 📈 Statistical Summary")
 
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
         st.metric(
-            "Valor Esperado (Probabilístico)",
+            "Expected Value (Probabilistic)",
             f"${prob_weighted:.2f}",
-            help="Ponderado: 25% pesimista, 50% base, 25% optimista",
+            help="Weighted: 25% pessimistic, 50% base, 25% optimistic",
         )
 
     with col2:
         range_pct = ((max_val - min_val) / median_val) * 100
         st.metric(
-            "Rango de Valoración",
+            "Valuation Range",
             f"${min_val:.2f} - ${max_val:.2f}",
             delta=f"±{range_pct/2:.1f}%",
-            help="Rango entre escenario pesimista y optimista",
+            help="Range between pessimistic and optimistic scenarios",
         )
 
     with col3:
-        st.metric("Precio de Mercado", f"${current_price:.2f}")
+        st.metric("Market Price", f"${current_price:.2f}")
 
     with col4:
         # Check if price is within range
         if current_price < min_val:
-            status = "🟢 Subvaluada"
+            status = "🟢 Undervalued"
             status_delta = f"{((min_val - current_price) / current_price) * 100:.1f}%"
         elif current_price > max_val:
-            status = "🔴 Sobrevaluada"
+            status = "🔴 Overvalued"
             status_delta = f"{((current_price - max_val) / current_price) * 100:.1f}%"
         else:
-            status = "🟡 En rango"
-            status_delta = "Dentro del rango"
+            status = "🟡 In range"
+            status_delta = "Within range"
 
         st.metric("Evaluación", status, delta=status_delta)
 
     # Visualization: Scenario comparison chart
     st.markdown("---")
-    st.markdown("### 📊 Comparación Visual de Escenarios")
+    st.markdown("### 📊 Visual Scenario Comparison")
 
     fig_scenarios = go.Figure()
 
     # Add bars for each scenario
-    scenario_names = ["Pesimista", "Base", "Optimista"]
+    scenario_names = ["Pessimistic", "Base", "Optimistic"]
     scenario_values = [
         scenarios["pessimistic"].fair_value_per_share,
         scenarios["base"].fair_value_per_share,
@@ -1614,7 +1660,7 @@ try:
         y=current_price,
         line_dash="dash",
         line_color="blue",
-        annotation_text=f"Precio Actual: ${current_price:.2f}",
+        annotation_text=f"Current Price: ${current_price:.2f}",
         annotation_position="right",
     )
 
@@ -1623,12 +1669,12 @@ try:
         y=prob_weighted,
         line_dash="dot",
         line_color="purple",
-        annotation_text=f"Valor Esperado: ${prob_weighted:.2f}",
+        annotation_text=f"Expected Value: ${prob_weighted:.2f}",
         annotation_position="left",
     )
 
     fig_scenarios.update_layout(
-        title="Fair Value por Escenario vs Precio Actual",
+        title="Fair Value por Escenario vs Current Price",
         yaxis_title="Fair Value por Acción ($)",
         showlegend=False,
         height=450,
@@ -1637,11 +1683,11 @@ try:
     st.plotly_chart(fig_scenarios, use_container_width=True)
 
     # Detailed scenario breakdown in expander
-    with st.expander("🔍 Ver detalles completos de cada escenario"):
+    with st.expander("🔍 View complete details of each scenario"):
         for scenario_key, scenario_name in [
-            ("pessimistic", "Pesimista"),
-            ("base", "Caso Base"),
-            ("optimistic", "Optimista"),
+            ("pessimistic", "Pessimistic"),
+            ("base", "Base Case"),
+            ("optimistic", "Optimistic"),
         ]:
             sc = scenarios[scenario_key]
             st.markdown(f"**{scenario_name}**")
@@ -1660,14 +1706,14 @@ try:
             cols[3].metric("Terminal Growth", f"{sc.terminal_growth:.2%}")
 
             st.caption(
-                f"Tasas de crecimiento FCF: {', '.join([f'{g:.1%}' for g in sc.growth_rates])}"
+                f"FCF growth rates: {', '.join([f'{g:.1%}' for g in sc.growth_rates])}"
             )
             st.markdown("---")
 
     # === ENHANCED SENSITIVITY HEATMAP ===
     st.markdown("---")
-    st.markdown("### 🔥 Heatmap de Sensibilidad Mejorado")
-    st.caption("Explora cómo varían los fair values según diferentes combinaciones de WACC y crecimiento")
+    st.markdown("### 🔥 Enhanced Sensitivity Heatmap")
+    st.caption("Explore how fair values vary according to different combinations of WACC and growth")
 
     try:
         from src.visualization.enhanced_charts import EnhancedChartGenerator
@@ -1727,7 +1773,7 @@ try:
         # Export options for heatmap
         heat_export_col1, heat_export_col2 = st.columns(2)
         with heat_export_col1:
-            if st.button("📥 Descargar Heatmap PNG", key="heatmap_png"):
+            if st.button("📥 Download Heatmap PNG", key="heatmap_png"):
                 try:
                     img_bytes = chart_gen.export_chart_to_image(fig_heatmap, format='png', width=1400, height=900)
                     st.download_button(
@@ -1736,26 +1782,26 @@ try:
                         file_name=f"heatmap_{ticker}_{datetime.now().strftime('%Y%m%d')}.png",
                         mime="image/png",
                     )
-                    st.success("✅ Heatmap PNG generado")
+                    st.success("✅ Heatmap PNG generated")
                 except ImportError:
                     st.warning("⚠️ Instala kaleido para exportar: pip install kaleido")
 
         with heat_export_col2:
             html_heatmap = chart_gen.export_chart_to_html(fig_heatmap)
             st.download_button(
-                "📥 Descargar Heatmap HTML",
+                "📥 Download Heatmap HTML",
                 data=html_heatmap,
                 file_name=f"heatmap_{ticker}_{datetime.now().strftime('%Y%m%d')}.html",
                 mime="text/html",
             )
 
     except Exception as e:
-        st.error(f"Error al generar heatmap mejorado: {e}")
-        st.caption("Continuando sin heatmap...")
+        st.error(f"Error generating enhanced heatmap: {e}")
+        st.caption("Continuing without heatmap...")
 
     # === ADVANCED SCENARIO ANALYSIS WITH RISK-ADJUSTED RECOMMENDATION ===
     st.markdown("---")
-    st.markdown("### 🎯 Análisis de Riesgo y Recomendación")
+    st.markdown("### 🎯 Risk Analysis and Recommendation")
 
     try:
         from src.dcf.enhanced_model import ScenarioAnalyzer, ScenarioType
@@ -1793,7 +1839,7 @@ try:
         )
 
         # Display recommendation prominently
-        st.markdown("#### 📋 Recomendación Ajustada por Riesgo")
+        st.markdown("#### 📋 Recommendation Ajustada por Riesgo")
 
         rec_col1, rec_col2 = st.columns([2, 3])
 
@@ -1810,32 +1856,32 @@ try:
 
             # Key metrics
             st.metric(
-                "Valor Ponderado (Esperado)",
+                "Weighted Value (Expected)",
                 f"${weighted_fair_value:.2f}",
                 delta=f"{recommendation['weighted_upside']:+.1f}%",
-                help="Ponderado por probabilidad: 25% pesimista, 50% base, 25% optimista"
+                help="Weighted by probability: 25% pessimistic, 50% base, 25% optimistic"
             )
 
         with rec_col2:
             # Reasoning
-            st.markdown("**Análisis:**")
+            st.markdown("**Analysis:**")
             st.info(recommendation['reasoning'])
 
             # Risk metrics
-            st.markdown("**Métricas de Riesgo:**")
+            st.markdown("**Risk Metrics:**")
 
             risk_cols = st.columns(3)
             with risk_cols[0]:
                 st.metric(
                     "📉 Riesgo a la Baja",
                     f"{recommendation.get('pessimistic_upside', 0):+.1f}%",
-                    help="Upside en escenario pesimista"
+                    help="Upside in pessimistic scenario"
                 )
             with risk_cols[1]:
                 st.metric(
                     "📈 Potencial al Alza",
                     f"{recommendation.get('optimistic_upside', 0):+.1f}%",
-                    help="Upside en escenario optimista"
+                    help="Upside in optimistic scenario"
                 )
             with risk_cols[2]:
                 risk_reward = recommendation.get('risk_reward_ratio', 0)
@@ -1850,11 +1896,11 @@ try:
 
         # Detailed scenario comparison table
         st.markdown("---")
-        st.markdown("#### 📊 Comparación Detallada de Escenarios")
+        st.markdown("#### 📊 Detailed Scenario Comparison")
 
         # Create comparison DataFrame
         comparison_data = {
-            "Escenario": ["🔴 Pesimista", "🟡 Base", "🟢 Optimista", "🎯 Ponderado"],
+            "Scenario": ["🔴 Pessimistic", "🟡 Base", "🟢 Optimistic", "🎯 Weighted"],
             "Fair Value": [
                 f"${scenario_results[ScenarioType.PESSIMISTIC]['fair_value_per_share']:.2f}",
                 f"${scenario_results[ScenarioType.BASE]['fair_value_per_share']:.2f}",
@@ -1890,7 +1936,7 @@ try:
             hide_index=True,
             use_container_width=True,
             column_config={
-                "Escenario": st.column_config.TextColumn("Escenario", width="medium"),
+                "Scenario": st.column_config.TextColumn("Scenario", width="medium"),
                 "Fair Value": st.column_config.TextColumn("Fair Value", width="medium"),
                 "Upside": st.column_config.TextColumn("Upside vs. Precio", width="medium"),
                 "WACC": st.column_config.TextColumn("WACC", width="small"),
@@ -1901,7 +1947,7 @@ try:
 
         # Range visualization (Tornado chart style)
         st.markdown("---")
-        st.markdown("#### 📊 Visualización de Rango de Valoración")
+        st.markdown("#### 📊 Valuation Range Visualization")
 
         fig_range = go.Figure()
 
@@ -1913,7 +1959,7 @@ try:
         # Add error bar showing full range
         fig_range.add_trace(go.Scatter(
             x=[base_val],
-            y=["Valoración DCF"],
+            y=["DCF Valuation"],
             error_x=dict(
                 type='data',
                 symmetric=False,
@@ -1931,16 +1977,16 @@ try:
         # Add markers for each scenario
         fig_range.add_trace(go.Scatter(
             x=[pess_val],
-            y=["Valoración DCF"],
+            y=["DCF Valuation"],
             mode='markers',
             marker=dict(size=12, color='#ef5350', symbol='triangle-left'),
-            name='Pesimista',
+            name='Pessimistic',
             showlegend=True,
         ))
 
         fig_range.add_trace(go.Scatter(
             x=[opt_val],
-            y=["Valoración DCF"],
+            y=["DCF Valuation"],
             mode='markers',
             marker=dict(size=12, color='#66bb6a', symbol='triangle-right'),
             name='Optimista',
@@ -1952,7 +1998,7 @@ try:
             x=current_price,
             line_dash="dash",
             line_color="blue",
-            annotation_text=f"Precio Actual: ${current_price:.2f}",
+            annotation_text=f"Current Price: ${current_price:.2f}",
             annotation_position="top",
         )
 
@@ -1961,12 +2007,12 @@ try:
             x=weighted_fair_value,
             line_dash="dot",
             line_color="purple",
-            annotation_text=f"Valor Ponderado: ${weighted_fair_value:.2f}",
+            annotation_text=f"Weighted Value: ${weighted_fair_value:.2f}",
             annotation_position="bottom",
         )
 
         fig_range.update_layout(
-            title="Rango de Fair Value: Pesimista → Base → Optimista",
+            title="Fair Value Range: Pessimistic → Base → Optimistic",
             xaxis_title="Fair Value por Acción ($)",
             showlegend=True,
             height=250,
@@ -1977,43 +2023,43 @@ try:
         st.plotly_chart(fig_range, use_container_width=True)
 
         # Insights
-        with st.expander("💡 Insights del Análisis de Escenarios"):
+        with st.expander("💡 Scenario Analysis Insights"):
             st.markdown("**¿Cómo interpretar esta recomendación?**")
 
             st.markdown(f"""
-            - **Rango de valoración**: ${pess_val:.2f} - ${opt_val:.2f} (diferencia de {recommendation.get('range_percentage', 0):.1f}%)
-            - **Precio actual**: ${current_price:.2f}
-            - **Valor esperado ponderado**: ${weighted_fair_value:.2f}
+            - **Valuation range**: ${pess_val:.2f} - ${opt_val:.2f} (difference of {recommendation.get('range_percentage', 0):.1f}%)
+            - **Current price**: ${current_price:.2f}
+            - **Weighted expected value**: ${weighted_fair_value:.2f}
 
-            **Escenarios:**
-            - 🔴 **Pesimista (25%)**: Asume mayor riesgo (WACC +2%), menor crecimiento (-40%), terminal growth reducido (-1%)
-            - 🟡 **Base (50%)**: Usa parámetros actuales sin ajustes
-            - 🟢 **Optimista (25%)**: Asume menor riesgo (WACC -1%), mayor crecimiento (+40%), terminal growth aumentado (+0.5%)
+            **Scenarios:**
+            - 🔴 **Pessimistic (25%)**: Assumes higher risk (WACC +2%), lower growth (-40%), reduced terminal growth (-1%)
+            - 🟡 **Base (50%)**: Uses current parameters without adjustments
+            - 🟢 **Optimistic (25%)**: Assumes lower risk (WACC -1%), higher growth (+40%), increased terminal growth (+0.5%)
 
-            **La recomendación considera**:
-            - Si TODOS los escenarios muestran upside positivo → STRONG BUY
-            - Si el riesgo a la baja es limitado y el upside es atractivo → BUY
-            - Si hay alto riesgo en el escenario pesimista → SELL/STRONG SELL
-            - La relación riesgo/retorno debe ser favorable (>1.5x preferible)
+            **The recommendation considers**:
+            - If ALL scenarios show positive upside → STRONG BUY
+            - If downside risk is limited and upside is attractive → BUY
+            - If there is high risk in the pessimistic scenario → SELL/STRONG SELL
+            - The risk/return ratio should be favorable (>1.5x preferable)
             """)
 
             if recommendation.get('weighted_upside', 0) > 15:
-                st.success("✅ **Oportunidad atractiva**: El upside ponderado supera el 15% con riesgo controlado.")
+                st.success("✅ **Attractive opportunity**: Weighted upside exceeds 15% with controlled risk.")
             elif recommendation.get('weighted_upside', 0) < -10:
-                st.warning("⚠️ **Sobrevaloración**: El precio actual supera significativamente el valor ponderado.")
+                st.warning("⚠️ **Overvaluation**: Current price significantly exceeds weighted value.")
             else:
-                st.info("ℹ️ **Valoración equilibrada**: El precio está cerca del valor estimado.")
+                st.info("ℹ️ **Balanced valuation**: Price is close to estimated value.")
 
     except Exception as e:
-        st.error(f"❌ Error en análisis de escenarios avanzado: {str(e)}")
-        st.caption("Continuando con análisis básico...")
+        st.error(f"❌ Error in advanced scenario analysis: {str(e)}")
+        st.caption("Continuing with basic analysis...")
 
     st.markdown("---")
 
     # Results
     if use_enhanced_model:
         # Show Enhanced Model results with Equity Value
-        st.subheader("💰 Valoración DCF - Caso Base Detallado")
+        st.subheader("💰 DCF Valuation - Detailed Base Case")
 
         col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
@@ -2041,7 +2087,7 @@ try:
             else:
                 st.info("Añade shares outstanding")
         with col4:
-            st.metric("Precio Mercado", f"${current_price:.2f}")
+            st.metric("Market Price", f"${current_price:.2f}")
         with col5:
             if fair_value_per_share > 0:
                 upside = ((fair_value_per_share - current_price) / current_price) * 100
@@ -2053,7 +2099,7 @@ try:
                 )
 
         # Show balance sheet adjustments
-        st.markdown("##### Ajustes de Balance")
+        st.markdown("##### Balance Sheet Adjustments")
         col1, col2, col3 = st.columns(3)
         with col1:
             st.metric(
@@ -2131,7 +2177,7 @@ try:
                             file_name=f"waterfall_{ticker}_{datetime.now().strftime('%Y%m%d')}.png",
                             mime="image/png",
                         )
-                        st.success("✅ PNG generado")
+                        st.success("✅ PNG generated")
                     except ImportError:
                         st.warning("⚠️ Instala kaleido para exportar: pip install kaleido")
 
@@ -2145,14 +2191,14 @@ try:
                             file_name=f"waterfall_{ticker}_{datetime.now().strftime('%Y%m%d')}.svg",
                             mime="image/svg+xml",
                         )
-                        st.success("✅ SVG generado")
+                        st.success("✅ SVG generated")
                     except ImportError:
                         st.warning("⚠️ Instala kaleido para exportar: pip install kaleido")
 
             with export_col3:
                 html_str = chart_gen.export_chart_to_html(fig_waterfall)
                 st.download_button(
-                    "📥 Descargar HTML",
+                    "📥 Download HTML",
                     data=html_str,
                     file_name=f"waterfall_{ticker}_{datetime.now().strftime('%Y%m%d')}.html",
                     mime="text/html",
@@ -2160,7 +2206,7 @@ try:
 
         except Exception as e:
             st.error(f"Error al generar waterfall chart: {e}")
-            st.caption("Continuando con gráfico básico...")
+            st.caption("Continuing with basic chart...")
 
     else:
         # Show Original Model results
@@ -2180,7 +2226,7 @@ try:
             else:
                 st.info("Añade shares outstanding")
         with col3:
-            st.metric("Precio Mercado", f"${current_price:.2f}")
+            st.metric("Market Price", f"${current_price:.2f}")
         with col4:
             if fair_value_per_share > 0:
                 upside = ((fair_value_per_share - current_price) / current_price) * 100
@@ -2204,7 +2250,7 @@ try:
         rows.append(
             {
                 "Año": i,
-                "Crecimiento": gr * 100,  # Show as percentage
+                "Growth": gr * 100,  # Show as percentage
                 "FCF Proyectado": cf,
                 "Valor Presente": dcf_c,
                 "% del Total": (dcf_c / fair_value_total) * 100,
@@ -2214,7 +2260,7 @@ try:
         rows.append(
             {
                 "Año": "Terminal",
-                "Crecimiento": g * 100,
+                "Growth": g * 100,
                 "FCF Proyectado": terminal,
                 "Valor Presente": disc_terminal,
                 "% del Total": (disc_terminal / fair_value_total) * 100,
@@ -2228,7 +2274,7 @@ try:
         st.dataframe(
             df_dcf.style.format(
                 {
-                    "Crecimiento": "{:+.2f}%",
+                    "Growth": "{:+.2f}%",
                     "FCF Proyectado": "${:,.0f}",
                     "Valor Presente": "${:,.0f}",
                     "% del Total": "{:.1f}%",
@@ -2262,16 +2308,16 @@ try:
 
     # === RELATIVE VALUATION METRICS SECTION ===
     st.markdown("---")
-    st.subheader("📊 Métricas de Valoración Relativa")
+    st.subheader("📊 Relative Valuation Metrics")
     st.markdown(
         """
-        Compara el valor intrínseco (DCF) con métricas de valoración relativa del mercado.
-        Estas métricas permiten comparar con empresas similares y promedios de la industria.
+        Compare intrinsic value (DCF) with relative valuation metrics from the market.
+        These metrics allow comparison with similar companies and industry averages.
         """
     )
 
     # Calculate valuation metrics
-    with st.spinner("Calculando métricas de valoración relativa..."):
+    with st.spinner("Calculating relative valuation metrics..."):
         try:
             from src.dcf.valuation_metrics import ValuationMetricsCalculator
 
@@ -2279,7 +2325,7 @@ try:
             valuation_metrics = metrics_calculator.calculate_all_metrics(ticker)
 
             # Display key metrics
-            st.markdown("### 🎯 Métricas Clave")
+            st.markdown("### 🎯 Key Metrics")
 
             col1, col2, col3, col4 = st.columns(4)
 
@@ -2288,7 +2334,7 @@ try:
                     st.metric(
                         "EV/EBITDA",
                         f"{valuation_metrics.ev_ebitda:.2f}x",
-                        help="Enterprise Value / EBITDA - Múltiplo de valoración operativa",
+                        help="Enterprise Value / EBITDA - Operating valuation multiple",
                     )
                 else:
                     st.metric(
@@ -2300,7 +2346,7 @@ try:
                     st.metric(
                         "P/E Ratio",
                         f"{valuation_metrics.pe_ratio:.2f}x",
-                        help="Price to Earnings - Múltiplo de valoración por beneficios",
+                        help="Price to Earnings - Earnings valuation multiple",
                     )
                 else:
                     st.metric("P/E Ratio", "N/A", help="EPS no disponible o negativo")
@@ -2329,7 +2375,7 @@ try:
                     )
 
             # Show interpretations
-            st.markdown("### 📈 Interpretación de Múltiplos")
+            st.markdown("### 📈 Multiple Interpretation")
 
             interpretations = metrics_calculator.get_valuation_interpretation(
                 valuation_metrics
@@ -2342,7 +2388,7 @@ try:
                 st.info(interpretations.get("ev_ebitda", "N/A"))
                 if valuation_metrics.ev_ebitda:
                     st.caption(
-                        "Rangos típicos: <10 (baja), 10-15 (normal), >15 (alta/crecimiento)"
+                        "Typical ranges: <10 (low), 10-15 (normal), >15 (high/growth)"
                     )
 
             with col2:
@@ -2350,18 +2396,18 @@ try:
                 st.info(interpretations.get("pe_ratio", "N/A"))
                 if valuation_metrics.pe_ratio:
                     st.caption(
-                        "Rangos típicos: <15 (baja), 15-25 (normal), >25 (alta/crecimiento)"
+                        "Typical ranges: <15 (low), 15-25 (normal), >25 (high/growth)"
                     )
 
             with col3:
                 st.markdown("**P/B Ratio:**")
                 st.info(interpretations.get("pb_ratio", "N/A"))
                 if valuation_metrics.pb_ratio:
-                    st.caption("Rangos típicos: <1 (baja), 1-3 (normal), >3 (premium)")
+                    st.caption("Typical ranges: <1 (low), 1-3 (normal), >3 (premium)")
 
             # Comparison with DCF
             st.markdown("---")
-            st.markdown("### ⚖️ Comparación: DCF vs Métricas Relativas")
+            st.markdown("### ⚖️ Comparison: DCF vs Relative Metrics")
 
             if fair_value_per_share > 0:
                 comparison = metrics_calculator.compare_with_dcf(
@@ -2374,14 +2420,14 @@ try:
                 col1, col2 = st.columns([1, 2])
 
                 with col1:
-                    st.markdown("**Señales de Valoración:**")
+                    st.markdown("**Valuation Signals:**")
                     st.success(comparison["dcf_signal"])
 
                     for signal in comparison["relative_signals"]:
                         st.info(signal)
 
                 with col2:
-                    st.markdown("**Consenso de Valoración:**")
+                    st.markdown("**Valuation Consensus:**")
                     consensus = comparison["consensus"]
 
                     if "COMPRA FUERTE" in consensus:
@@ -2401,13 +2447,13 @@ try:
 
                 # Visualization: Comparison chart
                 st.markdown("---")
-                st.markdown("### 📊 Comparación Visual: DCF vs Precio de Mercado")
+                st.markdown("### 📊 Visual Comparison: DCF vs Market Price")
 
                 fig_comparison = go.Figure()
 
                 # Calculate implied values from multiples (if available)
                 comparison_data = [
-                    ("Precio Actual", current_price, "#1f77b4"),
+                    ("Current Price", current_price, "#1f77b4"),
                     ("Fair Value (DCF)", fair_value_per_share, "#ff7f0e"),
                 ]
 
@@ -2425,7 +2471,7 @@ try:
                     )
 
                 fig_comparison.update_layout(
-                    title="Comparación de Valoración",
+                    title="Valuation Comparison",
                     yaxis_title="Precio por Acción ($)",
                     showlegend=False,
                     height=400,
@@ -2434,7 +2480,7 @@ try:
                 st.plotly_chart(fig_comparison, use_container_width=True)
 
             # Detailed metrics table
-            with st.expander("🔍 Ver detalles completos de métricas"):
+            with st.expander("🔍 View complete metric details"):
                 st.markdown("**Componentes del Enterprise Value:**")
 
                 detail_cols = st.columns(4)
@@ -2475,7 +2521,7 @@ try:
                         st.metric("Enterprise Value", ev_display)
 
                 st.markdown("---")
-                st.markdown("**Métricas del Income Statement:**")
+                st.markdown("**Income Statement Metrics:**")
 
                 income_cols = st.columns(3)
                 with income_cols[0]:
@@ -2503,19 +2549,19 @@ try:
                 st.markdown("---")
                 st.caption(f"Fuente de datos: {valuation_metrics.data_source}")
                 st.caption(
-                    f"Fecha de cálculo: {valuation_metrics.calculation_date.strftime('%Y-%m-%d %H:%M')}"
+                    f"Date de cálculo: {valuation_metrics.calculation_date.strftime('%Y-%m-%d %H:%M')}"
                 )
 
         except Exception as e:
-            st.error(f"❌ Error al calcular métricas de valoración: {str(e)}")
+            st.error(f"❌ Error calculating valuation metrics: {str(e)}")
             st.info(
-                "Las métricas de valoración relativa requieren datos completos de la empresa. "
-                "Algunos valores pueden no estar disponibles para este ticker."
+                "Relative valuation metrics require complete company data. "
+                "Some values may not be available for this ticker."
             )
 
     # Fair Value vs Market Price Chart
     st.markdown("---")
-    st.subheader("📊 Fair Value vs Precio de Mercado (Histórico)")
+    st.subheader("📊 Fair Value vs Market Price (Histórico)")
 
     # Get historical DCF calculations
     dcf_history = cache.get_dcf_history(ticker, limit=90)
@@ -2587,14 +2633,14 @@ try:
                             file_name=f"temporal_{ticker}_{datetime.now().strftime('%Y%m%d')}.png",
                             mime="image/png",
                         )
-                        st.success("✅ PNG generado")
+                        st.success("✅ PNG generated")
                     except ImportError:
                         st.warning("⚠️ Instala kaleido para exportar: pip install kaleido")
 
             with temp_export_col2:
                 html_temporal = chart_gen.export_chart_to_html(fig)
                 st.download_button(
-                    "📥 Descargar HTML Interactivo",
+                    "📥 Download Interactive HTML",
                     data=html_temporal,
                     file_name=f"temporal_{ticker}_{datetime.now().strftime('%Y%m%d')}.html",
                     mime="text/html",
@@ -2611,7 +2657,7 @@ try:
                         x=price_dates,
                         y=price_values,
                         mode="lines",
-                        name="Precio de Mercado",
+                        name="Market Price",
                         line=dict(color="#1f77b4", width=2),
                     )
                 )
@@ -2629,8 +2675,8 @@ try:
                 )
 
             fig.update_layout(
-                title=f"{ticker} - Fair Value vs Precio de Mercado",
-                xaxis_title="Fecha",
+                title=f"{ticker} - Fair Value vs Market Price",
+                xaxis_title="Date",
                 yaxis_title="Precio por Acción ($)",
                 hovermode="x unified",
                 height=500,
@@ -2647,14 +2693,14 @@ try:
 
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("Fair Value Promedio", f"${avg_fv:.2f}")
+                st.metric("Average Fair Value", f"${avg_fv:.2f}")
             with col2:
-                st.metric("Precio Promedio", f"${avg_price:.2f}")
+                st.metric("Average Price", f"${avg_price:.2f}")
             with col3:
                 st.metric("Premium/Descuento Promedio", f"{avg_premium:+.1f}%")
     else:
         st.info(
-            "📌 Necesitas al menos 2 cálculos históricos para ver el gráfico. Vuelve mañana o calcula con diferentes parámetros."
+            "📌 You need at least 2 historical calculations to view the chart. Come back tomorrow or calculate with different parameters."
         )
 
         # Show current comparison
@@ -2662,7 +2708,7 @@ try:
             fig = go.Figure(
                 data=[
                     go.Bar(
-                        x=["Fair Value", "Precio Mercado"],
+                        x=["Fair Value", "Market Price"],
                         y=[fair_value_per_share, current_price],
                         marker_color=["#ff7f0e", "#1f77b4"],
                         text=[f"${fair_value_per_share:.2f}", f"${current_price:.2f}"],
@@ -2688,29 +2734,29 @@ st.subheader("📄 Exportar Informe")
 col1, col2 = st.columns(2)
 
 with col1:
-    if st.button("💾 Guardar Análisis en Base de Datos"):
-        st.success(f"✅ Análisis de {ticker} guardado en la base de datos")
+    if st.button("💾 Save Analysis to Database"):
+        st.success(f"✅ Analysis of {ticker} saved to database")
         st.balloons()
 
 with col2:
     # Report generation section
     st.markdown("---")
-    st.subheader("📄 Generar Informe Profesional")
+    st.subheader("📄 Generate Professional Report")
 
     with st.expander("⚙️ Opciones de Informe", expanded=False):
         st.markdown("Personaliza tu informe con comentarios del analista:")
 
         # Commentary inputs
         summary_comment = st.text_area(
-            "💬 Resumen Ejecutivo (opcional)",
-            placeholder="Añade tu análisis y conclusiones principales...",
+            "💬 Executive Summary (opcional)",
+            placeholder="Add your analysis and main conclusions...",
             help="Este comentario aparecerá en el resumen ejecutivo del informe",
         )
 
         multiples_comment = st.text_area(
             "📊 Comentario sobre Múltiplos (opcional)",
-            placeholder="Tu análisis sobre la valoración relativa...",
-            help="Comenta sobre los múltiplos de valoración (P/E, EV/EBITDA, P/B)",
+            placeholder="Your analysis on relative valuation...",
+            help="Comment on valuation multiples (P/E, EV/EBITDA, P/B)",
         )
 
         # Additional analyst notes
@@ -2763,7 +2809,7 @@ with col2:
     col_html, col_pdf = st.columns(2)
 
     with col_html:
-        if st.button("📄 Generar Informe HTML", use_container_width=True):
+        if st.button("📄 Generate HTML Report", use_container_width=True):
             try:
                 from src.reports.advanced_html_generator import AdvancedHTMLGenerator
                 from src.reports.report_calculations import DCFReportData
@@ -2801,15 +2847,15 @@ with col2:
                 )
 
                 st.download_button(
-                    label="⬇️ Descargar HTML",
+                    label="⬇️ Download HTML",
                     data=html_content,
                     file_name=f"DCF_Report_{ticker}_{date.today().isoformat()}.html",
                     mime="text/html",
                     use_container_width=True,
                 )
-                st.success("✅ Informe HTML generado correctamente")
+                st.success("✅ HTML report generated successfully")
                 st.info(
-                    "💡 **Diseño Profesional Activado**\n\n"
+                    "💡 **Professional Design Activated**\n\n"
                     "El reporte incluye:\n"
                     "- 🎨 Tema azul oscuro estilo Bloomberg/Goldman Sachs\n"
                     "- 📊 4 gráficos interactivos Plotly (Waterfall, Sensitivity, Value Breakdown, FCF)\n"
@@ -2819,13 +2865,13 @@ with col2:
                 )
 
             except Exception as e:
-                st.error(f"Error generando informe HTML: {str(e)}")
+                st.error(f"Error generating HTML report: {str(e)}")
 
     with col_pdf:
         try:
             from src.reports import generate_dcf_report, ENHANCED_PDF_AVAILABLE
 
-            if st.button("📥 Generar Informe PDF", use_container_width=True):
+            if st.button("📥 Generate PDF Report", use_container_width=True):
                 pdf_data = {
                     "fair_value": fair_value_total,
                     "market_price": current_price,
@@ -2845,7 +2891,7 @@ with col2:
                 )
 
                 st.download_button(
-                    label="⬇️ Descargar PDF",
+                    label="⬇️ Download PDF",
                     data=pdf_bytes,
                     file_name=f"DCF_Report_{ticker}_{date.today().isoformat()}.pdf",
                     mime="application/pdf",
@@ -2854,14 +2900,14 @@ with col2:
 
                 if ENHANCED_PDF_AVAILABLE:
                     st.success(
-                        "✅ Informe PDF mejorado generado con gráficos y diseño profesional"
+                        "✅ Enhanced PDF report generated with charts and professional design"
                     )
                 else:
-                    st.success("✅ Informe PDF generado correctamente")
+                    st.success("✅ PDF report generated successfully")
 
         except ImportError:
             st.info(
-                "💡 **Informe PDF no disponible**\n\nPara generar PDFs instala: `pip install reportlab`\n\nMientras tanto, usa el formato HTML que tiene todas las funcionalidades."
+                "💡 **PDF Report Not Available**\n\nTo generate PDFs install: `pip install reportlab`\n\nIn the meantime, use the HTML format which has all the functionality."
             )
 
     # === EXCEL EXPORT SECTION ===
@@ -2872,16 +2918,16 @@ with col2:
 
     with excel_col1:
         st.markdown("""
-        **Exporta tu análisis DCF completo a Excel** con múltiples hojas:
-        - 📄 Resumen Ejecutivo con métricas clave
-        - 📈 Proyecciones de FCF con fórmulas
-        - 🔥 Análisis de Sensibilidad (r vs g)
-        - 📊 Escenarios (Pesimista/Base/Optimista)
-        - 💾 Datos originales para recalcular
+        **Export your complete DCF analysis to Excel** with multiple sheets:
+        - 📄 Executive Summary with key metrics
+        - 📈 FCF Projections with formulas
+        - 🔥 Sensitivity Analysis (r vs g)
+        - 📊 Scenarios (Pessimistic/Base/Optimistic)
+        - 💾 Original data for recalculation
         """)
 
     with excel_col2:
-        st.info("**Formato profesional** con colores, fórmulas y gráficos")
+        st.info("**Professional format** with colors, formulas and charts")
 
     if st.button("📥 Exportar a Excel", type="primary", use_container_width=True):
         try:
@@ -2960,16 +3006,16 @@ with col2:
                     use_container_width=True
                 )
 
-                st.success("✅ Archivo Excel generado correctamente!")
+                st.success("✅ Excel file generated successfully!")
                 st.info("""
                 **El archivo incluye:**
                 - ✅ Resumen ejecutivo con recomendación
-                - ✅ Proyecciones con fórmulas de Excel
-                - ✅ Análisis de sensibilidad
-                - ✅ Comparación de escenarios
+                - ✅ Projections with Excel formulas
+                - ✅ Sensitivity analysis
+                - ✅ Scenario comparison
                 - ✅ Datos originales para manipular
                 """)
 
         except Exception as e:
             st.error(f"Error al generar Excel: {e}")
-            st.info("Asegúrate de que openpyxl esté instalado: pip install openpyxl")
+            st.info("Make sure openpyxl is installed: pip install openpyxl")

@@ -1,0 +1,929 @@
+/* ============================================
+   DCF VALUATION PLATFORM - MODERN PROFESSIONAL DESIGN
+   ============================================ */
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* Root Variables */
+:root {
+    --primary-color: #0066FF;
+    --primary-dark: #0052CC;
+    --primary-light: #3385FF;
+    --secondary-color: #00D4AA;
+    --accent-color: #FF6B6B;
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+    --danger-color: #EF4444;
+    
+    --bg-primary: #0A0E27;
+    --bg-secondary: #131829;
+    --bg-tertiary: #1A1F3A;
+    --bg-card: #1E2338;
+    --bg-hover: #252B45;
+    
+    --text-primary: #FFFFFF;
+    --text-secondary: #B4B9D1;
+    --text-muted: #7C82A3;
+    
+    --border-color: #2A2F4A;
+    --border-light: #3A3F5A;
+    
+    --gradient-primary: linear-gradient(135deg, #0066FF 0%, #00D4AA 100%);
+    --gradient-card: linear-gradient(135deg, #1E2338 0%, #252B45 100%);
+    --gradient-hero: linear-gradient(135deg, #0A0E27 0%, #1A1F3A 50%, #0A0E27 100%);
+    
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 20px rgba(0, 102, 255, 0.3);
+}
+
+/* Global Styles */
+* {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.stApp {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* Header Styling - Match Blue Theme */
+[data-testid="stHeader"],
+.stAppHeader,
+[class*="stAppHeader"],
+[class*="st-emotion-cache-13892zc"] {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, #1A1F3A 100%) !important;
+    border-bottom: 2px solid var(--primary-color) !important;
+    box-shadow: 0 4px 16px rgba(0, 102, 255, 0.2) !important;
+    backdrop-filter: blur(10px);
+}
+
+[data-testid="stHeader"] *,
+.stAppHeader *,
+[class*="stAppHeader"] * {
+    color: var(--text-primary) !important;
+}
+
+/* Header Navigation Links */
+[data-testid="stHeader"] a,
+.stAppHeader a {
+    color: var(--text-secondary) !important;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+[data-testid="stHeader"] a:hover,
+.stAppHeader a:hover {
+    color: var(--primary-color) !important;
+}
+
+/* Hide Streamlit Toolbar (Deploy button) */
+[data-testid="stToolbar"],
+.stAppToolbar,
+.st-emotion-cache-14vh5up,
+[class*="stAppToolbar"] {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
+
+/* Main Container */
+.main .block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    max-width: 1400px;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+}
+
+h1 {
+    font-size: 2.5rem;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+}
+
+h2 {
+    font-size: 1.75rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+h3 {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+}
+
+/* Custom Hero Section */
+.hero-section {
+    background: var(--gradient-hero);
+    padding: 3rem 2rem;
+    border-radius: 20px;
+    margin-bottom: 3rem;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 20% 50%, rgba(0, 102, 255, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.hero-title {
+    font-size: 3rem;
+    font-weight: 800;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+/* Feature Cards */
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.feature-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2rem;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.feature-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.feature-description {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+/* Metric Cards */
+.metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-light);
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0.5rem 0;
+}
+
+.metric-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Buttons */
+.stButton > button {
+    background: var(--gradient-primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md), var(--shadow-glow);
+    background: var(--gradient-primary);
+}
+
+/* Sidebar */
+.css-1d391kg {
+    background: var(--bg-secondary) !important;
+    border-right: 1px solid var(--border-color);
+}
+
+[data-testid="stSidebar"] {
+    background: var(--bg-secondary) !important;
+}
+
+[data-testid="stSidebar"] .css-1d391kg {
+    background: var(--bg-secondary) !important;
+}
+
+/* Sidebar Content - Better Contrast */
+[data-testid="stSidebar"] * {
+    color: var(--text-primary) !important;
+}
+
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] div,
+[data-testid="stSidebar"] span,
+[data-testid="stSidebar"] label {
+    color: var(--text-primary) !important;
+}
+
+/* Sidebar Navigation Links */
+[data-testid="stSidebar"] a {
+    color: var(--text-primary) !important;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 0.5rem 0;
+    display: block;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+[data-testid="stSidebar"] a:hover {
+    background: var(--bg-hover) !important;
+    color: var(--primary-color) !important;
+    padding-left: 0.5rem;
+}
+
+/* Sidebar Headers */
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] h4 {
+    color: var(--text-primary) !important;
+    font-weight: 700;
+}
+
+/* Sidebar Markdown Content */
+[data-testid="stSidebar"] .stMarkdown,
+[data-testid="stSidebar"] .stMarkdown p,
+[data-testid="stSidebar"] .stMarkdown div {
+    color: var(--text-primary) !important;
+}
+
+[data-testid="stSidebar"] .stMarkdown strong {
+    color: var(--primary-color) !important;
+    font-weight: 600;
+}
+
+/* Sidebar Buttons */
+[data-testid="stSidebar"] button {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+[data-testid="stSidebar"] button:hover {
+    background: var(--bg-hover) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+}
+
+/* Sidebar Inputs */
+[data-testid="stSidebar"] input,
+[data-testid="stSidebar"] select,
+[data-testid="stSidebar"] textarea {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+[data-testid="stSidebar"] input:focus,
+[data-testid="stSidebar"] select:focus,
+[data-testid="stSidebar"] textarea:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1) !important;
+}
+
+/* Sidebar Alerts/Info Boxes */
+[data-testid="stSidebar"] .stAlert,
+[data-testid="stSidebar"] .stSuccess,
+[data-testid="stSidebar"] .stInfo,
+[data-testid="stSidebar"] .stWarning,
+[data-testid="stSidebar"] .stError {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Sidebar Icons */
+[data-testid="stSidebar"] svg {
+    fill: var(--text-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Sidebar Scrollbar */
+[data-testid="stSidebar"]::-webkit-scrollbar {
+    width: 8px;
+}
+
+[data-testid="stSidebar"]::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+[data-testid="stSidebar"]::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: 4px;
+}
+
+[data-testid="stSidebar"]::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
+}
+
+/* Sidebar Navigation Menu Items (Streamlit auto-generated) */
+[data-testid="stSidebar"] [class*="css"] a,
+[data-testid="stSidebar"] nav a,
+[data-testid="stSidebar"] ul a,
+[data-testid="stSidebar"] li a {
+    color: #B4B9D1 !important;
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    display: block;
+    border-radius: 8px;
+    margin: 0.25rem 0;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+[data-testid="stSidebar"] [class*="css"] a:hover,
+[data-testid="stSidebar"] nav a:hover,
+[data-testid="stSidebar"] ul a:hover,
+[data-testid="stSidebar"] li a:hover {
+    background: var(--bg-hover) !important;
+    color: var(--primary-color) !important;
+    padding-left: 1.25rem;
+    transform: translateX(4px);
+}
+
+/* Active navigation item */
+[data-testid="stSidebar"] [class*="css"] a[aria-current="page"],
+[data-testid="stSidebar"] nav a[aria-current="page"] {
+    background: rgba(0, 102, 255, 0.15) !important;
+    color: var(--primary-color) !important;
+    border-left: 3px solid var(--primary-color);
+    font-weight: 600;
+}
+
+/* Sidebar Text Elements - Force High Contrast */
+[data-testid="stSidebar"] .stMarkdown,
+[data-testid="stSidebar"] .stMarkdownContainer,
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] div:not([class*="css"]):not([data-baseweb]) {
+    color: #FFFFFF !important;
+}
+
+/* Sidebar Section Headers */
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] h4,
+[data-testid="stSidebar"] h5,
+[data-testid="stSidebar"] h6 {
+    color: #FFFFFF !important;
+    font-weight: 700;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+/* Sidebar Labels */
+[data-testid="stSidebar"] label {
+    color: #B4B9D1 !important;
+    font-weight: 500;
+}
+
+/* Sidebar Radio Buttons and Checkboxes */
+[data-testid="stSidebar"] [role="radiogroup"] label,
+[data-testid="stSidebar"] [role="checkbox"] label {
+    color: #FFFFFF !important;
+}
+
+/* Sidebar Selectbox Options */
+[data-testid="stSidebar"] select option {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Sidebar Collapse Button */
+[data-testid="stSidebar"] button[title*="collapse"],
+[data-testid="stSidebar"] button[aria-label*="collapse"] {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+[data-testid="stSidebar"] button[title*="collapse"]:hover,
+[data-testid="stSidebar"] button[aria-label*="collapse"]:hover {
+    background: var(--bg-hover) !important;
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* Input Fields */
+.stTextInput > div > div > input,
+.stSelectbox > div > div > select,
+.stNumberInput > div > div > input {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    padding: 0.75rem;
+}
+
+.stTextInput > div > div > input:focus,
+.stSelectbox > div > div > select:focus,
+.stNumberInput > div > div > input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+}
+
+/* Dataframes */
+.dataframe {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Alerts/Info Boxes */
+.stAlert {
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.stSuccess {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: var(--success-color);
+}
+
+.stInfo {
+    background: rgba(0, 102, 255, 0.1);
+    border-color: var(--primary-color);
+}
+
+.stWarning {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: var(--warning-color);
+}
+
+.stError {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: var(--danger-color);
+}
+
+/* Charts Container */
+.plotly {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+/* Dividers */
+hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+    margin: 2rem 0;
+}
+
+/* Tabs */
+.stTabs [data-baseweb="tab-list"] {
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    padding: 0.5rem;
+}
+
+.stTabs [data-baseweb="tab"] {
+    color: var(--text-secondary);
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.stTabs [aria-selected="true"] {
+    background: var(--gradient-primary);
+    color: white;
+}
+
+/* Expander */
+.stExpander {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin: 1rem 0;
+}
+
+/* Code Blocks */
+.stCode {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Custom Badge */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.badge-success {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: var(--success-color);
+    color: var(--success-color);
+}
+
+.badge-warning {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: var(--warning-color);
+    color: var(--warning-color);
+}
+
+.badge-danger {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+}
+
+.badge-primary {
+    background: rgba(0, 102, 255, 0.2);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* ============================================
+   HIGH CONTRAST TEXT IMPROVEMENTS
+   ============================================ */
+
+/* Main content area - ensure all text is visible */
+.stApp .main {
+    color: var(--text-primary) !important;
+}
+
+/* Horizontal blocks - better contrast */
+[data-testid="stHorizontalBlock"],
+.stHorizontalBlock,
+[class*="stHorizontalBlock"],
+[class*="st-emotion-cache-1permvm"],
+[class*="e1wguzas3"] {
+    color: var(--text-primary) !important;
+}
+
+[data-testid="stHorizontalBlock"] *,
+.stHorizontalBlock *,
+[class*="stHorizontalBlock"] *,
+[class*="st-emotion-cache-1permvm"] *,
+[class*="e1wguzas3"] * {
+    color: var(--text-primary) !important;
+    font-weight: 500 !important;
+}
+
+/* All text elements - force white/light colors */
+.stMarkdown,
+.stMarkdownContainer,
+.stMarkdown p,
+.stMarkdown div,
+.stMarkdown span,
+.stMarkdown label {
+    color: var(--text-primary) !important;
+}
+
+/* Numbers and metrics - extra bold and bright */
+[class*="st-emotion-cache-1q82h82"],
+[class*="e1wr3kle3"],
+.stMetric,
+.stMetric *,
+div[class*="st-emotion-cache-1q82h82"],
+div[class*="e1wr3kle3"] {
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* All divs with text - ensure visibility */
+div[class*="st-emotion"],
+div[class*="e1"],
+div[class*="css"] {
+    color: var(--text-primary) !important;
+}
+
+/* Labels and small text - better contrast */
+label,
+.stLabel,
+[class*="label"],
+small,
+.stCaption {
+    color: var(--text-secondary) !important;
+    font-weight: 500 !important;
+}
+
+/* Text in containers */
+.stContainer *,
+[data-testid*="container"] * {
+    color: var(--text-primary) !important;
+}
+
+/* Specific text classes from Streamlit - ensure maximum contrast */
+[class*="st-emotion-cache-1permvm"],
+[class*="e1wguzas3"],
+[class*="st-emotion-cache-1q82h82"],
+[class*="e1wr3kle3"],
+[class*="st-emotion"] {
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+}
+
+/* All emotion cache divs - force white text */
+div[class*="st-emotion-cache"],
+div[class*="e1"] {
+    color: #FFFFFF !important;
+}
+
+div[class*="st-emotion-cache"] *,
+div[class*="e1"] * {
+    color: #FFFFFF !important;
+}
+
+/* All paragraph and span elements - force high contrast */
+p,
+span,
+div:not([class*="css"]):not([data-baseweb]),
+div[dir="row"],
+div[dir="column"] {
+    color: #FFFFFF !important;
+}
+
+p *,
+span *,
+div[dir="row"] *,
+div[dir="column"] * {
+    color: #FFFFFF !important;
+}
+
+/* Strong and bold text - extra bright */
+strong,
+b,
+[class*="bold"],
+[class*="strong"] {
+    color: var(--text-primary) !important;
+    font-weight: 700 !important;
+}
+
+/* Links - better visibility */
+a {
+    color: var(--primary-light) !important;
+    font-weight: 500 !important;
+}
+
+a:hover {
+    color: var(--primary-color) !important;
+}
+
+/* Input labels and form elements */
+.stTextInput label,
+.stSelectbox label,
+.stNumberInput label,
+.stRadio label,
+.stCheckbox label {
+    color: var(--text-secondary) !important;
+    font-weight: 600 !important;
+}
+
+/* Metric labels */
+.stMetric label {
+    color: var(--text-secondary) !important;
+    font-weight: 500 !important;
+    font-size: 0.9rem !important;
+}
+
+/* Metric values - extra bright */
+.stMetric [data-testid="stMetricValue"],
+.stMetric [data-testid="stMetricDelta"] {
+    color: var(--text-primary) !important;
+    font-weight: 700 !important;
+}
+
+/* Radio buttons and checkboxes text */
+[role="radiogroup"] label,
+[role="checkbox"] label {
+    color: var(--text-primary) !important;
+    font-weight: 500 !important;
+}
+
+/* Selectbox options */
+select option {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Table text */
+.dataframe,
+[data-testid="stDataFrame"] *,
+table * {
+    color: var(--text-primary) !important;
+}
+
+/* Code blocks */
+code,
+pre,
+.stCode {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* Expander headers */
+.stExpander label {
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+}
+
+/* Tabs */
+.stTabs [data-baseweb="tab"] {
+    color: var(--text-secondary) !important;
+    font-weight: 500 !important;
+}
+
+.stTabs [aria-selected="true"] {
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+}
+
+/* Button text */
+button,
+.stButton button {
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+}
+
+/* Alert text */
+.stAlert,
+.stSuccess,
+.stInfo,
+.stWarning,
+.stError {
+    color: var(--text-primary) !important;
+}
+
+.stAlert *,
+.stSuccess *,
+.stInfo *,
+.stWarning *,
+.stError * {
+    color: var(--text-primary) !important;
+}
+
+/* Override any dark text on dark background */
+[style*="color: rgb(49, 51, 63)"],
+[style*="color: #31333f"],
+[style*="color: rgb(250, 250, 250)"] {
+    color: var(--text-primary) !important;
+}
+
+/* Ensure all Streamlit default text is visible */
+.stApp [class*="css"] {
+    color: var(--text-primary) !important;
+}
+
+/* Specific fixes for common low-contrast elements - maximum visibility */
+div[dir="row"],
+div[dir="column"],
+[data-testid="stHorizontalBlock"],
+[class*="stHorizontalBlock"] {
+    color: #FFFFFF !important;
+}
+
+div[dir="row"] *,
+div[dir="column"] *,
+[data-testid="stHorizontalBlock"] *,
+[class*="stHorizontalBlock"] * {
+    color: #FFFFFF !important;
+    font-weight: 500 !important;
+}
+
+/* Force all text in main content to be white */
+.stApp .main p,
+.stApp .main span,
+.stApp .main div,
+.stApp .main label,
+.stApp .main strong,
+.stApp .main b {
+    color: #FFFFFF !important;
+}
+
+/* Ensure emojis and text together are visible */
+[data-testid="stHorizontalBlock"] span,
+[class*="stHorizontalBlock"] span {
+    color: #FFFFFF !important;
+    font-weight: 500 !important;
+}
+

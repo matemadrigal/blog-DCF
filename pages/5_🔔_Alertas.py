@@ -9,13 +9,13 @@ from src.cache import DCFCache
 from src.alerts import AlertSystem, AlertType, AlertStatus, AlertCondition
 
 st.set_page_config(
-    page_title="Alertas - DCF",
+    page_title="Alerts - DCF",
     page_icon="🔔",
     layout="wide"
 )
 
-st.title("🔔 Sistema de Alertas")
-st.markdown("Configura alertas para recibir notificaciones cuando se cumplan tus condiciones.")
+st.title("🔔 Alert System")
+st.markdown("Configure alerts to receive notifications when your conditions are met.")
 
 
 # Initialize cache and alert system
@@ -34,10 +34,10 @@ cache = get_cache()
 alert_system = get_alert_system()
 
 # ============================================================================
-# SECCIÓN 1: NOTIFICACIONES ACTIVAS
+# SECTION 1: ACTIVE NOTIFICATIONS
 # ============================================================================
 
-st.subheader("🔥 Alertas Disparadas")
+st.subheader("🔥 Triggered Alerts")
 
 triggered_alerts = alert_system.get_all_alerts(AlertStatus.TRIGGERED)
 
@@ -50,67 +50,67 @@ if triggered_alerts:
                 st.warning(f"""
                 **🔔 {alert.ticker}** - {alert.message}
 
-                **Valor Objetivo:** ${alert.target_value:.2f} | **Valor Actual:** ${alert.current_value:.2f}
+                **Target Value:** ${alert.target_value:.2f} | **Current Value:** ${alert.current_value:.2f}
 
-                Disparado: {alert.triggered_at.strftime('%Y-%m-%d %H:%M')}
+                Triggered: {alert.triggered_at.strftime('%Y-%m-%d %H:%M')}
                 """)
 
             with col2:
-                if st.button(f"✅ Marcar vista", key=f"dismiss_{alert.id}"):
+                if st.button(f"✅ Mark as viewed", key=f"dismiss_{alert.id}"):
                     alert_system.dismiss_alert(alert.id)
                     st.rerun()
 
             with col3:
-                if st.button(f"🗑️ Eliminar", key=f"delete_{alert.id}"):
+                if st.button(f"🗑️ Delete", key=f"delete_{alert.id}"):
                     alert_system.delete_alert(alert.id)
                     st.rerun()
 
         st.markdown("---")
 else:
-    st.info("📭 No hay alertas disparadas. ¡Todo tranquilo!")
+    st.info("📭 No triggered alerts. All quiet!")
 
 st.markdown("---")
 
 # ============================================================================
-# SECCIÓN 2: CREAR NUEVA ALERTA
+# SECTION 2: CREATE NEW ALERT
 # ============================================================================
 
-st.subheader("➕ Crear Nueva Alerta")
+st.subheader("➕ Create New Alert")
 
 col_form1, col_form2 = st.columns(2)
 
 with col_form1:
-    st.markdown("### 🎯 Configuración de Alerta")
+    st.markdown("### 🎯 Alert Configuration")
 
     # Get available tickers from cache
     available_tickers = cache.get_all_tickers()
 
     if not available_tickers:
-        st.warning("⚠️ No hay empresas analizadas. Ve a **Análisis Individual** para calcular al menos una empresa primero.")
-        ticker_input = st.text_input("O ingresa un ticker manualmente:", "AAPL").upper()
+        st.warning("⚠️ No analyzed companies. Go to **Individual Analysis** to calculate at least one company first.")
+        ticker_input = st.text_input("Or enter a ticker manually:", "AAPL").upper()
     else:
         ticker_option = st.radio(
-            "Seleccionar empresa:",
-            ["De la lista", "Ingresar manualmente"]
+            "Select company:",
+            ["From list", "Enter manually"]
         )
 
-        if ticker_option == "De la lista":
+        if ticker_option == "From list":
             ticker_input = st.selectbox("Ticker:", available_tickers)
         else:
             ticker_input = st.text_input("Ticker:", "AAPL").upper()
 
     # Alert type selection
     alert_type_option = st.selectbox(
-        "Tipo de Alerta:",
+        "Alert Type:",
         [
-            "🎯 Precio Objetivo (Target Price)",
-            "📈 Cambio Significativo en Upside",
-            "💰 Precio Alcanza Valor"
+            "🎯 Target Price",
+            "📈 Significant Upside Change",
+            "💰 Price Reaches Value"
         ]
     )
 
 with col_form2:
-    st.markdown("### ⚙️ Parámetros")
+    st.markdown("### ⚙️ Parameters")
 
     if "Precio Objetivo" in alert_type_option:
         # Get current price
@@ -120,42 +120,42 @@ with col_form2:
             if current_price == 0:
                 current_price = stock.info.get('regularMarketPrice', 0)
 
-            st.metric("Precio Actual", f"${current_price:.2f}")
+            st.metric("Current Price", f"${current_price:.2f}")
         except:
             current_price = 0
-            st.info("No se pudo obtener el precio actual")
+            st.info("Could not retrieve current price")
 
         target_price = st.number_input(
-            "Precio Objetivo ($):",
+            "Target Price ($):",
             min_value=0.01,
             value=float(current_price * 1.1) if current_price > 0 else 100.0,
             step=1.0,
-            help="El precio que quieres monitorear"
+            help="The price you want to monitor"
         )
 
         condition = st.radio(
-            "Alertar cuando el precio esté:",
-            ["Por encima del objetivo", "Por debajo del objetivo"]
+            "Alert when price is:",
+            ["Above target", "Below target"]
         )
 
-        alert_condition = AlertCondition.ABOVE if "encima" in condition else AlertCondition.BELOW
+        alert_condition = AlertCondition.ABOVE if "Above" in condition else AlertCondition.BELOW
 
-    elif "Cambio Significativo" in alert_type_option:
+    elif "Significant" in alert_type_option:
         threshold = st.slider(
-            "Cambio mínimo para alertar (%):",
+            "Minimum change to alert (%):",
             min_value=5.0,
             max_value=50.0,
             value=10.0,
             step=5.0,
-            help="Te alertaremos cuando el upside cambie más de este porcentaje"
+            help="We will alert you when upside changes more than this percentage"
         )
 
         target_price = 0  # Will be set when checking
         alert_condition = AlertCondition.CHANGE_ABOVE
 
-    else:  # Precio Alcanza Valor
+    else:  # Price Reaches Value
         target_price = st.number_input(
-            "Valor a Monitorear ($):",
+            "Value to Monitor ($):",
             min_value=0.01,
             value=100.0,
             step=1.0
@@ -164,22 +164,22 @@ with col_form2:
         alert_condition = AlertCondition.EQUALS
 
 # Create button
-if st.button("✅ Crear Alerta", type="primary", use_container_width=True):
+if st.button("✅ Create Alert", type="primary", use_container_width=True):
     if ticker_input:
         try:
-            if "Precio Objetivo" in alert_type_option:
+            if "Target Price" in alert_type_option:
                 alert = alert_system.create_target_price_alert(
                     ticker=ticker_input,
                     target_price=target_price,
                     above=(alert_condition == AlertCondition.ABOVE)
                 )
-            elif "Cambio Significativo" in alert_type_option:
+            elif "Significant" in alert_type_option:
                 alert = alert_system.create_upside_change_alert(
                     ticker=ticker_input,
                     threshold=threshold
                 )
             else:
-                message = f"{ticker_input} alcanzó ${target_price:.2f}"
+                message = f"{ticker_input} reached ${target_price:.2f}"
                 alert = alert_system.create_alert(
                     ticker=ticker_input,
                     alert_type=AlertType.TARGET_PRICE,
@@ -188,22 +188,22 @@ if st.button("✅ Crear Alerta", type="primary", use_container_width=True):
                     message=message
                 )
 
-            st.success(f"✅ Alerta creada para {ticker_input}!")
+            st.success(f"✅ Alert created for {ticker_input}!")
             st.balloons()
             st.rerun()
 
         except Exception as e:
-            st.error(f"Error al crear alerta: {e}")
+            st.error(f"Error creating alert: {e}")
     else:
-        st.error("Por favor ingresa un ticker válido")
+        st.error("Please enter a valid ticker")
 
 st.markdown("---")
 
 # ============================================================================
-# SECCIÓN 3: ALERTAS ACTIVAS (WATCHLIST)
+# SECTION 3: ACTIVE ALERTS (WATCHLIST)
 # ============================================================================
 
-st.subheader("👁️ Watchlist - Alertas Activas")
+st.subheader("👁️ Watchlist - Active Alerts")
 
 active_alerts = alert_system.get_all_alerts(AlertStatus.ACTIVE)
 
@@ -212,15 +212,15 @@ if active_alerts:
     col_stat1, col_stat2, col_stat3 = st.columns(3)
 
     with col_stat1:
-        st.metric("Alertas Activas", len(active_alerts))
+        st.metric("Active Alerts", len(active_alerts))
 
     with col_stat2:
         unique_tickers = len(set(alert.ticker for alert in active_alerts))
-        st.metric("Empresas Monitoreadas", unique_tickers)
+        st.metric("Monitored Companies", unique_tickers)
 
     with col_stat3:
         target_price_alerts = len([a for a in active_alerts if a.alert_type == AlertType.TARGET_PRICE])
-        st.metric("Alertas de Precio", target_price_alerts)
+        st.metric("Price Alerts", target_price_alerts)
 
     st.markdown("---")
 
@@ -229,10 +229,10 @@ if active_alerts:
     for alert in active_alerts:
         alert_data.append({
             "Ticker": alert.ticker,
-            "Tipo": "🎯 Precio" if alert.alert_type == AlertType.TARGET_PRICE else "📈 Upside",
-            "Condición": "Por encima" if alert.condition == AlertCondition.ABOVE else "Por debajo",
-            "Valor Objetivo": f"${alert.target_value:.2f}",
-            "Creado": alert.created_at.strftime('%Y-%m-%d %H:%M'),
+            "Type": "🎯 Price" if alert.alert_type == AlertType.TARGET_PRICE else "📈 Upside",
+            "Condition": "Above" if alert.condition == AlertCondition.ABOVE else "Below",
+            "Target Value": f"${alert.target_value:.2f}",
+            "Created": alert.created_at.strftime('%Y-%m-%d %H:%M'),
             "ID": alert.id
         })
 
@@ -245,52 +245,52 @@ if active_alerts:
 
             with col_info:
                 st.markdown(f"""
-                **{row['Ticker']}** - {row['Tipo']} | {row['Condición']} de {row['Valor Objetivo']}
+                **{row['Ticker']}** - {row['Type']} | {row['Condition']} {row['Target Value']}
 
-                Creado: {row['Creado']}
+                Created: {row['Created']}
                 """)
 
             with col_actions:
-                if st.button("🗑️ Eliminar", key=f"del_active_{row['ID']}"):
+                if st.button("🗑️ Delete", key=f"del_active_{row['ID']}"):
                     alert_system.delete_alert(row['ID'])
                     st.rerun()
 
             st.markdown("---")
 
     # Export button
-    st.markdown("### 📥 Exportar Alertas")
+    st.markdown("### 📥 Export Alerts")
     csv_data = alert_system.export_to_csv()
 
     st.download_button(
-        label="📥 Descargar CSV",
+        label="📥 Download CSV",
         data=csv_data,
-        file_name=f"alertas_dcf_{datetime.now().strftime('%Y%m%d')}.csv",
+        file_name=f"dcf_alerts_{datetime.now().strftime('%Y%m%d')}.csv",
         mime="text/csv",
         use_container_width=True
     )
 
 else:
-    st.info("📋 No hay alertas activas. Crea una alerta arriba para empezar a monitorear.")
+    st.info("📋 No active alerts. Create an alert above to start monitoring.")
 
 st.markdown("---")
 
 # ============================================================================
-# SECCIÓN 4: VERIFICAR ALERTAS MANUALMENTE
+# SECTION 4: MANUALLY VERIFY ALERTS
 # ============================================================================
 
-with st.expander("🔍 Verificar Alertas Manualmente"):
+with st.expander("🔍 Manually Verify Alerts"):
     st.markdown("""
-    Esta función verifica todas las alertas activas con los precios actuales del mercado.
+    This function verifies all active alerts with current market prices.
 
-    **Nota:** Las alertas se verifican automáticamente cuando calculas un análisis DCF.
+    **Note:** Alerts are automatically verified when you calculate a DCF analysis.
     """)
 
-    if st.button("🔄 Verificar Todas las Alertas Ahora"):
-        with st.spinner("Verificando alertas..."):
+    if st.button("🔄 Verify All Alerts Now"):
+        with st.spinner("Verifying alerts..."):
             active_to_check = alert_system.get_all_alerts(AlertStatus.ACTIVE)
 
             if not active_to_check:
-                st.info("No hay alertas activas para verificar")
+                st.info("No active alerts to verify")
             else:
                 all_triggered = []
 
@@ -311,61 +311,61 @@ with st.expander("🔍 Verificar Alertas Manualmente"):
                         all_triggered.extend(triggered)
 
                     except Exception as e:
-                        st.warning(f"Error verificando {alert.ticker}: {e}")
+                        st.warning(f"Error verifying {alert.ticker}: {e}")
 
                 if all_triggered:
-                    st.success(f"✅ {len(all_triggered)} alertas disparadas!")
+                    st.success(f"✅ {len(all_triggered)} alerts triggered!")
                     st.rerun()
                 else:
-                    st.info("✅ Todas las alertas verificadas. Ninguna disparada.")
+                    st.info("✅ All alerts verified. None triggered.")
 
 st.markdown("---")
 
 # ============================================================================
-# SECCIÓN 5: HISTORIAL
+# SECTION 5: HISTORY
 # ============================================================================
 
-with st.expander("📜 Historial de Alertas"):
+with st.expander("📜 Alert History"):
     dismissed_alerts = alert_system.get_all_alerts(AlertStatus.DISMISSED)
 
     if dismissed_alerts:
-        st.markdown(f"**Total:** {len(dismissed_alerts)} alertas vistas")
+        st.markdown(f"**Total:** {len(dismissed_alerts)} viewed alerts")
 
         for alert in dismissed_alerts[:10]:  # Show last 10
-            st.text(f"{alert.ticker} - {alert.message} (Creado: {alert.created_at.strftime('%Y-%m-%d')})")
+            st.text(f"{alert.ticker} - {alert.message} (Created: {alert.created_at.strftime('%Y-%m-%d')})")
 
         if len(dismissed_alerts) > 10:
-            st.caption(f"Mostrando las últimas 10 de {len(dismissed_alerts)} alertas")
+            st.caption(f"Showing the last 10 of {len(dismissed_alerts)} alerts")
     else:
-        st.info("No hay historial de alertas")
+        st.info("No alert history")
 
 # ============================================================================
 # LEYENDA
 # ============================================================================
 
-with st.expander("📖 Ayuda y Consejos"):
+with st.expander("📖 Help and Tips"):
     st.markdown("""
-    ### Tipos de Alertas
+    ### Alert Types
 
-    - **🎯 Precio Objetivo**: Te alerta cuando el precio de mercado alcanza tu objetivo
-    - **📈 Cambio Significativo**: Te alerta cuando el upside cambia más de X%
-    - **💰 Precio Alcanza Valor**: Te alerta cuando el precio llega exactamente a un valor
+    - **🎯 Target Price**: Alerts you when market price reaches your target
+    - **📈 Significant Change**: Alerts you when upside changes more than X%
+    - **💰 Price Reaches Value**: Alerts you when price reaches exactly a value
 
-    ### Cómo Funcionan
+    ### How They Work
 
-    1. **Crea una alerta** con tus parámetros
-    2. **Automático**: Las alertas se verifican cuando calculas un DCF
-    3. **Manual**: Usa el botón "Verificar Todas las Alertas" para check inmediato
-    4. **Notificación**: Las alertas disparadas aparecen arriba en rojo
+    1. **Create an alert** with your parameters
+    2. **Automatic**: Alerts are verified when you calculate a DCF
+    3. **Manual**: Use the "Verify All Alerts" button for immediate check
+    4. **Notification**: Triggered alerts appear at the top in red
 
-    ### Mejores Prácticas
+    ### Best Practices
 
-    - ✅ Usa alertas de precio para estrategias de entrada/salida
-    - ✅ Usa alertas de cambio de upside para detectar oportunidades
-    - ✅ Revisa alertas disparadas regularmente
-    - ✅ Elimina alertas antiguas o irrelevantes
+    - ✅ Use price alerts for entry/exit strategies
+    - ✅ Use upside change alerts to detect opportunities
+    - ✅ Review triggered alerts regularly
+    - ✅ Delete old or irrelevant alerts
 
-    ### Exportar Datos
+    ### Export Data
 
-    Puedes exportar todas tus alertas a CSV para análisis en Excel.
+    You can export all your alerts to CSV for analysis in Excel.
     """)

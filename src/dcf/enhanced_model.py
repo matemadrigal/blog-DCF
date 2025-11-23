@@ -774,61 +774,61 @@ class ScenarioAnalyzer:
             # Risk-adjusted recommendation logic
             if weighted_upside > 25 and pessimistic_upside > 0:
                 recommendation = "STRONG BUY"
-                confidence = "Alta"
+                confidence = "High"
                 reasoning = (
-                    f"Todos los escenarios muestran upside positivo. "
-                    f"Incluso en el escenario pesimista hay {pessimistic_upside:.1f}% de potencial. "
-                    f"El valor ponderado sugiere {weighted_upside:.1f}% de upside."
+                    f"All scenarios show positive upside. "
+                    f"Even in the pessimistic scenario there is {pessimistic_upside:.1f}% potential. "
+                    f"The weighted value suggests {weighted_upside:.1f}% upside."
                 )
                 color = "#00CC00"
 
             elif weighted_upside > 15 and pessimistic_upside > -10:
                 recommendation = "BUY"
-                confidence = "Media-Alta"
+                confidence = "Medium-High"
                 reasoning = (
-                    f"El valor ponderado sugiere {weighted_upside:.1f}% de upside. "
-                    f"El riesgo a la baja es limitado ({abs(pessimistic_upside):.1f}% en escenario pesimista). "
-                    f"Relación riesgo/retorno favorable."
+                    f"The weighted value suggests {weighted_upside:.1f}% upside. "
+                    f"Downside risk is limited ({abs(pessimistic_upside):.1f}% in pessimistic scenario). "
+                    f"Favorable risk/return relationship."
                 )
                 color = "#66CC66"
 
             elif weighted_upside > 5:
                 recommendation = "HOLD"
-                confidence = "Media"
+                confidence = "Medium"
                 reasoning = (
-                    f"Potencial moderado de {weighted_upside:.1f}%. "
-                    f"El escenario pesimista muestra {pessimistic_upside:.1f}% de cambio. "
-                    f"Relación riesgo/retorno equilibrada."
+                    f"Moderate potential of {weighted_upside:.1f}%. "
+                    f"The pessimistic scenario shows {pessimistic_upside:.1f}% change. "
+                    f"Balanced risk/return relationship."
                 )
                 color = "#FFB366"
 
             elif weighted_upside > -5:
                 recommendation = "HOLD"
-                confidence = "Baja"
+                confidence = "Low"
                 reasoning = (
-                    f"Valor cercano al precio actual ({weighted_upside:+.1f}%). "
-                    f"Alta incertidumbre con rango de {range_percentage:.1f}% entre escenarios. "
-                    f"Se recomienda esperar más claridad."
+                    f"Value close to current price ({weighted_upside:+.1f}%). "
+                    f"High uncertainty with {range_percentage:.1f}% range between scenarios. "
+                    f"Waiting for more clarity is recommended."
                 )
                 color = "#FF9933"
 
             elif pessimistic_upside < -15:
                 recommendation = "STRONG SELL"
-                confidence = "Alta"
+                confidence = "High"
                 reasoning = (
-                    f"Riesgo significativo a la baja. "
-                    f"El escenario pesimista muestra {pessimistic_upside:.1f}% de caída potencial. "
-                    f"El valor ponderado está {abs(weighted_upside):.1f}% por debajo del precio actual."
+                    f"Significant downside risk. "
+                    f"The pessimistic scenario shows {pessimistic_upside:.1f}% potential decline. "
+                    f"The weighted value is {abs(weighted_upside):.1f}% below the current price."
                 )
                 color = "#CC0000"
 
             else:
                 recommendation = "SELL"
-                confidence = "Media"
+                confidence = "Medium"
                 reasoning = (
-                    f"Sobrevaloración de {abs(weighted_upside):.1f}% según valor ponderado. "
-                    f"El riesgo supera el potencial de retorno. "
-                    f"Se recomienda reducir exposición."
+                    f"Overvaluation of {abs(weighted_upside):.1f}% according to weighted value. "
+                    f"Risk exceeds return potential. "
+                    f"Reducing exposure is recommended."
                 )
                 color = "#FF3333"
 
