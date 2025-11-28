@@ -112,53 +112,66 @@ intelligent_selector = get_intelligent_selector()
 alert_system = get_alert_system()
 
 
-# Sidebar inputs
-st.sidebar.header("Selección de Company")
+# ============================================
+# COMPANY SELECTION - MOVED TO MAIN PAGE
+# ============================================
+st.markdown("### 📊 Company Selection")
 
 # Company selection mode
-selection_mode = st.sidebar.radio(
-    "Modo de selección",
+selection_mode = st.radio(
+    "Selection Mode",
     ["Manual search", "List with filters"],
     help="Choose how you want to select the company",
+    horizontal=True,
+    key="selection_mode_main"
 )
 
 if selection_mode == "Manual search":
     # Original text input
-    ticker = st.sidebar.text_input("Ticker (Yahoo Finance)", value="AAPL").upper()
+    ticker = st.text_input("Ticker (Yahoo Finance)", value="AAPL", key="ticker_input_main").upper()
 
 else:
     # List with filters
-    st.sidebar.subheader("Filtros")
+    st.markdown("#### Filters")
+    
+    col_filter1, col_filter2, col_filter3, col_filter4 = st.columns(4)
 
     # Get all companies from catalog (374+ companies)
     companies = catalog.get_all_companies()
     all_sectors = catalog.get_sectors()
 
-    # Search filter
-    search_query = st.sidebar.text_input(
-        "🔍 Buscar",
-        placeholder="Ej: Apple, MSFT, Tech...",
-        help="Search by ticker or company name",
-    )
+    with col_filter1:
+        # Search filter
+        search_query = st.text_input(
+            "🔍 Search",
+            placeholder="Ej: Apple, MSFT, Tech...",
+            help="Search by ticker or company name",
+            key="search_query_main"
+        )
 
-    # Sector filter
-    sector_filter = st.sidebar.selectbox(
-        "Sector", ["All"] + all_sectors, help="Filter by sector"
-    )
+    with col_filter2:
+        # Sector filter
+        sector_filter = st.selectbox(
+            "Sector", ["All"] + all_sectors, help="Filter by sector", key="sector_filter_main"
+        )
 
-    # Alphabetical filter
-    alpha_filter = st.sidebar.selectbox(
-        "Letra inicial",
-        ["Todas"] + list("ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
-        help="Filter by first letter of ticker",
-    )
+    with col_filter3:
+        # Alphabetical filter
+        alpha_filter = st.selectbox(
+            "First Letter",
+            ["All"] + list("ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+            help="Filter by first letter of ticker",
+            key="alpha_filter_main"
+        )
 
-    # FCF sorting
-    fcf_sort = st.sidebar.selectbox(
-        "Sort by FCF",
-        ["Unsorted", "Highest FCF", "Lowest FCF"],
-        help="Sort companies by their base year FCF",
-    )
+    with col_filter4:
+        # FCF sorting
+        fcf_sort = st.selectbox(
+            "Sort by FCF",
+            ["Unsorted", "Highest FCF", "Lowest FCF"],
+            help="Sort companies by their base year FCF",
+            key="fcf_sort_main"
+        )
 
     # Apply filters
     filtered_companies = companies.copy()
@@ -182,18 +195,18 @@ else:
         ]
 
     # Alphabetical filter
-    if alpha_filter != "Todas":
+    if alpha_filter != "All":
         filtered_companies = [
             c for c in filtered_companies if c["ticker"].startswith(alpha_filter)
         ]
 
     # FCF sorting
-    if fcf_sort != "Sin ordenar":
+    if fcf_sort != "Unsorted":
         # Scan companies if needed
-        if st.sidebar.button("🔄 Update FCF of filtered companies"):
+        if st.button("🔄 Update FCF of filtered companies", key="update_fcf_main"):
             with st.spinner(f"Scanning {len(filtered_companies)} companies..."):
-                progress_bar = st.sidebar.progress(0)
-                status_text = st.sidebar.empty()
+                progress_bar = st.progress(0)
+                status_text = st.empty()
 
                 def progress_callback(current, total, ticker):
                     progress_bar.progress(current / total)
@@ -204,7 +217,7 @@ else:
 
                 progress_bar.empty()
                 status_text.empty()
-                st.sidebar.success(f"✅ {len(filtered_companies)} companies scanned")
+                st.success(f"✅ {len(filtered_companies)} companies scanned")
 
         # Add FCF to companies
         for company in filtered_companies:
@@ -218,7 +231,7 @@ else:
             filtered_companies.sort(key=lambda x: x.get("fcf", 0))
 
     # Display filtered companies
-    st.sidebar.markdown(f"**{len(filtered_companies)} companies found**")
+    st.markdown(f"**{len(filtered_companies)} companies found**")
 
     # Create display options
     display_options = []
@@ -232,186 +245,17 @@ else:
         display_options.append(display_text)
 
     if display_options:
-        selected_display = st.sidebar.selectbox(
-            "Select company", display_options, help="List of filtered companies"
+        selected_display = st.selectbox(
+            "Select company", display_options, help="List of filtered companies", key="company_select_main"
         )
 
         # Extract ticker from selection
         ticker = selected_display.split(" - ")[0]
     else:
-        st.sidebar.warning("⚠️ No companies found with these filters")
+        st.warning("⚠️ No companies found with these filters")
         ticker = "AAPL"
 
-st.sidebar.markdown("---")
-st.sidebar.subheader("DCF Parameters")
-
-# Data source selection
-available_providers = aggregator.get_available_providers()
-if len(available_providers) > 1:
-    st.sidebar.info(f"📡 Fuentes disponibles: {', '.join(available_providers)}")
-    data_strategy = st.sidebar.selectbox(
-        "Estrategia de datos",
-        ["best_quality", "first_available", "merge"],
-        format_func=lambda x: {
-            "best_quality": "Best Quality",
-            "first_available": "Primera Disponible",
-            "merge": "Combinar Fuentes",
-        }[x],
-        help="best_quality: Compara todas las fuentes y elige la mejor\nfirst_available: Usa la primera que funcione\nmerge: Combina datos de múltiples fuentes",
-    )
-else:
-    data_strategy = "first_available"
-    st.sidebar.info(
-        f"📡 Usando: {available_providers[0] if available_providers else 'Yahoo Finance'}"
-    )
-
-# ✅ INTELLIGENT MODE: System automatically selects best options
-# No need for user to choose Manual/Autocompletar/Multi-fuente
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 🤖 Configuración Inteligente")
-st.sidebar.info(
-    """
-**El sistema selecciona automáticamente:**
-- ✅ Mejor fuente de datos disponible
-- ✅ Método óptimo de cálculo
-- ✅ WACC dinámico con CAPM
-- ✅ Terminal growth por empresa
-- ✅ Normalización si es necesaria
-
-*No manual configuration required.*
-"""
-)
-
-# Advanced options (collapsed by default)
-with st.sidebar.expander("⚙️ Opciones Avanzadas (opcional)"):
-    st.caption("The system uses optimal default values")
-
-    # WACC calculation method
-    st.markdown("### 🎯 Método de Cálculo WACC")
-    st.markdown(
-        """
-        El WACC (Weighted Average Cost of Capital) es la tasa de descuento que se usa
-        para calcular el valor presente de los flujos de caja futuros.
-        """
-    )
-
-    wacc_method = st.radio(
-        "Select calculation method:",
-        ["company_specific", "industry_damodaran", "custom"],
-        format_func=lambda x: {
-            "company_specific": "🔬 Calculated per company (CAPM)",
-            "industry_damodaran": "🏭 Promedio de industria (Damodaran)",
-            "custom": "✏️ Manual (custom)",
-        }[x],
-        index=0,  # Default: company_specific
-    )
-
-    # Show detailed explanation based on selection
-    if wacc_method == "company_specific":
-        st.info(
-            """
-            **🔬 WACC Calculado (Método CAPM)**
-
-            Calculates company-specific WACC using:
-            - Beta de la acción (riesgo sistemático)
-            - Estructura de capital real (deuda/equity)
-            - Cost of equity (CAPM): Re = Rf + β × (Rm - Rf)
-            - Cost of debt con tax shield
-            - Adjustments for high beta growth companies
-
-            ✅ **Recommended**: For detailed analysis of individual companies
-            """
-        )
-    elif wacc_method == "industry_damodaran":
-        st.info(
-            """
-            **🏭 WACC Industria (Datos Damodaran)**
-
-            Usa el WACC promedio del sector según Aswath Damodaran (NYU Stern):
-            - Basado en promedios de industria actualizados
-            - Considera características típicas del sector
-            - Útil para comparación y benchmarking
-
-            ✅ **Recomendado**: Para comparación rápida o cuando faltan datos específicos
-            ⚠️  **Nota**: Para financieros se usa automáticamente (la deuda es parte del negocio)
-            """
-        )
-    else:  # custom
-        st.info(
-            """
-            **✏️ Manual WACC**
-
-            Ingresa tu propio valor de WACC si:
-            - Tienes una estimación propia
-            - You want to test different scenarios
-            - Tienes información privilegiada del costo de capital
-
-            ⚠️ Asegúrate de que WACC > terminal growth (mínimo 4pp de diferencia)
-            """
-        )
-
-    custom_wacc = None
-    if wacc_method == "custom":
-        custom_wacc = st.number_input(
-            "WACC personalizado",
-            min_value=0.01,
-            max_value=0.30,
-            value=0.08,
-            step=0.01,
-            format="%.2f",
-        )
-
-    # Allow override of terminal growth
-    use_custom_g = st.checkbox("Personalizar terminal growth", value=False)
-    custom_g = None
-    if use_custom_g:
-        custom_g = st.number_input(
-            "Terminal growth personalizado",
-            min_value=0.01,
-            max_value=0.10,
-            value=0.035,
-            step=0.005,
-            format="%.3f",
-        )
-
-# Set intelligent defaults (always use best model)
-use_enhanced_model = True  # Always use Enhanced DCF
-use_dynamic_wacc = True if wacc_method != "custom" else False
-use_industry_wacc = True if wacc_method == "industry_damodaran" else False
-normalize_fcf = True  # Always normalize FCF base by default
-normalization_method = "weighted_average"  # Default normalization method
-
-years = st.sidebar.number_input(
-    "Projection years", min_value=1, max_value=20, value=10  # Changed from 5 to 10
-)
-
-# Handle WACC based on selected method
-if wacc_method == "custom":
-    r = custom_wacc
-else:
-    r = None  # Will be calculated dynamically
-
-# Terminal growth
-if use_custom_g:
-    g = custom_g
-else:
-    g = 0.035  # Default, will be overridden by intelligent calculation
-
-# Store shares input in session state to persist user changes
-if "shares_input" not in st.session_state:
-    st.session_state.shares_input = 0
-
-shares_input = st.sidebar.number_input(
-    "Shares outstanding",
-    min_value=0,
-    value=st.session_state.shares_input,
-    help="Leave at 0 to auto-complete (diluted shares). You can enter the value manually.",
-    key="shares_input_widget",
-)
-
-# Update session state when user changes value
-if shares_input != st.session_state.shares_input:
-    st.session_state.shares_input = shares_input
+st.markdown("---")
 
 
 # Data fetching
@@ -578,7 +422,19 @@ if df_prices.empty:
 current_price = float(df_prices["Close"].iloc[-1])
 company_name = info.get("longName", ticker)
 
+# Helper function to format price with full precision
+def format_price_full(price):
+    """Format price to show all significant digits"""
+    if price >= 1000:
+        return f"${price:,.2f}"
+    elif price >= 1:
+        return f"${price:.4f}"
+    else:
+        return f"${price:.6f}"
+
 # Get shares outstanding with robust fallback
+# shares_input will be defined in the parameters section below
+shares_input = st.session_state.get("shares_input", 0)
 shares, shares_source = get_shares_outstanding(ticker, shares_input)
 
 # Get balance sheet data (cash, debt) with robust fallback
@@ -589,7 +445,7 @@ col1, col2, col3 = st.columns([2, 1, 1])
 with col1:
     st.subheader(f"{company_name} ({ticker})")
 with col2:
-    st.metric("Current Price", f"${current_price:.2f}")
+    st.metric("Current Price", format_price_full(current_price))
 with col3:
     if shares > 0:
         st.metric(
@@ -600,29 +456,336 @@ with col3:
     else:
         st.error("⚠️ No shares data")
 
-# Show data sources in an expander
-with st.expander("📊 View data sources"):
-    st.markdown("**Shares Outstanding:**")
-    st.caption(f"✓ {shares_source}")
-    if shares > 0:
-        st.caption(f"  Valor: {shares:,}")
+# ============================================
+# PARAMETERS SECTION - MOVED FROM SIDEBAR
+# ============================================
+st.markdown("---")
+st.markdown("### ⚙️ DCF Parameters Configuration")
 
-    st.markdown("**Balance Sheet:**")
-    st.caption(f"✓ Cash: {balance_sources['cash']}")
-    st.caption(
-        f"  Valor: ${cash/1e9:.2f}B" if cash > 1e9 else f"  Valor: ${cash/1e6:.2f}M"
+# Create tabs for better organization
+param_tabs = st.tabs(["📊 Basic Parameters", "🎯 WACC Settings", "📈 Growth & Projections", "💼 Company Data"])
+
+with param_tabs[0]:  # Basic Parameters
+    col_years, col_shares = st.columns(2)
+    
+    with col_years:
+        # Use session state to persist years value
+        if "years_value" not in st.session_state:
+            st.session_state.years_value = 10
+        
+        years = st.number_input(
+            "Projection Years",
+            min_value=1,
+            max_value=20,
+            value=st.session_state.years_value,
+            help="Number of years for FCF projections",
+            key="years_input_main"
+        )
+        
+        # Update session state
+        st.session_state.years_value = years
+    
+    with col_shares:
+        # Store shares input in session state to persist user changes
+        if "shares_input" not in st.session_state:
+            st.session_state.shares_input = 0
+        
+        shares_input = st.number_input(
+            "Shares Outstanding",
+            min_value=0,
+            value=st.session_state.shares_input,
+            help="Leave at 0 to auto-complete (diluted shares). You can enter the value manually.",
+            key="shares_input_main",
+        )
+        
+        # Update session state when user changes value
+        if shares_input != st.session_state.shares_input:
+            st.session_state.shares_input = shares_input
+    
+    # Data source selection
+    available_providers = aggregator.get_available_providers()
+    if len(available_providers) > 1:
+        st.info(f"📡 Available sources: {', '.join(available_providers)}")
+        data_strategy = st.selectbox(
+            "Data Strategy",
+            ["best_quality", "first_available", "merge"],
+            format_func=lambda x: {
+                "best_quality": "Best Quality",
+                "first_available": "First Available",
+                "merge": "Merge Sources",
+            }[x],
+            help="best_quality: Compare all sources and choose the best\nfirst_available: Use the first that works\nmerge: Combine data from multiple sources",
+            key="data_strategy_main"
+        )
+    else:
+        data_strategy = "first_available"
+        st.info(
+            f"📡 Using: {available_providers[0] if available_providers else 'Yahoo Finance'}"
+        )
+
+with param_tabs[1]:  # WACC Settings
+    st.markdown("### 🎯 WACC Calculation Method")
+    st.markdown(
+        """
+        The WACC (Weighted Average Cost of Capital) is the discount rate used
+        to calculate the present value of future cash flows.
+        """
     )
-    st.caption(f"✓ Debt: {balance_sources['debt']}")
-    st.caption(
-        f"  Valor: ${total_debt/1e9:.2f}B"
-        if total_debt > 1e9
-        else f"  Valor: ${total_debt/1e6:.2f}M"
+    
+    # Initialize wacc_method in session state if not exists
+    if "wacc_method_value" not in st.session_state:
+        st.session_state.wacc_method_value = "company_specific"
+    
+    # Get current wacc_method from session state
+    current_wacc_index = 0
+    if st.session_state.wacc_method_value == "industry_damodaran":
+        current_wacc_index = 1
+    elif st.session_state.wacc_method_value == "custom":
+        current_wacc_index = 2
+    
+    wacc_method = st.radio(
+        "Select calculation method:",
+        ["company_specific", "industry_damodaran", "custom"],
+        format_func=lambda x: {
+            "company_specific": "🔬 Calculated per company (CAPM)",
+            "industry_damodaran": "🏭 Industry average (Damodaran)",
+            "custom": "✏️ Manual (custom)",
+        }[x],
+        index=current_wacc_index,
+        key="wacc_method_main"
     )
+    
+    # Update session state
+    st.session_state.wacc_method_value = wacc_method
+    
+    # Show detailed explanation based on selection
+    if wacc_method == "company_specific":
+        st.info(
+            """
+            **🔬 Company-Specific WACC (CAPM Method)**
+            
+            Calculates company-specific WACC using:
+            - Stock beta (systematic risk)
+            - Real capital structure (debt/equity)
+            - Cost of equity (CAPM): Re = Rf + β × (Rm - Rf)
+            - Cost of debt with tax shield
+            - Adjustments for high beta growth companies
+            
+            ✅ **Recommended**: For detailed analysis of individual companies
+            """
+        )
+    elif wacc_method == "industry_damodaran":
+        st.info(
+            """
+            **🏭 Industry WACC (Damodaran Data)**
+            
+            Uses the industry average WACC according to Aswath Damodaran (NYU Stern):
+            - Based on updated industry averages
+            - Considers typical sector characteristics
+            - Useful for comparison and benchmarking
+            
+            ✅ **Recommended**: For quick comparison or when specific data is missing
+            ⚠️  **Note**: For financial companies, it's used automatically (debt is part of the business)
+            """
+        )
+    else:  # custom
+        st.info(
+            """
+            **✏️ Manual WACC**
+            
+            Enter your own WACC value if:
+            - You have your own estimate
+            - You want to test different scenarios
+            - You have privileged information about the cost of capital
+            
+            ⚠️ Make sure WACC > terminal growth (minimum 4pp difference)
+            """
+        )
+    
+    # Initialize custom_wacc in session state if not exists
+    if "custom_wacc_value" not in st.session_state:
+        st.session_state.custom_wacc_value = None
+    
+    if wacc_method == "custom":
+        custom_wacc = st.number_input(
+            "Custom WACC",
+            min_value=0.01,
+            max_value=0.30,
+            value=st.session_state.custom_wacc_value if st.session_state.custom_wacc_value else 0.08,
+            step=0.01,
+            format="%.2f",
+            key="custom_wacc_main"
+        )
+        st.session_state.custom_wacc_value = custom_wacc
+        r = custom_wacc
+    else:
+        r = None  # Will be calculated dynamically
+    
+    use_dynamic_wacc = True if wacc_method != "custom" else False
+    use_industry_wacc = True if wacc_method == "industry_damodaran" else False
+    
+    # Store in session state for later use
+    st.session_state.use_dynamic_wacc = use_dynamic_wacc
+    st.session_state.use_industry_wacc = use_industry_wacc
+
+with param_tabs[2]:  # Growth & Projections
+    st.markdown("### 📈 Terminal Growth Settings")
+    
+    # Initialize use_custom_g in session state if not exists
+    if "use_custom_g_value" not in st.session_state:
+        st.session_state.use_custom_g_value = False
+    
+    use_custom_g = st.checkbox("Customize terminal growth", value=st.session_state.use_custom_g_value, key="use_custom_g_main")
+    st.session_state.use_custom_g_value = use_custom_g
+    
+    # Initialize custom_g in session state if not exists
+    if "custom_g_value" not in st.session_state:
+        st.session_state.custom_g_value = 0.035
+    
+    if use_custom_g:
+        custom_g = st.number_input(
+            "Custom Terminal Growth",
+            min_value=0.01,
+            max_value=0.10,
+            value=st.session_state.custom_g_value,
+            step=0.005,
+            format="%.3f",
+            help="Terminal growth rate (g) for perpetuity calculation",
+            key="custom_g_main"
+        )
+        st.session_state.custom_g_value = custom_g
+        g = custom_g
+    else:
+        g = 0.035  # Default, will be overridden by intelligent calculation
+    
+    st.markdown("---")
+    st.markdown("### 📊 Normalization Settings")
+    
+    # Initialize normalize_fcf in session state if not exists
+    if "normalize_fcf_value" not in st.session_state:
+        st.session_state.normalize_fcf_value = True
+    
+    normalize_fcf = st.checkbox(
+        "Normalize FCF",
+        value=st.session_state.normalize_fcf_value,
+        help="Normalize base FCF if historical data shows volatility",
+        key="normalize_fcf_main"
+    )
+    st.session_state.normalize_fcf_value = normalize_fcf
+    
+    # Initialize normalization_method in session state if not exists
+    if "normalization_method_value" not in st.session_state:
+        st.session_state.normalization_method_value = "weighted_average"
+    
+    if normalize_fcf:
+        current_norm_index = 0
+        if st.session_state.normalization_method_value == "median":
+            current_norm_index = 1
+        elif st.session_state.normalization_method_value == "average":
+            current_norm_index = 2
+        
+        normalization_method = st.selectbox(
+            "Normalization Method",
+            ["weighted_average", "median", "average"],
+            format_func=lambda x: {
+                "weighted_average": "Weighted Average (Recommended)",
+                "median": "Median",
+                "average": "Simple Average",
+            }[x],
+            index=current_norm_index,
+            key="normalization_method_main"
+        )
+        st.session_state.normalization_method_value = normalization_method
+    else:
+        normalization_method = None
+
+with param_tabs[3]:  # Company Data
+    st.markdown("### 💼 Company Information")
+    
+    # Show data sources
+    with st.expander("📊 View data sources", expanded=False):
+        st.markdown("**Shares Outstanding:**")
+        st.caption(f"✓ {shares_source}")
+        if shares > 0:
+            st.caption(f"  Value: {shares:,}")
+        
+        st.markdown("**Balance Sheet:**")
+        st.caption(f"✓ Cash: {balance_sources['cash']}")
+        st.caption(
+            f"  Value: ${cash/1e9:.2f}B" if cash > 1e9 else f"  Value: ${cash/1e6:.2f}M"
+        )
+        st.caption(f"✓ Debt: {balance_sources['debt']}")
+        st.caption(
+            f"  Value: ${total_debt/1e9:.2f}B"
+            if total_debt > 1e9
+            else f"  Value: ${total_debt/1e6:.2f}M"
+        )
+    
+    st.markdown("---")
+    st.markdown("### 🤖 Intelligent Configuration")
+    st.info(
+        """
+        **The system automatically selects:**
+        - ✅ Best available data source
+        - ✅ Optimal calculation method
+        - ✅ Dynamic WACC with CAPM
+        - ✅ Company-specific terminal growth
+        - ✅ Normalization if needed
+        
+        *Advanced options available above for customization.*
+        """
+    )
+
+# Set intelligent defaults
+use_enhanced_model = True  # Always use Enhanced DCF
+data_strategy = "first_available"
+
+# Initialize session state variables with defaults
+if "years_value" not in st.session_state:
+    st.session_state.years_value = 10
+if "wacc_method_value" not in st.session_state:
+    st.session_state.wacc_method_value = "company_specific"
+if "custom_wacc_value" not in st.session_state:
+    st.session_state.custom_wacc_value = None
+if "use_custom_g_value" not in st.session_state:
+    st.session_state.use_custom_g_value = False
+if "custom_g_value" not in st.session_state:
+    st.session_state.custom_g_value = 0.035
+if "normalize_fcf_value" not in st.session_state:
+    st.session_state.normalize_fcf_value = True
+if "normalization_method_value" not in st.session_state:
+    st.session_state.normalization_method_value = "weighted_average"
+if "use_dynamic_wacc" not in st.session_state:
+    st.session_state.use_dynamic_wacc = True
+if "use_industry_wacc" not in st.session_state:
+    st.session_state.use_industry_wacc = False
 
 
 # FCF Input Section
 st.markdown("---")
 st.subheader("📊 Free Cash Flow Projections")
+
+# Get values from session state (updated in the tabs above)
+years = st.session_state.years_value
+wacc_method = st.session_state.get("wacc_method_value", "company_specific")
+use_custom_g = st.session_state.get("use_custom_g_value", False)
+custom_g = st.session_state.get("custom_g_value", 0.035)
+normalize_fcf = st.session_state.get("normalize_fcf_value", True)
+normalization_method = st.session_state.get("normalization_method_value", "weighted_average")
+use_dynamic_wacc = st.session_state.get("use_dynamic_wacc", True)
+use_industry_wacc = st.session_state.get("use_industry_wacc", False)
+
+# Set r based on wacc_method
+if wacc_method == "custom":
+    r = st.session_state.get("custom_wacc_value", 0.08)
+else:
+    r = None  # Will be calculated dynamically
+
+# Set g based on use_custom_g
+if use_custom_g:
+    g = custom_g
+else:
+    g = 0.035  # Default, will be overridden by intelligent calculation
 
 # ✅ INTELLIGENT FCF FETCH: System automatically selects best source
 with st.spinner("🤖 Seleccionando mejor fuente de datos disponible..."):
@@ -853,93 +1016,102 @@ try:
             g = g_calculated  # Use calculated value when not customized
         # else: g already has custom value from user input
 
-        # Display WACC breakdown
-        st.sidebar.markdown("---")
-
-        # Show WACC method being used with clear header
-        if wacc_components.get("using_industry_wacc"):
-            st.sidebar.markdown("### 🏭 WACC Industria (Damodaran)")
-            st.sidebar.success(f"📊 Sector: {wacc_components['industry']}")
-        elif wacc_method == "company_specific":
-            st.sidebar.markdown("### 🔬 WACC Calculado (CAPM)")
-            if wacc_components.get("sector"):
-                st.sidebar.info(f"📊 Sector: {wacc_components['sector']}")
-        else:
-            st.sidebar.markdown("### ✏️ WACC Personalizado")
-
-        # Show WACC value prominently
-        st.sidebar.metric(
-            "WACC (Discount Rate)",
-            f"{r:.2%}",
-            help="Weighted Average Cost of Capital - Rate used to discount future cash flows",
-        )
-
-        # Show components based on method
-        if wacc_components.get("using_industry_wacc"):
-            # Industry WACC components
-            st.sidebar.caption(f"• Beta Industria: {wacc_components['beta']:.2f}")
-            st.sidebar.caption(
-                f"• Cost of Equity: {wacc_components['cost_of_equity']:.2%}"
+        # Display WACC breakdown in main page
+        st.markdown("---")
+        st.markdown("### 🎯 WACC & Terminal Growth Details")
+        
+        wacc_col1, wacc_col2, wacc_col3 = st.columns(3)
+        
+        with wacc_col1:
+            # Show WACC method being used with clear header
+            if wacc_components.get("using_industry_wacc"):
+                st.markdown("**🏭 Industry WACC (Damodaran)**")
+                st.success(f"📊 Sector: {wacc_components['industry']}")
+            elif wacc_method == "company_specific":
+                st.markdown("**🔬 Company-Specific WACC (CAPM)**")
+                if wacc_components.get("sector"):
+                    st.info(f"📊 Sector: {wacc_components['sector']}")
+            else:
+                st.markdown("**✏️ Custom WACC**")
+            
+            # Show WACC value prominently
+            st.metric(
+                "WACC (Discount Rate)",
+                f"{r:.2%}",
+                help="Weighted Average Cost of Capital - Rate used to discount future cash flows",
             )
-            st.sidebar.caption(
-                f"• Estructura Capital: E/V {wacc_components['equity_weight']:.1%} | D/V {wacc_components['debt_weight']:.1%}"
-            )
-        else:
-            # Company-specific WACC components
-            if wacc_components.get("beta"):
-                st.sidebar.caption(f"• Beta Company: {wacc_components['beta']:.2f}")
-                st.sidebar.caption(
-                    f"• Cost of Equity (Re): {wacc_components['cost_of_equity']:.2%}"
+        
+        with wacc_col2:
+            st.markdown("**📈 Terminal Growth (g)**")
+            st.metric("Terminal Growth", f"{g:.2%}")
+            
+            # Show if spread was adjusted
+            if terminal_growth_info and terminal_growth_info.get("spread_adjusted"):
+                st.warning(
+                    f"⚠️ Adjusted for spread: {terminal_growth_info['g_before_spread_adjustment']:.2%} → {g:.2%}"
                 )
-                st.sidebar.caption(
-                    f"• Cost of Debt (Rd): {wacc_components['cost_of_debt']:.2%}"
+                st.caption("(Minimum spread: 4.0pp)")
+        
+        with wacc_col3:
+            # Show if WACC floor was applied
+            if wacc_components and wacc_components.get("floor_applied"):
+                st.warning(
+                    f"⚠️ WACC floor applied: {wacc_components['wacc_before_floor']:.2%} → {r:.2%}"
                 )
-                st.sidebar.caption(
-                    f"• After-tax Rd: {wacc_components['after_tax_cost_of_debt']:.2%}"
+                st.caption(
+                    f"(Floor {wacc_components['sector']}: {wacc_components['wacc_floor']:.2%})"
                 )
-                st.sidebar.caption(
-                    f"• Estructura Capital: E/V {wacc_components['equity_weight']:.1%} | D/V {wacc_components['debt_weight']:.1%}"
+        
+        # Show WACC components in expander
+        with st.expander("🔍 View WACC Components & Details", expanded=False):
+            if wacc_components.get("using_industry_wacc"):
+                # Industry WACC components
+                st.markdown("**Industry WACC Components:**")
+                st.caption(f"• Industry Beta: {wacc_components['beta']:.2f}")
+                st.caption(
+                    f"• Cost of Equity: {wacc_components['cost_of_equity']:.2%}"
                 )
-
-                # Show comparison with industry WACC
-                if wacc_components.get("industry_wacc"):
-                    diff = (r - wacc_components["industry_wacc"]) * 100
-                    st.sidebar.markdown("---")
-                    st.sidebar.markdown("**📊 Comparación con Industria:**")
-                    st.sidebar.metric(
-                        f"WACC Industria ({wacc_components.get('industry', 'Sector')})",
-                        f"{wacc_components['industry_wacc']:.2%}",
-                        delta=f"{diff:+.1f}pp",
-                        delta_color="inverse",
-                        help="Diferencia: WACC empresa vs promedio industria",
+                st.caption(
+                    f"• Capital Structure: E/V {wacc_components['equity_weight']:.1%} | D/V {wacc_components['debt_weight']:.1%}"
+                )
+            else:
+                # Company-specific WACC components
+                if wacc_components.get("beta"):
+                    st.markdown("**Company-Specific WACC Components:**")
+                    st.caption(f"• Company Beta: {wacc_components['beta']:.2f}")
+                    st.caption(
+                        f"• Cost of Equity (Re): {wacc_components['cost_of_equity']:.2%}"
                     )
-
-        # Show terminal growth calculation
-        st.sidebar.markdown("---")
-        st.sidebar.markdown("**📈 Terminal Growth (g)**")
-        st.sidebar.metric("Terminal Growth", f"{g:.2%}")
-
-        # Show if spread was adjusted
-        if terminal_growth_info and terminal_growth_info.get("spread_adjusted"):
-            st.sidebar.warning(
-                f"⚠️ Ajustado por spread: {terminal_growth_info['g_before_spread_adjustment']:.2%} → {g:.2%}"
-            )
-            st.sidebar.caption("(Spread mínimo: 4.0pp)")
-
-        # Show if WACC floor was applied
-        if wacc_components and wacc_components.get("floor_applied"):
-            st.sidebar.warning(
-                f"⚠️ WACC floor aplicado: {wacc_components['wacc_before_floor']:.2%} → {r:.2%}"
-            )
-            st.sidebar.caption(
-                f"(Floor {wacc_components['sector']}: {wacc_components['wacc_floor']:.2%})"
-            )
-
-        if (
-            terminal_growth_info
-            and terminal_growth_info.get("method") == "company_specific"
-        ):
-            with st.sidebar.expander("🔍 View detailed calculation"):
+                    st.caption(
+                        f"• Cost of Debt (Rd): {wacc_components['cost_of_debt']:.2%}"
+                    )
+                    st.caption(
+                        f"• After-tax Rd: {wacc_components['after_tax_cost_of_debt']:.2%}"
+                    )
+                    st.caption(
+                        f"• Capital Structure: E/V {wacc_components['equity_weight']:.1%} | D/V {wacc_components['debt_weight']:.1%}"
+                    )
+                    
+                    # Show comparison with industry WACC
+                    if wacc_components.get("industry_wacc"):
+                        diff = (r - wacc_components["industry_wacc"]) * 100
+                        st.markdown("---")
+                        st.markdown("**📊 Industry Comparison:**")
+                        st.metric(
+                            f"Industry WACC ({wacc_components.get('industry', 'Sector')})",
+                            f"{wacc_components['industry_wacc']:.2%}",
+                            delta=f"{diff:+.1f}pp",
+                            delta_color="inverse",
+                            help="Difference: Company WACC vs industry average",
+                        )
+            
+            # Terminal growth details
+            if (
+                terminal_growth_info
+                and terminal_growth_info.get("method") == "company_specific"
+            ):
+                st.markdown("---")
+                st.markdown("**📈 Terminal Growth Calculation:**")
                 st.markdown(terminal_growth_info["justification"])
 
     # Comprehensive input validation
@@ -1337,7 +1509,7 @@ try:
                 )
 
         with col3:
-            st.metric("Market Price", f"${current_price:.2f}")
+            st.metric("Market Price", format_price_full(current_price))
 
         with col4:
             if fair_value_per_share > 0:
@@ -2087,7 +2259,7 @@ try:
             else:
                 st.info("Añade shares outstanding")
         with col4:
-            st.metric("Market Price", f"${current_price:.2f}")
+            st.metric("Market Price", format_price_full(current_price))
         with col5:
             if fair_value_per_share > 0:
                 upside = ((fair_value_per_share - current_price) / current_price) * 100
@@ -2226,7 +2398,7 @@ try:
             else:
                 st.info("Añade shares outstanding")
         with col3:
-            st.metric("Market Price", f"${current_price:.2f}")
+            st.metric("Market Price", format_price_full(current_price))
         with col4:
             if fair_value_per_share > 0:
                 upside = ((fair_value_per_share - current_price) / current_price) * 100
