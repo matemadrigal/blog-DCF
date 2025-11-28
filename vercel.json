@@ -1,26 +1,19 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "builds": [
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/next"
-    },
-    {
-      "src": "api/main.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/main.py"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/frontend/$1"
-    }
-  ],
+  "name": "dcf-valuation-platform",
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/.next",
+  "installCommand": "cd frontend && npm install",
+  "devCommand": "cd frontend && npm run dev",
+  "framework": "nextjs",
+  "regions": ["iad1"],
   "env": {
-    "PYTHON_VERSION": "3.11"
+    "NEXT_PUBLIC_API_URL": "@api_url"
+  },
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_API_URL": "@api_url"
+    }
   }
 }

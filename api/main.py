@@ -1,11 +1,12 @@
 """Main FastAPI application for DCF Valuation Platform."""
 
 import logging
+import os
 from datetime import datetime
 from typing import Optional
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -21,6 +22,13 @@ from .models import (
     HistoricalValuation
 )
 from .routers import dcf, companies, dashboard, alerts
+from .middleware import (
+    LoggingMiddleware,
+    ErrorHandlerMiddleware,
+    SecurityHeadersMiddleware,
+    RateLimitMiddleware
+)
+from .exceptions import DCFException
 
 # Setup logging
 from src.utils.logging_config import setup_logging
@@ -51,19 +59,46 @@ app = FastAPI(
     openapi_url="/api/openapi.json"
 )
 
+# Determine allowed origins based on environment
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Next.js dev
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+]
+
+# Add production origins
+if os.getenv("VERCEL_URL"):
+    ALLOWED_ORIGINS.append(f"https://{os.getenv('VERCEL_URL')}")
+
+# Add custom domain if configured
+if os.getenv("PRODUCTION_URL"):
+    ALLOWED_ORIGINS.append(os.getenv("PRODUCTION_URL"))
+
+# Allow all Vercel preview deployments
+ALLOWED_ORIGINS.extend([
+    "https://*.vercel.app",
+    "https://dcf-valuation.vercel.app"
+])
+
 # CORS middleware for Next.js frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # Next.js dev
-        "http://localhost:3001",
-        "https://*.vercel.app",   # Vercel deployments
-        "https://dcf-valuation.vercel.app"  # Production
-    ],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add custom middlewares (order matters!)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(ErrorHandlerMiddleware)
+app.add_middleware(LoggingMiddleware)
+
+# Add rate limiting (100 requests per minute per IP)
+# Disabled in development
+if os.getenv("ENVIRONMENT") == "production":
+    app.add_middleware(RateLimitMiddleware, max_requests=100, window_seconds=60)
 
 
 # Health check endpoint
@@ -112,16 +147,58 @@ app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"]
 app.include_router(alerts.router, prefix="/api/alerts", tags=["Alerts"])
 
 
-# Global exception handler
+# Exception handlers
+@app.exception_handler(DCFException)
+async def dcf_exception_handler(request, exc: DCFException):
+    """Handle custom DCF exceptions."""
+    logger.warning(f"DCF Exception: {exc.message}", extra={"detail": exc.detail})
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=ErrorResponse(
+            error=exc.message,
+            detail=exc.detail
+        ).model_dump()
+    )
+
+
+@app.exception_handler(ValueError)
+async def value_error_handler(request, exc: ValueError):
+    """Handle ValueError exceptions."""
+    logger.warning(f"ValueError: {str(exc)}")
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=ErrorResponse(
+            error="Validation Error",
+            detail=str(exc)
+        ).model_dump()
+    )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request, exc: HTTPException):
+    """Handle HTTP exceptions."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=ErrorResponse(
+            error=exc.detail,
+            detail=None
+        ).model_dump()
+    )
+
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     """Handle unexpected exceptions."""
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
+
+    # Don't expose internal errors in production
+    detail = str(exc) if os.getenv("ENVIRONMENT") != "production" else None
+
     return JSONResponse(
         status_code=500,
         content=ErrorResponse(
             error="Internal Server Error",
-            detail=str(exc)
+            detail=detail
         ).model_dump()
     )
 

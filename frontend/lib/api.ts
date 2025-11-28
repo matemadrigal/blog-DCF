@@ -2,6 +2,8 @@
  * API client for DCF Valuation Platform backend
  */
 
+import { APIError, NetworkError, parseAPIError, retryWithBackoff } from './errors';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export interface DCFCalculationRequest {
@@ -63,28 +65,56 @@ class APIClient {
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
 
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+        signal: options.signal || AbortSignal.timeout(30000), // 30s timeout
+      });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({
-        error: 'Request failed',
-        detail: response.statusText,
-      }));
-      throw new Error(error.detail || error.error || 'Request failed');
+      if (!response.ok) {
+        throw await parseAPIError(response);
+      }
+
+      return response.json();
+    } catch (error) {
+      // Handle network errors
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new NetworkError();
+      }
+
+      // Re-throw API errors
+      if (error instanceof APIError) {
+        throw error;
+      }
+
+      // Handle timeout errors
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new APIError('Request timeout', 408, 'The request took too long to complete');
+      }
+
+      // Unknown error
+      throw new APIError(
+        'Request failed',
+        500,
+        error instanceof Error ? error.message : 'Unknown error'
+      );
     }
+  }
 
-    return response.json();
+  private async requestWithRetry<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    return retryWithBackoff(() => this.request<T>(endpoint, options));
   }
 
   // DCF Endpoints
   async calculateDCF(request: DCFCalculationRequest): Promise<DCFResult> {
-    return this.request<DCFResult>('/api/dcf/calculate', {
+    return this.requestWithRetry<DCFResult>('/api/dcf/calculate', {
       method: 'POST',
       body: JSON.stringify(request),
     });
