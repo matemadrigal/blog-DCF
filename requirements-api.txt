@@ -1,0 +1,22 @@
+# FastAPI and API dependencies
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+python-multipart>=0.0.6
+
+# Existing DCF dependencies
+pandas>=2.2.0
+numpy>=2.0.0
+yfinance>=0.2.36
+plotly>=5.24.0
+scipy>=1.13.0
+statsmodels>=0.14.0
+requests>=2.32.0
+reportlab>=4.0.0
+openpyxl>=3.1.0
+jinja2>=3.1.0
+
+# Development
+pytest>=7.0.0
+httpx>=0.26.0  # For testing FastAPI
