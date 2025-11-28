@@ -74,3 +74,31 @@ MEJORAS_*.md
 .streamlit/secrets.toml
 .streamlit/credentials.toml
 
+# Next.js / Frontend
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/dist/
+frontend/node_modules/
+frontend/.env*.local
+frontend/.vercel
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Vercel
+.vercel
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
