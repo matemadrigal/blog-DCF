@@ -203,31 +203,104 @@ st.markdown("""
 </style>
 
 <script>
-    // Navigation menu functionality
-    document.addEventListener('DOMContentLoaded', function() {
-        // Get current page
-        const currentPath = window.location.pathname;
-        const navLinks = document.querySelectorAll('.navbar-menu a');
+        // Global navigation function - make sure it's available immediately
+        window.navigateToPage = function(page) {
+            const pageMap = {
+                'home': '/',
+                'dashboard': '/2_📊_Dashboard',
+                'analysis': '/1_📈_Análisis_Individual',
+                'compare': '/3_⚖️_Comparador',
+                'historical': '/4_📅_Histórico',
+                'alerts': '/5_🔔_Alertas'
+            };
+            
+            const targetPath = pageMap[page] || '/';
+            const queryString = window.location.search;
+            
+            // Build full path
+            let fullPath = targetPath;
+            if (queryString) {
+                fullPath = fullPath + queryString;
+            }
+            
+            console.log('Navigating to:', fullPath);
+            
+            // Navigate using Streamlit's routing
+            // Try multiple methods to ensure navigation works
+            try {
+                // Method 1: Direct navigation
+                window.location.href = fullPath;
+            } catch (e) {
+                console.error('Navigation error:', e);
+                // Method 2: Assign location
+                window.location.assign(fullPath);
+            }
+        };
         
-        // Mark active link
-        navLinks.forEach(link => {
-            const onclick = link.getAttribute('onclick');
-            if (onclick) {
-                const match = onclick.match(/href='([^']+)'/);
-                if (match) {
-                    const href = match[1];
-                    if (currentPath === href || (href === '/' && currentPath === '/')) {
+        // Also make it available as a global function
+        if (typeof navigateToPage === 'undefined') {
+            window.navigateToPage = window.navigateToPage;
+        }
+        
+        // Navigation menu functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get current page
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.navbar-menu a, .navbar-brand');
+            
+            // Setup navigation - add click handlers and mark active links
+            navLinks.forEach(link => {
+                const pageData = link.getAttribute('data-page');
+                
+                // Add click handler as backup (in case onclick doesn't work)
+                if (pageData) {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (window.navigateToPage) {
+                            window.navigateToPage(pageData);
+                        }
+                        return false;
+                    }, true);
+                    
+                    // Mark active link based on current path
+                    const pageMap = {
+                        'home': '/',
+                        'dashboard': '/2_📊_Dashboard',
+                        'analysis': '/1_📈_Análisis_Individual',
+                        'compare': '/3_⚖️_Comparador',
+                        'historical': '/4_📅_Histórico',
+                        'alerts': '/5_🔔_Alertas'
+                    };
+                    
+                    const expectedPath = pageMap[pageData] || '/';
+                    const currentPathNormalized = currentPath.split('?')[0];
+                    
+                    // Check if current path matches
+                    if (currentPathNormalized === expectedPath || 
+                        (expectedPath === '/' && currentPathNormalized === '/') ||
+                        (currentPathNormalized !== '/' && currentPathNormalized.includes(expectedPath.replace('/', '')))) {
                         link.classList.add('active');
                     }
                 }
-            }
-        });
+            });
         
         // Fix ForwardRef elements by unwrapping them
         const fixForwardRefs = () => {
             const forwardRefs = document.querySelectorAll('[class*="ForwardRef"], ForwardRef');
             forwardRefs.forEach(ref => {
-                if (ref.children && ref.children.length > 0 && ref.parentNode) {
+                // Special handling for feature cards - don't hide, just make contents visible
+                const isInFeatureCard = ref.closest('.feature-card') || ref.closest('.feature-grid');
+                
+                if (isInFeatureCard) {
+                    // For feature cards, ensure ForwardRef displays contents
+                    ref.style.display = 'contents';
+                    ref.style.visibility = 'visible';
+                    Array.from(ref.children || []).forEach(child => {
+                        child.style.display = 'block';
+                        child.style.visibility = 'visible';
+                    });
+                } else if (ref.children && ref.children.length > 0 && ref.parentNode) {
                     Array.from(ref.children).forEach(child => {
                         ref.parentNode.insertBefore(child.cloneNode(true), ref);
                     });
@@ -288,25 +361,209 @@ st.markdown("""
             fixNewForwardRefs();
             fixExpanderSummaries();
         }, 1000);
+        
+        // Add tooltip functionality for metrics
+        const setupMetricTooltips = () => {
+            const metrics = document.querySelectorAll('[data-testid="stMetric"], .stMetric');
+            metrics.forEach(metric => {
+                // Skip if already processed
+                if (metric.hasAttribute('data-tooltip-setup')) {
+                    return;
+                }
+                
+                // Find the help text from Streamlit's tooltip
+                const helpButton = metric.querySelector('[data-testid="stTooltipIcon"]');
+                let tooltipText = '';
+                
+                if (helpButton) {
+                    // Try to get tooltip text from various sources
+                    tooltipText = helpButton.getAttribute('title') || 
+                                 helpButton.getAttribute('aria-label') ||
+                                 helpButton.getAttribute('data-tooltip') ||
+                                 '';
+                    
+                    // Also try to get from parent's title
+                    if (!tooltipText && helpButton.parentElement) {
+                        tooltipText = helpButton.parentElement.getAttribute('title') || '';
+                    }
+                }
+                
+                // Also check for help attribute in the metric container
+                if (!tooltipText) {
+                    tooltipText = metric.getAttribute('help') || metric.getAttribute('data-help') || '';
+                }
+                
+                // Extract text from label and value for tooltip if no help text
+                if (!tooltipText) {
+                    const label = metric.querySelector('[data-testid="stMetricLabel"]') || 
+                                 metric.querySelector('label') ||
+                                 metric.querySelector('p');
+                    const value = metric.querySelector('[data-testid="stMetricValue"]') || 
+                                metric.querySelector('[class*="st-emotion-cache-1q82h82"]') ||
+                                metric.querySelector('[class*="e1wr3kle3"]');
+                    
+                    if (label && value) {
+                        const labelText = (label.textContent || label.innerText || '').trim();
+                        const valueText = (value.textContent || value.innerText || '').trim();
+                        if (labelText && valueText) {
+                            tooltipText = `${labelText}: ${valueText}`;
+                        }
+                    }
+                }
+                
+                // Set the tooltip text if we found any
+                if (tooltipText) {
+                    metric.setAttribute('data-help-text', tooltipText);
+                }
+                
+                // Mark as processed
+                metric.setAttribute('data-tooltip-setup', 'true');
+            });
+        };
+        
+        // Run tooltip setup on load and periodically
+        setupMetricTooltips();
+        setInterval(setupMetricTooltips, 500);
     });
 </script>
 """, unsafe_allow_html=True)
 
 # Static Navigation Menu with Streamlit navigation
+# Discover actual routes from Streamlit's sidebar and use them
 st.markdown("""
 <div class="static-navbar">
-    <a href="#" onclick="window.location.href='/' + window.location.search; return false;" class="navbar-brand">DCF Platform</a>
+    <a href="/" class="navbar-brand" data-page="home">DCF Platform</a>
     <nav>
         <ul class="navbar-menu">
-            <li><a href="#" onclick="window.location.href='/' + window.location.search; return false;">Home</a></li>
-            <li><a href="#" onclick="window.location.href='/2_📊_Dashboard' + window.location.search; return false;">Dashboard</a></li>
-            <li><a href="#" onclick="window.location.href='/1_📈_Análisis_Individual' + window.location.search; return false;">Analysis</a></li>
-            <li><a href="#" onclick="window.location.href='/3_⚖️_Comparador' + window.location.search; return false;">Compare</a></li>
-            <li><a href="#" onclick="window.location.href='/4_📅_Histórico' + window.location.search; return false;">Historical</a></li>
-            <li><a href="#" onclick="window.location.href='/5_🔔_Alertas' + window.location.search; return false;">Alerts</a></li>
+            <li><a href="/" class="nav-link" data-page="home">Home</a></li>
+            <li><a href="#" class="nav-link" data-page="dashboard">Dashboard</a></li>
+            <li><a href="#" class="nav-link" data-page="analysis">Analysis</a></li>
+            <li><a href="#" class="nav-link" data-page="compare">Compare</a></li>
+            <li><a href="#" class="nav-link" data-page="historical">Historical</a></li>
+            <li><a href="#" class="nav-link" data-page="alerts">Alerts</a></li>
         </ul>
     </nav>
 </div>
+
+<script>
+(function() {
+    // Discover actual Streamlit page routes from sidebar
+    function discoverStreamlitRoutes() {
+        const routes = {};
+        
+        // Try to find routes from Streamlit's sidebar
+        const sidebarLinks = document.querySelectorAll('[data-testid="stSidebar"] a[href], [data-testid="stSidebar"] [href*="/"]');
+        sidebarLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            const text = (link.textContent || link.innerText || '').trim().toLowerCase();
+            
+            if (href && href !== '#' && href.startsWith('/')) {
+                // Map text to page keys
+                if (text.includes('dashboard') || text.includes('📊')) {
+                    routes.dashboard = href;
+                } else if (text.includes('analysis') || text.includes('análisis') || text.includes('📈')) {
+                    routes.analysis = href;
+                } else if (text.includes('compare') || text.includes('comparador') || text.includes('⚖️')) {
+                    routes.compare = href;
+                } else if (text.includes('historical') || text.includes('histórico') || text.includes('📅')) {
+                    routes.historical = href;
+                } else if (text.includes('alert') || text.includes('🔔')) {
+                    routes.alerts = href;
+                }
+            }
+        });
+        
+        return routes;
+    }
+    
+    // Navigation function that discovers routes dynamically
+    window.navigateToPage = function(page) {
+        // First, try to discover routes from sidebar
+        const discoveredRoutes = discoverStreamlitRoutes();
+        
+        // Fallback routes if discovery fails
+        const fallbackRoutes = {
+            'home': '/',
+            'dashboard': '/2_📊_Dashboard',
+            'analysis': '/1_📈_Análisis_Individual',
+            'compare': '/3_⚖️_Comparador',
+            'historical': '/4_📅_Histórico',
+            'alerts': '/5_🔔_Alertas'
+        };
+        
+        // Use discovered route if available, otherwise use fallback
+        let targetPath = discoveredRoutes[page] || fallbackRoutes[page] || '/';
+        
+        // If route contains encoded characters, try URL encoding
+        if (targetPath.includes('📊') || targetPath.includes('📈') || targetPath.includes('⚖️') || targetPath.includes('📅') || targetPath.includes('🔔')) {
+            // Try encoding the path
+            const pathParts = targetPath.split('/');
+            const encodedParts = pathParts.map(part => {
+                if (part && (part.includes('📊') || part.includes('📈') || part.includes('⚖️') || part.includes('📅') || part.includes('🔔'))) {
+                    return encodeURIComponent(part);
+                }
+                return part;
+            });
+            const encodedPath = encodedParts.join('/');
+            
+            console.log('Trying encoded path:', encodedPath);
+            // Try encoded version first
+            const queryString = window.location.search;
+            window.location.href = encodedPath + queryString;
+            return;
+        }
+        
+        const queryString = window.location.search;
+        const fullPath = targetPath + queryString;
+        
+        console.log('Navigating to:', fullPath, '(discovered:', discoveredRoutes[page] ? 'yes' : 'no', ')');
+        window.location.href = fullPath;
+    };
+    
+    // Setup navigation links
+    function setupNavLinks() {
+        const navLinks = document.querySelectorAll('.navbar-menu a, .navbar-brand');
+        navLinks.forEach(link => {
+            const pageData = link.getAttribute('data-page');
+            
+            if (pageData) {
+                // Remove existing handlers by cloning
+                const newLink = link.cloneNode(true);
+                link.parentNode.replaceChild(newLink, link);
+                
+                // Add click handler
+                newLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    
+                    console.log('Link clicked, page:', pageData);
+                    
+                    if (window.navigateToPage) {
+                        window.navigateToPage(pageData);
+                    }
+                    return false;
+                }, true); // Use capture phase to run before other handlers
+            }
+        });
+    }
+    
+    // Run immediately and multiple times
+    setupNavLinks();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupNavLinks);
+    }
+    setTimeout(setupNavLinks, 100);
+    setTimeout(setupNavLinks, 500);
+    setTimeout(setupNavLinks, 1000);
+    
+    // Use MutationObserver
+    const observer = new MutationObserver(function(mutations) {
+        setupNavLinks();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+})();
+</script>
 """, unsafe_allow_html=True)
 
 # Hero Section - New Design with Image Aesthetic
@@ -339,6 +596,8 @@ st.markdown("""
             Complete DCF calculation for a specific company with detailed analysis and advanced visualizations. 
             Get comprehensive insights into company valuation, cash flow projections, and fair value estimates. 
             Analyze growth rates, terminal values, and sensitivity scenarios to make informed investment decisions.
+            <br><br>
+            <a href="#" onclick="navigateToPage('analysis'); return false;" style="color: var(--lime-dark); font-weight: 700; text-decoration: underline; font-size: 1.1rem;">→ Ir a Análisis</a>
         </div>
     </div>
     

@@ -660,56 +660,268 @@ ForwardRef > *,
     visibility: visible !important;
 }
 
+/* Specific fix for ForwardRef in feature cards */
+.feature-card ForwardRef,
+.feature-card [class*="ForwardRef"],
+.feature-grid ForwardRef,
+.feature-grid [class*="ForwardRef"] {
+    display: contents !important;
+    visibility: visible !important;
+    width: 100% !important;
+    height: auto !important;
+}
+
+.feature-card ForwardRef > *,
+.feature-card [class*="ForwardRef"] > *,
+.feature-grid ForwardRef > *,
+.feature-grid [class*="ForwardRef"] > * {
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+    color: inherit !important;
+}
+
+/* Ensure feature card content is always visible */
+.feature-card *,
+.feature-card div,
+.feature-card span,
+.feature-card p {
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: inherit !important;
+}
+
+.feature-description {
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: block !important;
+    width: 100% !important;
+}
+
 /* ============================================
-   METRICS - REDESIGN
+   METRICS - REDESIGN - ENHANCED AESTHETICS
    ============================================ */
 
 .stMetric,
 [data-testid="stMetric"],
 [class*="stMetric"],
-[class*="st-emotion-cache-1q82h82"],
-[class*="e1wr3kle3"] {
-    background: rgba(255, 255, 255, 0.9) !important;
-    backdrop-filter: blur(15px) !important;
-    border: 2px solid var(--lime-medium) !important;
-    border-left: 4px solid var(--lime-light) !important;
-    border-radius: var(--radius-md) !important;
-    padding: 1.5rem !important;
+[class*="st-emotion-cache-10klw3m"],
+[class*="e1wr3kle0"],
+div[class*="stMetric"] {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 2.5px solid var(--lime-medium) !important;
+    border-left: 5px solid var(--lime-light) !important;
+    border-radius: 16px !important;
+    padding: 1rem 1.25rem !important;
     text-align: center !important;
-    transition: all 0.3s ease !important;
-    box-shadow: 0 4px 16px rgba(122, 184, 58, 0.2), 0 0 20px rgba(158, 216, 92, 0.2) !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 6px 24px rgba(122, 184, 58, 0.25), 0 0 30px rgba(158, 216, 92, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+    min-height: 80px !important;
+    max-height: 90px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: hidden !important;
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.stMetric::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--lime-light) 0%, var(--lime-medium) 50%, var(--lime-dark) 100%);
+    border-radius: 16px 16px 0 0;
+    opacity: 0.6;
+    z-index: 1;
 }
 
 .stMetric:hover {
-    border-color: var(--lime-bright) !important;
-    border-left-color: var(--cream) !important;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6), 0 0 30px rgba(184, 233, 134, 0.3) !important;
-    transform: translateY(-2px) !important;
+    border-color: var(--lime-dark) !important;
+    border-left-color: var(--lime-bright) !important;
+    box-shadow: 0 8px 32px rgba(122, 184, 58, 0.35), 0 0 40px rgba(184, 233, 134, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+    transform: translateY(-4px) scale(1.02) !important;
+    background: rgba(255, 255, 255, 1) !important;
 }
 
-.stMetric [data-testid="stMetricLabel"],
-.stMetric label {
+.stMetric:hover::before {
+    opacity: 1;
+    height: 4px;
+}
+
+/* Tooltip styling for metrics - using a separate element */
+.stMetric {
+    position: relative !important;
+    cursor: help !important;
+}
+
+/* Create tooltip container */
+.stMetric::after {
+    content: attr(data-help-text);
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%) translateY(5px);
+    background: rgba(26, 26, 26, 0.98) !important;
+    color: #FFFADC !important;
+    padding: 0.875rem 1.125rem !important;
+    border-radius: 10px !important;
     font-family: 'TT Gertika', sans-serif !important;
-    color: #2A2A2A !important;
-    font-size: 0.85rem !important;
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+    white-space: normal !important;
+    max-width: 300px !important;
+    min-width: 200px !important;
+    width: max-content !important;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4), 0 0 30px rgba(158, 216, 92, 0.3) !important;
+    border: 2px solid var(--lime-medium) !important;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    z-index: 10000 !important;
+    line-height: 1.6 !important;
+    text-align: left !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
+.stMetric:hover::after {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateX(-50%) translateY(0) !important;
+}
+
+/* Tooltip arrow - add with JavaScript or use a span */
+.stMetric[data-help-text]::after {
+    position: relative;
+}
+
+.stMetric[data-help-text]::after::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 7px solid transparent;
+    border-top-color: rgba(26, 26, 26, 0.98);
+    margin-top: -1px;
+    z-index: 10002;
+}
+
+/* Ensure tooltip text is visible */
+.stMetric::after * {
+    color: #FFFADC !important;
+    visibility: visible !important;
+}
+
+/* Label styling - single line, different color, always visible */
+.stMetric [data-testid="stMetricLabel"],
+.stMetric label,
+.stMetric > div:first-child,
+.stMetric label[data-testid="stMetricLabel"],
+.stMetric p {
+    font-family: 'TT Gertika', sans-serif !important;
+    color: #4A4A4A !important;
+    font-size: 0.8rem !important;
     text-transform: uppercase !important;
     letter-spacing: 0.1em !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
     margin-bottom: 0.5rem !important;
+    display: block !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    line-height: 1.3 !important;
+    padding: 0 0.25rem !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
+/* Value styling - single line, always visible */
 .stMetric [data-testid="stMetricValue"],
-.stMetric [data-testid="stMetricDelta"],
 .stMetric div[class*="st-emotion-cache-1q82h82"],
-.stMetric div[class*="e1wr3kle3"] {
+.stMetric div[class*="e1wr3kle3"],
+.stMetric > div:last-child,
+.stMetric > div:nth-child(2),
+div[class*="st-emotion-cache-1q82h82"],
+div[class*="e1wr3kle3"] {
     font-family: 'Roboto', sans-serif !important;
-    font-size: 2rem !important;
-    font-weight: 900 !important;
+    font-size: 1.25rem !important;
+    font-weight: 800 !important;
     color: var(--lime-dark) !important;
     background: linear-gradient(135deg, var(--lime-dark) 0%, var(--lime-medium) 100%) !important;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
     background-clip: text !important;
+    display: block !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    line-height: 1.3 !important;
+    padding: 0 0.25rem !important;
+    margin: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Delta styling - single line, smaller */
+.stMetric [data-testid="stMetricDelta"] {
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    margin-top: 0.25rem !important;
+    opacity: 0.85 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Ensure all text inside metric is on single line */
+.stMetric *,
+.stMetric span,
+.stMetric div,
+.stMetric p,
+[data-testid="stMetric"] *,
+[data-testid="stMetric"] span,
+[data-testid="stMetric"] div,
+[data-testid="stMetric"] p {
+    color: inherit !important;
+    visibility: visible !important;
+    display: block !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* Specific fix for ForwardRef elements inside metrics */
+.stMetric ForwardRef,
+.stMetric [class*="ForwardRef"],
+[data-testid="stMetric"] ForwardRef,
+[data-testid="stMetric"] [class*="ForwardRef"] {
+    display: contents !important;
+    visibility: visible !important;
+    width: 100% !important;
+    overflow: visible !important;
+}
+
+.stMetric ForwardRef > *,
+.stMetric [class*="ForwardRef"] > *,
+[data-testid="stMetric"] ForwardRef > *,
+[data-testid="stMetric"] [class*="ForwardRef"] > * {
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
 }
 
 /* ============================================
@@ -1057,6 +1269,57 @@ ForwardRef > *,
     .main .block-container {
         padding-top: 120px !important;
     }
+    
+    /* Responsive metrics on mobile */
+    .stMetric,
+    [data-testid="stMetric"] {
+        min-height: 75px !important;
+        max-height: 85px !important;
+        padding: 0.875rem 1rem !important;
+        border-radius: 14px !important;
+    }
+    
+    .stMetric [data-testid="stMetricValue"],
+    .stMetric div[class*="st-emotion-cache-1q82h82"],
+    .stMetric div[class*="e1wr3kle3"] {
+        font-size: 1rem !important;
+    }
+    
+    .stMetric [data-testid="stMetricLabel"],
+    .stMetric label {
+        font-size: 0.7rem !important;
+        letter-spacing: 0.08em !important;
+    }
+}
+
+/* Additional responsive breakpoints for metrics */
+@media (max-width: 480px) {
+    .stMetric,
+    [data-testid="stMetric"] {
+        min-height: 70px !important;
+        max-height: 80px !important;
+        padding: 0.75rem 0.875rem !important;
+        border-radius: 12px !important;
+    }
+    
+    .stMetric [data-testid="stMetricValue"],
+    .stMetric div[class*="st-emotion-cache-1q82h82"],
+    .stMetric div[class*="e1wr3kle3"] {
+        font-size: 0.95rem !important;
+    }
+    
+    .stMetric [data-testid="stMetricLabel"],
+    .stMetric label {
+        font-size: 0.65rem !important;
+    }
+}
+
+/* Ensure metrics in columns display properly */
+[data-testid="column"] .stMetric,
+[data-testid="column"] [data-testid="stMetric"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
 }
 
 /* ============================================
