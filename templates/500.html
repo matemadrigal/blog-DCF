@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="fade-in-up" style="text-align: center; padding: var(--spacing-2xl) 0;">
+    <div style="font-size: 8rem; color: var(--santander-red); margin-bottom: var(--spacing-lg);">
+        <i class="fas fa-exclamation-triangle"></i>
+    </div>
+
+    <h1 style="font-size: 4rem; margin-bottom: var(--spacing-md);">500</h1>
+    <h2 style="margin-bottom: var(--spacing-xl);">Error del Servidor</h2>
+
+    <p style="font-size: 1.25rem; color: var(--black-strong); max-width: 600px; margin: 0 auto var(--spacing-2xl);">
+        Algo salió mal en el servidor. Nuestro equipo ha sido notificado y estamos trabajando para resolverlo.
+    </p>
+
+    <div style="display: flex; gap: var(--spacing-lg); justify-content: center; flex-wrap: wrap;">
+        <a href="{{ url_for('home') }}" class="btn btn-primary">
+            <i class="fas fa-home"></i> Ir al Inicio
+        </a>
+        <a href="javascript:window.location.reload()" class="btn btn-outline">
+            <i class="fas fa-redo"></i> Reintentar
+        </a>
+    </div>
+</div>
+{% endblock %}

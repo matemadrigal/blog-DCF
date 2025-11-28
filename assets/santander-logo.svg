@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 100" width="500" height="100">
+  <!-- Llama característica de Santander -->
+  <g id="flame">
+    <path d="M 30 50 Q 20 30, 35 20 Q 50 10, 50 30 Q 50 45, 35 55 Q 25 60, 30 50 Z" fill="#EC0000"/>
+  </g>
+
+  <!-- Texto SANTANDER -->
+  <text x="80" y="60" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#EC0000">
+    SANTANDER
+  </text>
+</svg>

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="fade-in-up">
+    <h1><i class="fas fa-bell"></i> Sistema de Alertas</h1>
+    <p style="font-size: 1.1rem; color: var(--black-strong); margin-bottom: var(--spacing-2xl);">
+        Configura alertas de precio y recibe notificaciones cuando se alcancen tus objetivos.
+    </p>
+
+    <!-- Crear Nueva Alerta -->
+    <div class="card" style="margin-bottom: var(--spacing-2xl);">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-plus"></i>
+            </div>
+            <h2 class="card-title">Crear Nueva Alerta</h2>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('alertas') }}">
+                <input type="hidden" name="action" value="create">
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 200px; gap: var(--spacing-lg); align-items: end;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="ticker">
+                            <i class="fas fa-building"></i> Ticker
+                        </label>
+                        <input type="text"
+                               id="ticker"
+                               name="ticker"
+                               class="form-input"
+                               placeholder="Ej: AAPL"
+                               required>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="target_price">
+                            <i class="fas fa-dollar-sign"></i> Precio Objetivo
+                        </label>
+                        <input type="number"
+                               id="target_price"
+                               name="target_price"
+                               class="form-input"
+                               step="0.01"
+                               placeholder="150.00"
+                               required>
+                    </div>
+
+                    <div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            <i class="fas fa-bell"></i> Crear Alerta
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Alertas Activas -->
+    <div class="card" style="margin-bottom: var(--spacing-2xl);">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-list"></i>
+            </div>
+            <h2 class="card-title">Alertas Activas</h2>
+        </div>
+        <div class="card-body">
+            {% if active_alerts %}
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Precio Objetivo</th>
+                            <th>Fecha Creación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alert in active_alerts %}
+                        <tr>
+                            <td><strong>{{ alert.ticker }}</strong></td>
+                            <td>${{ "%.2f"|format(alert.target_price) }}</td>
+                            <td>{{ alert.created_at }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('alertas') }}" style="display: inline;">
+                                    <input type="hidden" name="action" value="dismiss">
+                                    <input type="hidden" name="alert_id" value="{{ alert.id }}">
+                                    <button type="submit" class="btn btn-danger" style="padding: var(--spacing-xs) var(--spacing-sm);">
+                                        <i class="fas fa-times"></i> Eliminar
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <div>No hay alertas activas. Crea una nueva alerta arriba.</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Alertas Disparadas -->
+    {% if triggered_alerts %}
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon" style="background: var(--santander-red); color: white;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h2 class="card-title">Alertas Disparadas</h2>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Precio Objetivo</th>
+                            <th>Precio Actual</th>
+                            <th>Fecha Disparo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alert in triggered_alerts %}
+                        <tr style="background: rgba(236, 0, 0, 0.05);">
+                            <td><strong>{{ alert.ticker }}</strong></td>
+                            <td>${{ "%.2f"|format(alert.target_price) }}</td>
+                            <td>${{ "%.2f"|format(alert.current_price) }}</td>
+                            <td>{{ alert.triggered_at }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }} - DCF Platform</title>
+
+    <!-- CSS Personalizado -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- Plotly para gráficos -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Menú de Navegación Superior -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="{{ url_for('home') }}" class="navbar-brand">
+                <i class="fas fa-chart-line"></i> DCF Platform
+            </a>
+
+            <ul class="navbar-menu">
+                <li class="{{ 'active' if current_page == 'home' else '' }}">
+                    <a href="{{ url_for('home') }}">
+                        <i class="fas fa-home"></i> Home
+                    </a>
+                </li>
+                <li class="{{ 'active' if current_page == 'analisis' else '' }}">
+                    <a href="{{ url_for('analisis') }}">
+                        <i class="fas fa-chart-bar"></i> Análisis
+                    </a>
+                </li>
+                <li class="{{ 'active' if current_page == 'dashboard' else '' }}">
+                    <a href="{{ url_for('dashboard') }}">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="{{ 'active' if current_page == 'comparador' else '' }}">
+                    <a href="{{ url_for('comparador') }}">
+                        <i class="fas fa-balance-scale"></i> Comparador
+                    </a>
+                </li>
+                <li class="{{ 'active' if current_page == 'historico' else '' }}">
+                    <a href="{{ url_for('historico') }}">
+                        <i class="fas fa-calendar-alt"></i> Histórico
+                    </a>
+                </li>
+                <li class="{{ 'active' if current_page == 'alertas' else '' }}">
+                    <a href="{{ url_for('alertas') }}">
+                        <i class="fas fa-bell"></i> Alertas
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Botón móvil hamburguesa -->
+            <button class="navbar-toggle" onclick="toggleMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <p>&copy; <span id="current-year"></span> DCF Platform - Banco Santander</p>
+            <p class="footer-disclaimer">
+                Esta plataforma es una herramienta de análisis financiero.
+                Las valoraciones son estimaciones y no constituyen asesoramiento de inversión.
+            </p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Año actual en el footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
+        // Toggle menú móvil
+        function toggleMenu() {
+            const menu = document.querySelector('.navbar-menu');
+            menu.classList.toggle('show');
+        }
+
+        // Cerrar menú al hacer clic fuera
+        document.addEventListener('click', function(event) {
+            const navbar = document.querySelector('.navbar-container');
+            const toggle = document.querySelector('.navbar-toggle');
+
+            if (!navbar.contains(event.target) && !toggle.contains(event.target)) {
+                document.querySelector('.navbar-menu').classList.remove('show');
+            }
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

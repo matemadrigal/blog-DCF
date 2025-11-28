@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section con Logo de Santander -->
+<section class="hero">
+    <div class="hero-header">
+        <img src="{{ url_for('static', filename='santander-logo.svg') }}"
+             alt="Logo Banco Santander"
+             class="santander-logo">
+        <div>
+            <h1 class="hero-title">DCF Valuation Platform</h1>
+            <p class="welcome-message">Bienvenidos, amigos del Banco Santander</p>
+        </div>
+    </div>
+
+    <p class="hero-description">
+        Plataforma profesional de valoración DCF (Discounted Cash Flow) diseñada
+        para analizar empresas con precisión financiera. Utiliza modelos matemáticos
+        avanzados, datos en tiempo real y análisis de sensibilidad para tomar
+        decisiones de inversión informadas.
+    </p>
+</section>
+
+<!-- Características Principales -->
+<section class="card-grid">
+    <div class="card fade-in-up">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <h3 class="card-title">Modelo DCF Avanzado</h3>
+        </div>
+        <div class="card-body">
+            <p>
+                <strong>Motor de valoración profesional</strong> con convención mid-year,
+                Gordon Growth Model, y validación de spreads (r-g) > 2%.
+            </p>
+            <ul style="list-style: none; padding: 0;">
+                <li><i class="fas fa-check" style="color: var(--lime-dark);"></i> WACC dinámico con CAPM</li>
+                <li><i class="fas fa-check" style="color: var(--lime-dark);"></i> Tasas de crecimiento escalonadas</li>
+                <li><i class="fas fa-check" style="color: var(--lime-dark);"></i> Análisis de sensibilidad 2D/3D</li>
+                <li><i class="fas fa-check" style="color: var(--lime-dark);"></i> Cálculo de Equity Value</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card fade-in-up" style="animation-delay: 0.1s;">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-database"></i>
+            </div>
+            <h3 class="card-title">Múltiples Fuentes de Datos</h3>
+        </div>
+        <div class="card-body">
+            <p>
+                <strong>Agregador inteligente</strong> que combina Yahoo Finance,
+                Financial Modeling Prep, Alpha Vantage e IEX Cloud para máxima precisión.
+            </p>
+            <ul style="list-style: none; padding: 0;">
+                <li><i class="fas fa-check" style="color: var(--lime-dark);"></i> Fallback automático</li>
+                <li><i class="fas fa-check" style="color: var(--lime-dark);"></i> Validación de calidad FCF</li>
+                <li><i class="fas fa-check" style="color: var(--lime-dark);"></i> Caché SQLite</li>
+                <li><i class="fas fa-check" style="color: var(--lime-dark);"></i> Datos de Damodaran</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card fade-in-up" style="animation-delay: 0.2s;">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h3 class="card-title">Visualizaciones Interactivas</h3>
+        </div>
+        <div class="card-body">
+            <p>
+                <strong>Gráficos Plotly profesionales</strong> con proyecciones FCF,
+                waterfall charts, matrices de sensibilidad y más.
+            </p>
+            <ul style="list-style: none; padding: 0;">
+                <li><i class="fas fa-check" style="color: var(--lime-dark);"></i> Proyecciones FCF</li>
+                <li><i class="fas fa-check" style="color: var(--lime-dark);"></i> Waterfall de componentes</li>
+                <li><i class="fas fa-check" style="color: var(--lime-dark);"></i> Matrices de sensibilidad</li>
+                <li><i class="fas fa-check" style="color: var(--lime-dark);"></i> Gráficos tornado</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card fade-in-up" style="animation-delay: 0.3s;">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-file-export"></i>
+            </div>
+            <h3 class="card-title">Exportación Profesional</h3>
+        </div>
+        <div class="card-body">
+            <p>
+                <strong>Reportes ejecutivos</strong> en PDF, HTML y Excel con
+                diseño inspirado en Bloomberg/Goldman Sachs.
+            </p>
+            <ul style="list-style: none; padding: 0;">
+                <li><i class="fas fa-check" style="color: var(--lime-dark);"></i> PDFs con ReportLab</li>
+                <li><i class="fas fa-check" style="color: var(--lime-dark);"></i> HTML con templates Jinja2</li>
+                <li><i class="fas fa-check" style="color: var(--lime-dark);"></i> Excel con openpyxl</li>
+                <li><i class="fas fa-check" style="color: var(--lime-dark);"></i> Diseño profesional</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- Guía Rápida -->
+<section class="card" style="margin-top: var(--spacing-2xl);">
+    <div class="card-header">
+        <div class="card-icon">
+            <i class="fas fa-rocket"></i>
+        </div>
+        <h2 class="card-title">Guía Rápida</h2>
+    </div>
+    <div class="card-body">
+        <div class="card-grid">
+            <div style="background: var(--cream-light); padding: var(--spacing-lg); border-radius: var(--radius-md); border-left: 4px solid var(--lime-dark);">
+                <h4><i class="fas fa-1" style="color: var(--lime-dark);"></i> Análisis Individual</h4>
+                <p>Ingresa un ticker (ej: AAPL) para obtener una valoración DCF completa con métricas clave, proyecciones y gráficos.</p>
+                <a href="{{ url_for('analisis') }}" class="btn btn-primary">
+                    <i class="fas fa-chart-bar"></i> Ir a Análisis
+                </a>
+            </div>
+
+            <div style="background: var(--cream-light); padding: var(--spacing-lg); border-radius: var(--radius-md); border-left: 4px solid var(--lime-medium);">
+                <h4><i class="fas fa-2" style="color: var(--lime-medium);"></i> Dashboard Ejecutivo</h4>
+                <p>Vista consolidada de todas las empresas analizadas con métricas agregadas y filtros interactivos.</p>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                    <i class="fas fa-tachometer-alt"></i> Ver Dashboard
+                </a>
+            </div>
+
+            <div style="background: var(--cream-light); padding: var(--spacing-lg); border-radius: var(--radius-md); border-left: 4px solid var(--lime-dark);">
+                <h4><i class="fas fa-3" style="color: var(--lime-dark);"></i> Comparador</h4>
+                <p>Compara múltiples empresas lado a lado con tablas y gráficos comparativos de ratios financieros.</p>
+                <a href="{{ url_for('comparador') }}" class="btn btn-primary">
+                    <i class="fas fa-balance-scale"></i> Comparar Empresas
+                </a>
+            </div>
+
+            <div style="background: var(--cream-light); padding: var(--spacing-lg); border-radius: var(--radius-md); border-left: 4px solid var(--lime-medium);">
+                <h4><i class="fas fa-4" style="color: var(--lime-medium);"></i> Sistema de Alertas</h4>
+                <p>Configura alertas de precio y recibe notificaciones cuando se disparan tus objetivos de inversión.</p>
+                <a href="{{ url_for('alertas') }}" class="btn btn-primary">
+                    <i class="fas fa-bell"></i> Configurar Alertas
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Modelo Financiero -->
+<section class="card" style="margin-top: var(--spacing-2xl);">
+    <div class="card-header">
+        <div class="card-icon">
+            <i class="fas fa-graduation-cap"></i>
+        </div>
+        <h2 class="card-title">Modelo Financiero Matemático</h2>
+    </div>
+    <div class="card-body">
+        <h3>Fórmula DCF Core</h3>
+        <div style="background: white; padding: var(--spacing-lg); border-radius: var(--radius-md); border: 2px solid var(--cream-dark); margin-bottom: var(--spacing-lg); font-family: monospace;">
+            <p><strong>Present Value:</strong></p>
+            <p style="font-size: 1.1rem;">PV = Σ(FCF<sub>t</sub> / (1 + r)<sup>(t - 0.5)</sup>) + TV / (1 + r)<sup>(n - 0.5)</sup></p>
+
+            <p style="margin-top: var(--spacing-lg);"><strong>Terminal Value (Gordon Growth):</strong></p>
+            <p style="font-size: 1.1rem;">TV = FCF<sub>n</sub> × (1 + g) / (r - g)</p>
+
+            <p style="margin-top: var(--spacing-lg);"><strong>WACC (Weighted Average Cost of Capital):</strong></p>
+            <p style="font-size: 1.1rem;">WACC = (E/V) × R<sub>e</sub> + (D/V) × R<sub>d</sub> × (1 - T<sub>c</sub>)</p>
+
+            <p style="margin-top: var(--spacing-lg);"><strong>CAPM (Cost of Equity):</strong></p>
+            <p style="font-size: 1.1rem;">R<sub>e</sub> = R<sub>f</sub> + β × (R<sub>m</sub> - R<sub>f</sub>)</p>
+
+            <p style="margin-top: var(--spacing-lg);"><strong>Equity Value:</strong></p>
+            <p style="font-size: 1.1rem;">Equity Value = Enterprise Value + Cash - Debt</p>
+        </div>
+
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle" style="font-size: 1.5rem;"></i>
+            <div>
+                <strong>Características Técnicas:</strong>
+                <ul style="margin-top: var(--spacing-sm);">
+                    <li>✓ Mid-year discounting convention (estándar industria)</li>
+                    <li>✓ Validación de spread (r - g) > 2% para evitar valuaciones explosivas</li>
+                    <li>✓ Tasas de crecimiento escalonadas basadas en volatilidad histórica</li>
+                    <li>✓ Beta ajustado por Blume y Hamada (des/reapalancamiento)</li>
+                    <li>✓ Country Risk Premium para mercados emergentes</li>
+                    <li>✓ Manejo de FCF negativo en terminal value</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section style="text-align: center; margin-top: var(--spacing-2xl); padding: var(--spacing-2xl); background: var(--gradient-lime); border-radius: var(--radius-xl);">
+    <h2 style="color: var(--black); margin-bottom: var(--spacing-lg);">
+        ¿Listo para empezar?
+    </h2>
+    <p style="font-size: 1.25rem; color: var(--black-strong); margin-bottom: var(--spacing-xl);">
+        Comienza a analizar empresas con la herramienta de valoración DCF más avanzada
+    </p>
+    <a href="{{ url_for('analisis') }}" class="btn btn-secondary" style="font-size: 1.25rem; padding: var(--spacing-lg) var(--spacing-2xl);">
+        <i class="fas fa-play"></i> Comenzar Análisis
+    </a>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

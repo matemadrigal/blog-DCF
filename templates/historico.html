@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="fade-in-up">
+    <h1><i class="fas fa-calendar-alt"></i> Evolución Histórica</h1>
+    <p style="font-size: 1.1rem; color: var(--black-strong); margin-bottom: var(--spacing-2xl);">
+        Visualiza la evolución temporal de Market Price vs Fair Value.
+    </p>
+
+    <!-- Selector de Empresa -->
+    <div class="card" style="margin-bottom: var(--spacing-2xl);">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-search"></i>
+            </div>
+            <h2 class="card-title">Seleccionar Empresa</h2>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('historico') }}">
+                <div class="form-group">
+                    <label class="form-label" for="ticker">
+                        <i class="fas fa-building"></i> Ticker
+                    </label>
+                    <input type="text"
+                           id="ticker"
+                           name="ticker"
+                           class="form-input"
+                           placeholder="Ej: AAPL"
+                           value="{{ ticker }}">
+                </div>
+
+                <div style="margin-top: var(--spacing-lg); text-align: center;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-chart-line"></i> Ver Histórico
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Gráfico Histórico -->
+    {% if historical_data %}
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h2 class="card-title">Gráfico Histórico - {{ historical_data.ticker }}</h2>
+        </div>
+        <div class="card-body">
+            {% if historical_data.error %}
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <div>{{ historical_data.error }}</div>
+            </div>
+            {% else %}
+            {{ historical_data.fig|safe }}
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

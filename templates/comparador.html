@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="fade-in-up">
+    <h1><i class="fas fa-balance-scale"></i> Comparador de Empresas</h1>
+    <p style="font-size: 1.1rem; color: var(--black-strong); margin-bottom: var(--spacing-2xl);">
+        Compara múltiples empresas lado a lado con tablas y gráficos comparativos.
+    </p>
+
+    <!-- Formulario de Comparación -->
+    <div class="card" style="margin-bottom: var(--spacing-2xl);">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-list"></i>
+            </div>
+            <h2 class="card-title">Seleccionar Empresas</h2>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('comparador') }}">
+                <div class="form-group">
+                    <label class="form-label" for="tickers">
+                        <i class="fas fa-building"></i> Tickers (separados por comas)
+                    </label>
+                    <input type="text"
+                           id="tickers"
+                           name="tickers"
+                           class="form-input"
+                           placeholder="Ej: AAPL, MSFT, GOOGL, AMZN"
+                           required
+                           value="{{ request.form.get('tickers', '') }}">
+                    <small style="color: var(--black-medium); display: block; margin-top: var(--spacing-xs);">
+                        Ingresa los símbolos de las empresas que deseas comparar, separados por comas
+                    </small>
+                </div>
+
+                <div style="margin-top: var(--spacing-xl); text-align: center;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-chart-bar"></i> Comparar Empresas
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mostrar Resultados si existen -->
+    {% if comparison_data %}
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-table"></i>
+            </div>
+            <h2 class="card-title">Tabla Comparativa</h2>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Empresa</th>
+                            <th>Precio Actual</th>
+                            <th>Fair Value (DCF)</th>
+                            <th>Upside/Downside</th>
+                            <th>Market Cap</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for company in comparison_data %}
+                        <tr>
+                            <td><strong>{{ company.ticker }}</strong></td>
+                            <td>{{ company.company_name }}</td>
+                            <td>${{ "%.2f"|format(company.current_price) }}</td>
+                            <td>${{ "%.2f"|format(company.fair_value) }}</td>
+                            <td class="{% if company.upside_downside > 0 %}metric-change positive{% else %}metric-change negative{% endif %}">
+                                {{ "%.2f"|format(company.upside_downside) }}%
+                            </td>
+                            <td>${{ "{:,.0f}".format(company.market_cap) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

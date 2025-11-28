@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="fade-in-up">
+    <h1><i class="fas fa-tachometer-alt"></i> Dashboard Ejecutivo</h1>
+    <p style="font-size: 1.1rem; color: var(--black-strong); margin-bottom: var(--spacing-2xl);">
+        Vista consolidada de todas las empresas analizadas con métricas agregadas.
+    </p>
+
+    <!-- Métricas Agregadas -->
+    <div class="metrics-grid" style="margin-bottom: var(--spacing-2xl);">
+        <div class="metric-card">
+            <div class="metric-label">Total Empresas</div>
+            <div class="metric-value">{{ stats.total_companies }}</div>
+            <div class="metric-change">Analizadas</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-label">Upside Promedio</div>
+            <div class="metric-value" style="color: {% if stats.avg_upside > 0 %}var(--lime-dark){% else %}var(--santander-red){% endif %};">
+                {{ "%.2f"|format(stats.avg_upside) }}%
+            </div>
+            <div class="metric-change">Potencial</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-label">Alertas Activas</div>
+            <div class="metric-value" style="color: var(--santander-red);">{{ stats.total_alerts }}</div>
+            <div class="metric-change">Notificaciones</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-label">Última Actualización</div>
+            <div class="metric-value" style="font-size: 1.2rem;">{{ stats.last_update }}</div>
+            <div class="metric-change">Timestamp</div>
+        </div>
+    </div>
+
+    <!-- Tabla de Empresas -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-list"></i>
+            </div>
+            <h2 class="card-title">Empresas Analizadas</h2>
+        </div>
+        <div class="card-body">
+            {% if companies %}
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Empresa</th>
+                            <th>Precio Actual</th>
+                            <th>Fair Value</th>
+                            <th>Upside/Downside</th>
+                            <th>Fecha Análisis</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for company in companies %}
+                        <tr>
+                            <td><strong>{{ company.ticker }}</strong></td>
+                            <td>{{ company.get('company_name', company.ticker) }}</td>
+                            <td>${{ "%.2f"|format(company.get('current_price', 0)) }}</td>
+                            <td>${{ "%.2f"|format(company.get('fair_value', 0)) }}</td>
+                            <td class="{% if company.get('upside', 0) > 0 %}metric-change positive{% else %}metric-change negative{% endif %}">
+                                {{ "%.2f"|format(company.get('upside', 0)) }}%
+                            </td>
+                            <td>{{ company.get('date', 'N/A') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle" style="font-size: 1.5rem;"></i>
+                <div>
+                    <strong>No hay empresas analizadas aún</strong>
+                    <p>Ve a la <a href="{{ url_for('analisis') }}">página de Análisis</a> para comenzar a evaluar empresas.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
