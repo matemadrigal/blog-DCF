@@ -1,0 +1,48 @@
+# GitHub Pages Configuration
+# Site settings
+title: DCF Valuation Reports
+description: Análisis de valoración por Flujo de Caja Descontado (DCF)
+author: matemadrigal
+email: your-email@example.com
+
+# Build settings
+markdown: kramdown
+theme: minima
+
+# Repository
+repository: matemadrigal/blog-DCF
+github_username: matemadrigal
+
+# Exclude from processing
+exclude:
+  - README_GITHUB_PAGES.md
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+
+# Include files that start with underscore
+include:
+  - _config.yml
+
+# Timezone
+timezone: Europe/Madrid
+
+# Permalink structure
+permalink: pretty
+
+# Plugins
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+# SEO settings
+lang: es
+url: "https://matemadrigal.github.io"
+baseurl: "/blog-DCF"
+
+# Social
+social:
+  name: DCF Valuation Engine
+  links:
+    - https://github.com/matemadrigal/blog-DCF
